@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  Button,
   Card,
   CardHeader,
   CardTitle,
@@ -23,43 +22,6 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-            <Card>
-              <CardHeader>
-                <CardTitle>⚡ Next.js 15</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600 dark:text-gray-400">
-                  Latest version with App Router, Server Components, and
-                  improved performance.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>🔷 TypeScript</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600 dark:text-gray-400">
-                  Full type safety with strict mode enabled and proper
-                  configuration.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>🎨 Tailwind CSS</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600 dark:text-gray-400">
-                  Utility-first CSS framework for rapid UI development.
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-
           <div className="mb-12">
             <Card className="max-w-2xl mx-auto">
               <CardHeader>
@@ -79,22 +41,6 @@ export default function Home() {
           {/* Photo Gallery Section */}
           <div className="mb-12">
             <PhotoGallery />
-          </div>
-
-          <div className="text-center space-y-4">
-            <div className="flex gap-4 justify-center flex-wrap">
-              <Button variant="primary" size="lg">
-                Get Started
-              </Button>
-              <Button variant="outline" size="lg">
-                View Docs
-              </Button>
-            </div>
-
-            <p className="text-sm text-gray-500">
-              Upload images above to see them appear in your photo gallery with
-              AI-generated captions and tags!
-            </p>
           </div>
         </main>
       </div>

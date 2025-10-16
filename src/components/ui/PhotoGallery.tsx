@@ -19,7 +19,13 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [deletingPhotoId, setDeletingPhotoId] = useState<number | null>(null);
-  const { refreshTrigger, refreshGallery, newPhotos, clearNewPhotos, removePhoto } = useGallery();
+  const {
+    refreshTrigger,
+    refreshGallery,
+    newPhotos,
+    clearNewPhotos,
+    removePhoto,
+  } = useGallery();
 
   const fetchPhotos = async (page = 1) => {
     try {
@@ -32,9 +38,16 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
         // Backend returns data as array directly
         const fetchedPhotos = Array.isArray(result.data) ? result.data : [];
         setPhotos(fetchedPhotos);
-        setCurrentPage(page);
-        // Since backend doesn't provide pagination info, calculate based on data
-        setTotalPages(Math.ceil(fetchedPhotos.length / 12) || 1);
+
+        // Use backend pagination info if available, otherwise calculate
+        if (result.pagination) {
+          setCurrentPage(result.pagination.current_page);
+          setTotalPages(result.pagination.total_pages);
+        } else {
+          // Fallback: if no pagination info, assume we got all data
+          setCurrentPage(page);
+          setTotalPages(Math.ceil(fetchedPhotos.length / 12) || 1);
+        }
       } else {
         setError(result.error || "Failed to load photos");
       }
@@ -74,9 +87,23 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
 
       if (result.success) {
         console.log("File deleted successfully:", result.message);
-        // Remove photo from both arrays without full refresh
-        setPhotos((prev) => prev.filter((p) => p.id !== photo.id));
+
+        // Check if this is the last photo on current page (excluding newPhotos)
+        const currentPagePhotoCount = photos.length;
+        const willPageBeEmpty = currentPagePhotoCount === 1 && currentPage > 1;
+
+        if (willPageBeEmpty) {
+          console.log(
+            "Current page will be empty after deletion, navigating to previous page"
+          );
+          await fetchPhotos(currentPage - 1);
+        } else {
+          // Re-fetch current page to get updated pagination and fill gaps
+          await fetchPhotos(currentPage);
+        }
+
         removePhoto(photo.id); // Remove from newPhotos as well
+        clearNewPhotos(); // Clear new photos after deletion to avoid stale data
       } else {
         setError(result.error || "Failed to delete photo");
       }
