@@ -262,12 +262,95 @@ export async function bulkUploadAndAnalyzeImages(
       }
     }
 
-    throw new Error("All field patterns failed");
+    // If we get here, all patterns failed - try fallback to single uploads
+    console.warn(
+      "🔄 All bulk patterns failed, trying fallback to multiple single uploads..."
+    );
+    return await bulkUploadFallback(files);
   } catch (error) {
     console.error("Error bulk uploading and analyzing images:", error);
+    // Also try fallback on exception
+    console.warn(
+      "🔄 Exception occurred, trying fallback to multiple single uploads..."
+    );
+    try {
+      return await bulkUploadFallback(files);
+    } catch (fallbackError) {
+      console.error("Fallback also failed:", fallbackError);
+      return {
+        success: false,
+        message: "Both bulk upload and fallback failed",
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
+  }
+}
+
+/**
+ * Fallback: Use multiple single uploads when bulk upload fails
+ */
+async function bulkUploadFallback(files: File[]): Promise<UploadResponse> {
+  try {
+    console.log("📤 Starting fallback: multiple single uploads");
+    const results = [];
+    let successCount = 0;
+
+    for (let i = 0; i < files.length; i++) {
+      console.log(
+        `📤 Uploading file ${i + 1}/${files.length}: ${files[i].name}`
+      );
+
+      const singleResult = await uploadAndAnalyzeImage(files[i]);
+
+      if (singleResult.success && singleResult.data) {
+        successCount++;
+        // Convert single upload response to bulk format
+        results.push({
+          id: Date.now() + i, // Temporary ID since single uploads don't return real IDs
+          filename: singleResult.data.filename || files[i].name,
+          size: files[i].size,
+          type: files[i].type,
+          path: `fallback-${Date.now()}-${i}`,
+          publicUrl: URL.createObjectURL(files[i]), // Temporary preview URL
+          description: singleResult.data.analysis?.caption || "",
+          tags: singleResult.data.analysis?.tags || [],
+          status: "completed",
+          uploadedAt: new Date().toISOString(),
+          analyzedAt: new Date().toISOString(),
+          analysis: {
+            success: true,
+            error: null,
+          },
+        });
+      } else {
+        console.error(
+          `❌ Failed to upload ${files[i].name}:`,
+          singleResult.error
+        );
+      }
+    }
+
+    const message =
+      successCount === files.length
+        ? `✅ All ${successCount} images uploaded successfully via fallback`
+        : `⚠️  Fallback completed: ${successCount}/${files.length} images uploaded successfully`;
+
+    console.log(message);
+
+    return {
+      success: successCount > 0,
+      message: message,
+      data: {
+        successful_uploads: successCount,
+        total_attempts: files.length,
+        results: results,
+      },
+    };
+  } catch (error) {
+    console.error("Fallback upload error:", error);
     return {
       success: false,
-      message: "Failed to bulk upload and analyze images",
+      message: "Fallback upload failed",
       error: error instanceof Error ? error.message : "Unknown error",
     };
   }
@@ -352,16 +435,45 @@ export async function deleteFile(fileId: number): Promise<DeleteResponse> {
 }
 
 /**
+ * Interface for upload data that can be converted to FileItem
+ */
+export interface UploadData {
+  id?: number;
+  filename?: string;
+  path?: string;
+  file_path?: string;
+  size?: number;
+  file_size?: number;
+  type?: string;
+  mime_type?: string;
+  publicUrl?: string;
+  public_url?: string;
+  description?: string;
+  tags?: string[];
+  status?: string;
+  uploadedAt?: string;
+  uploaded_at?: string;
+  analyzedAt?: string;
+  updated_at?: string;
+  file_size_mb?: string;
+  analysis?: {
+    success?: boolean;
+    error?: string | null;
+  };
+}
+
+/**
  * Convert upload response data to FileItem format
  */
-export function convertUploadToFileItem(uploadData: any): FileItem {
+export function convertUploadToFileItem(uploadData: UploadData): FileItem {
   return {
-    id: uploadData.id,
-    filename: uploadData.filename,
-    file_path: uploadData.path || uploadData.file_path,
-    file_size: uploadData.size || uploadData.file_size,
-    mime_type: uploadData.type || uploadData.mime_type,
-    public_url: uploadData.publicUrl || uploadData.public_url,
+    id: uploadData.id || 0,
+    filename: uploadData.filename || "unknown-file",
+    file_path: uploadData.path || uploadData.file_path || "",
+    file_size: uploadData.size || uploadData.file_size || 0,
+    mime_type:
+      uploadData.type || uploadData.mime_type || "application/octet-stream",
+    public_url: uploadData.publicUrl || uploadData.public_url || "",
     description: uploadData.description || "",
     tags: uploadData.tags || [],
     status: uploadData.status || "completed",
@@ -374,8 +486,14 @@ export function convertUploadToFileItem(uploadData: any): FileItem {
       uploadData.updated_at ||
       new Date().toISOString(),
     file_size_mb:
-      uploadData.file_size_mb || (uploadData.size / (1024 * 1024)).toFixed(2),
-    has_ai_analysis: uploadData.analysis?.success || true,
-    is_image: uploadData.type?.startsWith("image/") || true,
+      uploadData.file_size_mb ||
+      ((uploadData.size || uploadData.file_size || 0) / (1024 * 1024)).toFixed(
+        2
+      ),
+    has_ai_analysis: uploadData.analysis?.success ?? true,
+    is_image:
+      uploadData.type?.startsWith("image/") ||
+      uploadData.mime_type?.startsWith("image/") ||
+      true,
   };
 }

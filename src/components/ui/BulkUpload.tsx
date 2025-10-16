@@ -2,7 +2,12 @@
 
 import React, { useState, useCallback } from "react";
 import Image from "next/image";
-import { bulkUploadAndAnalyzeImages, UploadResponse, convertUploadToFileItem } from "@/lib/api";
+import {
+  bulkUploadAndAnalyzeImages,
+  UploadResponse,
+  convertUploadToFileItem,
+  UploadData,
+} from "@/lib/api";
 import { useGallery } from "@/lib/contexts";
 import { Button } from "./Button";
 
@@ -150,8 +155,14 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({ className = "" }) => {
           results: result.data?.results,
         });
 
+        // Check if this was a fallback (indicated by message content)
+        const isFallback = successMessage.includes("fallback");
+        const displayMessage = isFallback
+          ? `${successMessage} (Backend bulk upload unavailable - used individual uploads)`
+          : successMessage;
+
         setResults({
-          message: successMessage,
+          message: displayMessage,
           uploadCount,
           results: result.data?.results || [],
         });
