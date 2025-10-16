@@ -1,5 +1,14 @@
+"use client";
+
 import Image from "next/image";
-import { Button, Card, CardHeader, CardTitle, CardContent } from "@/components";
+import {
+  Button,
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  ImageUpload,
+} from "@/components";
 
 export default function Home() {
   return (
@@ -53,6 +62,23 @@ export default function Home() {
               <p className="text-gray-600 dark:text-gray-400">
                 Utility-first CSS framework for rapid UI development.
               </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="mb-12">
+          <Card className="max-w-2xl mx-auto">
+            <CardHeader>
+              <CardTitle className="text-center">
+                📸 Upload Your Image
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ImageUpload
+                onImageSelect={(file) => {
+                  console.log("Selected file:", file.name);
+                }}
+              />
             </CardContent>
           </Card>
         </div>
