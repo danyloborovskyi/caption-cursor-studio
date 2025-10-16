@@ -19,13 +19,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [deletingPhotoId, setDeletingPhotoId] = useState<number | null>(null);
-  const {
-    refreshTrigger,
-    refreshGallery,
-    newPhotos,
-    clearNewPhotos,
-    removePhoto,
-  } = useGallery();
+  const { refreshTrigger, newPhotos, removePhoto } = useGallery();
 
   const fetchPhotos = async (page = 1, showLoading = true) => {
     try {
@@ -89,6 +83,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
 
     // Optimistically remove photo immediately for smooth UX
     const isFromNewPhotos = newPhotos.some((p) => p.id === photo.id);
+    const originalPhotos = photos; // Store original photos for potential revert
 
     if (isFromNewPhotos) {
       // If it's from newPhotos, just remove it from there
@@ -103,13 +98,21 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
 
       if (result.success) {
         console.log("File deleted successfully:", result.message);
-        // Photo already removed optimistically, no need to re-fetch
 
-        // Handle pagination if needed - only if we removed the last photo and we're not on page 1
-        const remainingPhotos = photos.filter((p) => p.id !== photo.id);
+        // Always refetch the current page to fill any gaps with new photos
+        // This ensures that if there are more photos on subsequent pages,
+        // they will be loaded to fill the gap left by the deleted photo
+        const remainingPhotos = originalPhotos.filter((p) => p.id !== photo.id);
+
         if (remainingPhotos.length === 0 && currentPage > 1) {
+          // Page became completely empty, navigate to previous page
           console.log("Page became empty, navigating to previous page");
-          await fetchPhotos(currentPage - 1, true); // Show loading for page navigation
+          setCurrentPage(currentPage - 1);
+          await fetchPhotos(currentPage - 1, true);
+        } else {
+          // Refetch current page to fill the gap with next available photo
+          console.log("Refetching current page to fill gap after deletion");
+          await fetchPhotos(currentPage, false);
         }
       } else {
         // Deletion failed, revert the optimistic update

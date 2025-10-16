@@ -190,24 +190,15 @@ export async function bulkUploadAndAnalyzeImages(
       const formData = new FormData();
       const patternName = fieldPatterns[i](formData, files);
 
-      console.log(`Attempt ${i + 1}: Using field pattern: ${patternName}`);
-      console.log(
-        "Files to upload:",
-        files.map((f) => `${f.name} (${f.size} bytes, ${f.type})`)
-      );
-
-      // Debug: Log all FormData entries
-      console.log("FormData entries:");
-      for (const [key, value] of formData.entries()) {
+      if (i === 0) {
+        console.log("🚀 Starting bulk upload with", files.length, "files");
         console.log(
-          `  ${key}:`,
-          value instanceof File ? `${value.name} (${value.size} bytes)` : value
+          "Files to upload:",
+          files.map((f) => `${f.name} (${f.size} bytes, ${f.type})`)
         );
       }
-
       console.log(
-        "Sending bulk upload request to:",
-        `${API_BASE_URL}/api/upload/bulk-upload-and-analyze`
+        `📤 Attempt ${i + 1}/${fieldPatterns.length}: ${patternName}`
       );
 
       try {
@@ -219,77 +210,57 @@ export async function bulkUploadAndAnalyzeImages(
           }
         );
 
-        console.log("Response status:", response.status);
-        console.log(
-          "Response headers:",
-          Object.fromEntries(response.headers.entries())
-        );
-
         if (response.ok) {
           const data = await response.json();
-          console.log("Bulk upload successful with pattern:", patternName);
-          console.log("Response data:", data);
+          console.log("✅ Bulk upload successful with pattern:", patternName);
           return data;
         } else {
-          // Get error details
-          let errorText = "";
-          try {
-            errorText = await response.text();
-            console.error(
-              `Pattern ${patternName} failed (${response.status}):`,
-              errorText
-            );
-          } catch {
-            console.error(
-              `Pattern ${patternName} failed (${response.status}): Could not read error response`
-            );
-          }
+          // Just log that this pattern didn't work (not as an error)
+          console.log(
+            `❌ Pattern ${patternName} not supported (${response.status})`
+          );
 
-          // If this is the last pattern, throw the error
+          // If this is the last pattern, we'll fall back to single uploads
           if (i === fieldPatterns.length - 1) {
-            throw new Error(
-              `HTTP error! status: ${response.status} - ${errorText}`
+            console.log(
+              "📝 All bulk patterns attempted, will try fallback method"
             );
           }
 
-          // Continue to next pattern
-          console.log(`Trying next pattern...`);
           continue;
         }
-      } catch (networkError) {
-        console.error(
-          `Network error with pattern ${patternName}:`,
-          networkError
+      } catch {
+        console.log(
+          `🌐 Network issue with pattern ${patternName}, trying next...`
         );
 
-        // If this is the last pattern, throw the error
+        // If this is the last pattern, we'll fall back to single uploads
         if (i === fieldPatterns.length - 1) {
-          throw networkError;
+          console.log(
+            "📝 All patterns had network issues, will try fallback method"
+          );
         }
 
-        // Continue to next pattern
         continue;
       }
     }
 
     // If we get here, all patterns failed - try fallback to single uploads
-    console.warn(
-      "🔄 All bulk patterns failed, trying fallback to multiple single uploads..."
+    console.log(
+      "🔄 Backend doesn't support bulk upload, using individual uploads..."
     );
     return await bulkUploadFallback(files);
   } catch (error) {
-    console.error("Error bulk uploading and analyzing images:", error);
-    // Also try fallback on exception
-    console.warn(
-      "🔄 Exception occurred, trying fallback to multiple single uploads..."
+    console.log(
+      "🔄 Network issues with bulk upload, trying individual uploads..."
     );
     try {
       return await bulkUploadFallback(files);
     } catch (fallbackError) {
-      console.error("Fallback also failed:", fallbackError);
+      console.error("❌ Both bulk upload and fallback failed:", fallbackError);
       return {
         success: false,
-        message: "Both bulk upload and fallback failed",
+        message: "Both bulk upload and individual upload methods failed",
         error: error instanceof Error ? error.message : "Unknown error",
       };
     }
@@ -342,8 +313,8 @@ async function bulkUploadFallback(files: File[]): Promise<UploadResponse> {
 
     const message =
       successCount === files.length
-        ? `✅ All ${successCount} images uploaded successfully via fallback`
-        : `⚠️  Fallback completed: ${successCount}/${files.length} images uploaded successfully`;
+        ? `✅ All ${successCount} images uploaded successfully (individual uploads)`
+        : `⚠️  Individual uploads completed: ${successCount}/${files.length} images uploaded successfully`;
 
     console.log(message);
 

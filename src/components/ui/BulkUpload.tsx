@@ -155,10 +155,14 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({ className = "" }) => {
           results: result.data?.results,
         });
 
-        // Check if this was a fallback (indicated by message content)
-        const isFallback = successMessage.includes("fallback");
-        const displayMessage = isFallback
-          ? `${successMessage} (Backend bulk upload unavailable - used individual uploads)`
+        // Check if this was individual uploads (indicated by message content)
+        const isIndividualUploads =
+          successMessage.includes("individual uploads");
+        const displayMessage = isIndividualUploads
+          ? successMessage.replace(
+              "(individual uploads)",
+              "- processed individually"
+            )
           : successMessage;
 
         setResults({
