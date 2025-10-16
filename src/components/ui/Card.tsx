@@ -7,9 +7,7 @@ interface CardProps {
 
 export const Card: React.FC<CardProps> = ({ children, className = "" }) => {
   return (
-    <div
-      className={`rounded-lg border bg-card text-card-foreground shadow-sm ${className}`}
-    >
+    <div className={`glass glass-hover rounded-2xl ${className}`}>
       {children}
     </div>
   );
@@ -25,9 +23,7 @@ export const CardHeader: React.FC<CardHeaderProps> = ({
   className = "",
 }) => {
   return (
-    <div className={`flex flex-col space-y-1.5 p-6 ${className}`}>
-      {children}
-    </div>
+    <div className={`flex flex-col space-y-3 p-8 ${className}`}>{children}</div>
   );
 };
 
@@ -42,7 +38,7 @@ export const CardTitle: React.FC<CardTitleProps> = ({
 }) => {
   return (
     <h3
-      className={`text-2xl font-semibold leading-none tracking-tight ${className}`}
+      className={`text-2xl font-light leading-tight tracking-wide text-white ${className}`}
     >
       {children}
     </h3>
@@ -58,5 +54,5 @@ export const CardContent: React.FC<CardContentProps> = ({
   children,
   className = "",
 }) => {
-  return <div className={`p-6 pt-0 ${className}`}>{children}</div>;
+  return <div className={`p-8 pt-0 ${className}`}>{children}</div>;
 };

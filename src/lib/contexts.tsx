@@ -25,7 +25,24 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const addNewPhotos = (photos: FileItem[]) => {
-    setNewPhotos((prev) => [...photos, ...prev]);
+    setNewPhotos((prev) => {
+      // Filter out duplicates based on filename and size to prevent duplicates
+      const existingIds = new Set(
+        prev.map((p) => `${p.filename}-${p.file_size}`)
+      );
+      const uniqueNewPhotos = photos.filter(
+        (p) => !existingIds.has(`${p.filename}-${p.file_size}`)
+      );
+      return [...uniqueNewPhotos, ...prev];
+    });
+
+    // Auto-clear new photos after 30 seconds to prevent stale data
+    setTimeout(() => {
+      setNewPhotos((prev) => {
+        const photosToRemove = new Set(photos.map((p) => p.id));
+        return prev.filter((p) => !photosToRemove.has(p.id));
+      });
+    }, 30000);
   };
 
   const clearNewPhotos = () => {
@@ -37,14 +54,14 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   return (
-    <GalleryContext.Provider 
-      value={{ 
-        refreshTrigger, 
-        refreshGallery, 
-        addNewPhotos, 
-        newPhotos, 
+    <GalleryContext.Provider
+      value={{
+        refreshTrigger,
+        refreshGallery,
+        addNewPhotos,
+        newPhotos,
         clearNewPhotos,
-        removePhoto
+        removePhoto,
       }}
     >
       {children}

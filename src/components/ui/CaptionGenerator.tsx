@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { uploadAndAnalyzeImage, UploadResponse } from "@/lib/api";
 import { useGallery } from "@/lib/contexts";
@@ -21,6 +21,16 @@ export const CaptionGenerator: React.FC<CaptionGeneratorProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [confidence, setConfidence] = useState<number | null>(null);
   const { refreshGallery } = useGallery();
+  const refreshTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (refreshTimeoutRef.current) {
+        clearTimeout(refreshTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleImageSelect = (file: File) => {
     // Validate file type
@@ -76,6 +86,12 @@ export const CaptionGenerator: React.FC<CaptionGeneratorProps> = ({
   const generateCaption = async () => {
     if (!selectedImage) return;
 
+    // Clear any existing refresh timeout
+    if (refreshTimeoutRef.current) {
+      clearTimeout(refreshTimeoutRef.current);
+      refreshTimeoutRef.current = null;
+    }
+
     setIsLoading(true);
     setError(null);
 
@@ -87,9 +103,10 @@ export const CaptionGenerator: React.FC<CaptionGeneratorProps> = ({
         setConfidence(result.data.analysis.confidence);
 
         // For single uploads, we don't get the real ID back from the API
-        // So we need to refresh the gallery to get the actual data
-        // This is different from bulk uploads which return proper IDs
-        refreshGallery();
+        // Use a delayed refresh to reduce flickering and allow backend processing
+        refreshTimeoutRef.current = setTimeout(() => {
+          refreshGallery();
+        }, 1000); // 1 second delay to reduce flickering
       } else {
         setError(
           result.error || result.message || "Failed to generate caption"

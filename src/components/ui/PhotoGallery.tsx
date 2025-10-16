@@ -27,9 +27,11 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
     removePhoto,
   } = useGallery();
 
-  const fetchPhotos = async (page = 1) => {
+  const fetchPhotos = async (page = 1, showLoading = true) => {
     try {
-      setIsLoading(true);
+      if (showLoading) {
+        setIsLoading(true);
+      }
       setError(null);
 
       const result = await getFiles(page, 12); // 12 photos per page
@@ -55,7 +57,9 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
       setError("An unexpected error occurred while loading photos");
       console.error("Photo gallery error:", err);
     } finally {
-      setIsLoading(false);
+      if (showLoading) {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -64,12 +68,12 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   }, []);
 
   // Refresh gallery when refreshTrigger changes (for deletion or errors)
+  // Only refresh if we don't have new photos (to avoid disrupting smooth additions)
   useEffect(() => {
-    if (refreshTrigger > 0) {
-      fetchPhotos(currentPage);
-      clearNewPhotos(); // Clear new photos when doing full refresh
+    if (refreshTrigger > 0 && newPhotos.length === 0) {
+      fetchPhotos(currentPage, false); // Background refresh without loading state
     }
-  }, [refreshTrigger, currentPage]);
+  }, [refreshTrigger, currentPage, newPhotos.length]);
 
   // Merge new photos with existing ones
   const allPhotos = [...newPhotos, ...photos];
@@ -82,34 +86,46 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
 
   const handleDeleteClick = async (photo: FileItem) => {
     setDeletingPhotoId(photo.id);
+
+    // Optimistically remove photo immediately for smooth UX
+    const isFromNewPhotos = newPhotos.some((p) => p.id === photo.id);
+
+    if (isFromNewPhotos) {
+      // If it's from newPhotos, just remove it from there
+      removePhoto(photo.id);
+    } else {
+      // If it's from regular photos, remove it optimistically
+      setPhotos((prev) => prev.filter((p) => p.id !== photo.id));
+    }
+
     try {
       const result: DeleteResponse = await deleteFile(photo.id);
 
       if (result.success) {
         console.log("File deleted successfully:", result.message);
+        // Photo already removed optimistically, no need to re-fetch
 
-        // Check if this is the last photo on current page (excluding newPhotos)
-        const currentPagePhotoCount = photos.length;
-        const willPageBeEmpty = currentPagePhotoCount === 1 && currentPage > 1;
-
-        if (willPageBeEmpty) {
-          console.log(
-            "Current page will be empty after deletion, navigating to previous page"
-          );
-          await fetchPhotos(currentPage - 1);
-        } else {
-          // Re-fetch current page to get updated pagination and fill gaps
-          await fetchPhotos(currentPage);
+        // Handle pagination if needed - only if we removed the last photo and we're not on page 1
+        const remainingPhotos = photos.filter((p) => p.id !== photo.id);
+        if (remainingPhotos.length === 0 && currentPage > 1) {
+          console.log("Page became empty, navigating to previous page");
+          await fetchPhotos(currentPage - 1, true); // Show loading for page navigation
         }
-
-        removePhoto(photo.id); // Remove from newPhotos as well
-        clearNewPhotos(); // Clear new photos after deletion to avoid stale data
       } else {
+        // Deletion failed, revert the optimistic update
+        console.error("Delete failed, reverting optimistic update");
         setError(result.error || "Failed to delete photo");
+
+        // Re-fetch to restore the photo that failed to delete
+        await fetchPhotos(currentPage, false);
       }
     } catch (err) {
+      // Network error, revert the optimistic update
+      console.error("Delete error, reverting optimistic update:", err);
       setError("An unexpected error occurred while deleting photo");
-      console.error("Delete error:", err);
+
+      // Re-fetch to restore the photo that failed to delete
+      await fetchPhotos(currentPage, false);
     } finally {
       setDeletingPhotoId(null);
     }
@@ -204,10 +220,8 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
               />
             </svg>
           </div>
-          <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
-            No photos yet
-          </h3>
-          <p className="text-gray-600 dark:text-gray-400">
+          <h3 className="text-2xl font-light text-white mb-4">No photos yet</h3>
+          <p className="text-white/70 font-light text-lg">
             Upload your first image to get started with AI caption generation!
           </p>
         </div>
@@ -217,11 +231,11 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
 
   return (
     <div className={`w-full ${className}`}>
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+      <div className="mb-12 text-center">
+        <h2 className="text-4xl font-light text-white mb-4 tracking-wide">
           Photo Gallery
         </h2>
-        <p className="text-gray-600 dark:text-gray-400">
+        <p className="text-white/70 font-light text-lg">
           {allPhotos.length} photo{allPhotos.length !== 1 ? "s" : ""} with
           AI-generated captions
         </p>
@@ -231,10 +245,10 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
         {allPhotos.map((photo) => (
           <div
             key={photo.id}
-            className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md transition-shadow"
+            className="glass glass-hover rounded-2xl overflow-hidden"
           >
             {/* Image Display */}
-            <div className="aspect-square relative bg-gray-100 dark:bg-gray-700">
+            <div className="aspect-square relative bg-white/10">
               <Image
                 src={photo.public_url}
                 alt={photo.description || photo.filename}
@@ -245,18 +259,18 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
             </div>
 
             {/* Photo Info */}
-            <div className="p-4">
-              <h3 className="font-medium text-gray-900 dark:text-gray-100 truncate mb-2">
+            <div className="p-6">
+              <h3 className="font-light text-white truncate mb-3 text-lg">
                 {photo.filename}
               </h3>
 
               {/* AI Caption */}
               {photo.description && (
-                <div className="mb-3">
-                  <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-3">
+                <div className="mb-4">
+                  <p className="text-sm text-white/80 line-clamp-3 font-light leading-relaxed">
                     {photo.description}
                   </p>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-white/50 mt-2 font-light">
                     AI Generated • {photo.status}
                   </p>
                 </div>
@@ -265,17 +279,17 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
               {/* Tags */}
               {photo.tags && photo.tags.length > 0 && (
                 <div className="mb-3">
-                  <div className="flex flex-wrap gap-1">
+                  <div className="flex flex-wrap gap-2">
                     {photo.tags.slice(0, 5).map((tag, index) => (
                       <span
                         key={index}
-                        className="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full"
+                        className="px-3 py-1 text-xs bg-white/20 text-white rounded-full font-light border border-white/30"
                       >
                         {tag}
                       </span>
                     ))}
                     {photo.tags.length > 5 && (
-                      <span className="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-full">
+                      <span className="px-3 py-1 text-xs bg-white/10 text-white/70 rounded-full font-light border border-white/20">
                         +{photo.tags.length - 5} more
                       </span>
                     )}
@@ -284,7 +298,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
               )}
 
               {/* Metadata */}
-              <div className="text-xs text-gray-500 space-y-1 border-t border-gray-200 dark:border-gray-700 pt-2 mb-3">
+              <div className="text-xs text-white/50 space-y-2 border-t border-white/20 pt-4 mb-4 font-light">
                 <div className="flex justify-between">
                   <span>Size:</span>
                   <span>{formatFileSize(photo.file_size)}</span>
@@ -301,7 +315,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                 size="sm"
                 onClick={() => handleDeleteClick(photo)}
                 disabled={deletingPhotoId === photo.id}
-                className="w-full text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 hover:border-red-300 disabled:opacity-50"
+                className="w-full text-red-300 hover:text-red-200 hover:bg-red-500/20 border-red-300/50 hover:border-red-300/70 disabled:opacity-50"
               >
                 <svg
                   className="w-4 h-4 mr-2"
@@ -325,7 +339,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-center space-x-2">
+        <div className="flex items-center justify-center space-x-3">
           <Button
             onClick={() => handlePageChange(currentPage - 1)}
             disabled={currentPage === 1}
