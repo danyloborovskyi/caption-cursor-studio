@@ -27,26 +27,38 @@ export default function Home() {
           </div>
 
           {/* Upload Section */}
-          <div className="mb-24">
-            <Card className="max-w-4xl mx-auto">
+          <section className="mb-24">
+            <Card
+              as="article"
+              className="max-w-4xl mx-auto"
+              aria-labelledby="upload-section-title"
+              aria-describedby="upload-section-description"
+            >
               <CardHeader>
-                <CardTitle className="text-center text-3xl">
+                <CardTitle
+                  as="h2"
+                  id="upload-section-title"
+                  className="text-center text-3xl"
+                >
                   🤖 AI Caption Generator
                 </CardTitle>
-                <p className="text-center text-white/70 font-light mt-4 text-lg">
+                <p
+                  id="upload-section-description"
+                  className="text-center text-white/70 font-light mt-4 text-lg"
+                >
                   Upload single images or batch process up to 3 images at once
                 </p>
               </CardHeader>
-              <CardContent>
+              <CardContent as="main" role="application">
                 <UploadTabs />
               </CardContent>
             </Card>
-          </div>
+          </section>
 
           {/* Photo Gallery Section */}
-          <div className="mb-16">
+          <section className="mb-16" aria-label="Photo Gallery">
             <PhotoGallery />
-          </div>
+          </section>
         </main>
       </div>
     </GalleryProvider>
