@@ -260,22 +260,6 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
 
             {/* Photo Info */}
             <div className="p-6">
-              <h3 className="font-light text-white truncate mb-3 text-lg">
-                {photo.filename}
-              </h3>
-
-              {/* AI Caption */}
-              {photo.description && (
-                <div className="mb-4">
-                  <p className="text-sm text-white/80 line-clamp-3 font-light leading-relaxed">
-                    {photo.description}
-                  </p>
-                  <p className="text-xs text-white/50 mt-2 font-light">
-                    AI Generated • {photo.status}
-                  </p>
-                </div>
-              )}
-
               {/* Tags */}
               {photo.tags && photo.tags.length > 0 && (
                 <div className="mb-3">
@@ -296,18 +280,6 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                   </div>
                 </div>
               )}
-
-              {/* Metadata */}
-              <div className="text-xs text-white/50 space-y-2 border-t border-white/20 pt-4 mb-4 font-light">
-                <div className="flex justify-between">
-                  <span>Size:</span>
-                  <span>{formatFileSize(photo.file_size)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Uploaded:</span>
-                  <span>{formatDate(photo.uploaded_at)}</span>
-                </div>
-              </div>
 
               {/* Delete Button */}
               <Button
