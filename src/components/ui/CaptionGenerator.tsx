@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import { uploadAndAnalyzeImage, UploadResponse } from "@/lib/api";
+import { useGallery } from "@/lib/contexts";
 import { Button } from "./Button";
 
 interface CaptionGeneratorProps {
@@ -19,6 +20,7 @@ export const CaptionGenerator: React.FC<CaptionGeneratorProps> = ({
   const [caption, setCaption] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [confidence, setConfidence] = useState<number | null>(null);
+  const { refreshGallery } = useGallery();
 
   const handleImageSelect = (file: File) => {
     // Validate file type
@@ -83,6 +85,8 @@ export const CaptionGenerator: React.FC<CaptionGeneratorProps> = ({
       if (result.success && result.data) {
         setCaption(result.data.analysis.caption);
         setConfidence(result.data.analysis.confidence);
+        // Refresh the gallery to show the newly uploaded image
+        refreshGallery();
       } else {
         setError(
           result.error || result.message || "Failed to generate caption"

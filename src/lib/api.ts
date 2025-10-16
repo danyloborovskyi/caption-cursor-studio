@@ -15,30 +15,25 @@ export interface UploadResponse {
 }
 
 export interface FileItem {
-  id: string;
+  id: number;
   filename: string;
-  originalName: string;
-  mimeType: string;
-  size: number;
-  uploadedAt: string;
-  analysis?: {
-    caption: string;
-    confidence: number;
-    tags?: string[];
-  };
+  file_path: string;
+  file_size: number;
+  mime_type: string;
+  public_url: string;
+  description: string;
+  tags: string[];
+  status: string;
+  uploaded_at: string;
+  updated_at: string;
+  file_size_mb: string;
+  has_ai_analysis: boolean;
+  is_image: boolean;
 }
 
 export interface FilesResponse {
   success: boolean;
-  data: {
-    files: FileItem[];
-    pagination: {
-      page: number;
-      limit: number;
-      total: number;
-      totalPages: number;
-    };
-  };
+  data: FileItem[];
   error?: string;
 }
 
@@ -122,10 +117,18 @@ export async function bulkUploadAndAnalyzeImages(
 export async function getFiles(page = 1, limit = 10): Promise<FilesResponse> {
   try {
     const response = await fetch(
-      `${API_BASE_URL}/api/files/?page=${page}&limit=${limit}`
+      `${API_BASE_URL}/api/files/?page=${page}&limit=${limit}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
     );
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`API Error: ${response.status} - ${errorText}`);
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
@@ -135,15 +138,7 @@ export async function getFiles(page = 1, limit = 10): Promise<FilesResponse> {
     console.error("Error fetching files:", error);
     return {
       success: false,
-      data: {
-        files: [],
-        pagination: {
-          page: 1,
-          limit: 10,
-          total: 0,
-          totalPages: 0,
-        },
-      },
+      data: [],
       error: error instanceof Error ? error.message : "Unknown error",
     };
   }
