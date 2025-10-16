@@ -7,7 +7,7 @@ import {
   CardHeader,
   CardTitle,
   CardContent,
-  ImageUpload,
+  CaptionGenerator,
 } from "@/components";
 
 export default function Home() {
@@ -25,7 +25,7 @@ export default function Home() {
           />
           <h1 className="text-4xl font-bold mb-4">Caption Cursor Studio</h1>
           <p className="text-xl text-gray-600 dark:text-gray-400">
-            A Next.js TypeScript project built with modern tools
+            Generate AI-powered captions for your images instantly
           </p>
         </div>
 
@@ -70,15 +70,11 @@ export default function Home() {
           <Card className="max-w-2xl mx-auto">
             <CardHeader>
               <CardTitle className="text-center">
-                📸 Upload Your Image
+                🤖 AI Caption Generator
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <ImageUpload
-                onImageSelect={(file) => {
-                  console.log("Selected file:", file.name);
-                }}
-              />
+              <CaptionGenerator />
             </CardContent>
           </Card>
         </div>
