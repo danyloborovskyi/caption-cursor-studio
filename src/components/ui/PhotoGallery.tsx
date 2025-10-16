@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
-import { getFiles, FileItem } from "@/lib/api";
+import { getFiles, deleteFile, FileItem, DeleteResponse } from "@/lib/api";
 import { useGallery } from "@/lib/contexts";
 import { Button } from "./Button";
 
@@ -18,7 +18,15 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const { refreshTrigger } = useGallery();
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    show: boolean;
+    photo: FileItem | null;
+  }>({
+    show: false,
+    photo: null,
+  });
+  const [isDeleting, setIsDeleting] = useState(false);
+  const { refreshTrigger, refreshGallery } = useGallery();
 
   const fetchPhotos = async (page = 1) => {
     try {
@@ -58,6 +66,38 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {
       fetchPhotos(newPage);
+    }
+  };
+
+  const handleDeleteClick = (photo: FileItem) => {
+    setDeleteConfirm({ show: true, photo });
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteConfirm({ show: false, photo: null });
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteConfirm.photo) return;
+
+    setIsDeleting(true);
+    try {
+      const result: DeleteResponse = await deleteFile(deleteConfirm.photo.id);
+
+      if (result.success) {
+        console.log("File deleted successfully:", result.message);
+        // Refresh gallery to show updated list
+        refreshGallery();
+        fetchPhotos(currentPage);
+      } else {
+        setError(result.error || "Failed to delete photo");
+      }
+    } catch (err) {
+      setError("An unexpected error occurred while deleting photo");
+      console.error("Delete error:", err);
+    } finally {
+      setIsDeleting(false);
+      setDeleteConfirm({ show: false, photo: null });
     }
   };
 
@@ -230,7 +270,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
               )}
 
               {/* Metadata */}
-              <div className="text-xs text-gray-500 space-y-1 border-t border-gray-200 dark:border-gray-700 pt-2">
+              <div className="text-xs text-gray-500 space-y-1 border-t border-gray-200 dark:border-gray-700 pt-2 mb-3">
                 <div className="flex justify-between">
                   <span>Size:</span>
                   <span>{formatFileSize(photo.file_size)}</span>
@@ -240,6 +280,29 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                   <span>{formatDate(photo.uploaded_at)}</span>
                 </div>
               </div>
+
+              {/* Delete Button */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleDeleteClick(photo)}
+                className="w-full text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 hover:border-red-300"
+              >
+                <svg
+                  className="w-4 h-4 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                  />
+                </svg>
+                Delete
+              </Button>
             </div>
           </div>
         ))}
@@ -284,6 +347,66 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
           >
             Next
           </Button>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm.show && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6 shadow-xl">
+            <div className="flex items-start space-x-3 mb-4">
+              <div className="flex-shrink-0">
+                <svg
+                  className="w-6 h-6 text-red-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.268 16.5c-.77.833.192 2.5 1.732 2.5z"
+                  />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+                  Delete Photo
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                  Are you sure you want to delete "
+                  {deleteConfirm.photo?.filename}"? This action cannot be
+                  undone.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-3">
+              <Button
+                variant="outline"
+                onClick={handleDeleteCancel}
+                disabled={isDeleting}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                onClick={handleDeleteConfirm}
+                disabled={isDeleting}
+                className="bg-red-600 hover:bg-red-700 text-white"
+              >
+                {isDeleting ? (
+                  <div className="flex items-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Deleting...
+                  </div>
+                ) : (
+                  "Delete"
+                )}
+              </Button>
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -57,6 +57,12 @@ export interface FilesResponse {
   error?: string;
 }
 
+export interface DeleteResponse {
+  success: boolean;
+  message: string;
+  error?: string;
+}
+
 /**
  * Upload a single image and get AI-generated caption
  */
@@ -223,7 +229,7 @@ export async function bulkUploadAndAnalyzeImages(
               `Pattern ${patternName} failed (${response.status}):`,
               errorText
             );
-          } catch (_e) {
+          } catch {
             console.error(
               `Pattern ${patternName} failed (${response.status}): Could not read error response`
             );
@@ -310,6 +316,36 @@ export async function getFiles(page = 1, limit = 10): Promise<FilesResponse> {
     return {
       success: false,
       data: [],
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
+/**
+ * Delete a file by ID
+ */
+export async function deleteFile(fileId: number): Promise<DeleteResponse> {
+  try {
+    console.log(`Deleting file with ID: ${fileId}`);
+
+    const response = await fetch(`${API_BASE_URL}/api/files/${fileId}`, {
+      method: "DELETE",
+      mode: "cors",
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Delete API Error: ${response.status} - ${errorText}`);
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error deleting file:", error);
+    return {
+      success: false,
+      message: "Failed to delete file",
       error: error instanceof Error ? error.message : "Unknown error",
     };
   }
