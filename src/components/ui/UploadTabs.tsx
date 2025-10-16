@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import { CaptionGenerator } from "./CaptionGenerator";
 import { BulkUpload } from "./BulkUpload";
-import { Button } from "./Button";
 
 interface UploadTabsProps {
   className?: string;

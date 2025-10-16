@@ -223,7 +223,7 @@ export async function bulkUploadAndAnalyzeImages(
               `Pattern ${patternName} failed (${response.status}):`,
               errorText
             );
-          } catch (e) {
+          } catch (_e) {
             console.error(
               `Pattern ${patternName} failed (${response.status}): Could not read error response`
             );
@@ -272,13 +272,16 @@ export async function bulkUploadAndAnalyzeImages(
  */
 export async function getFiles(page = 1, limit = 10): Promise<FilesResponse> {
   try {
+    console.log(
+      `Fetching files from: ${API_BASE_URL}/api/files/?page=${page}&limit=${limit}`
+    );
+
+    // Don't send Content-Type header for GET requests to avoid CORS preflight
     const response = await fetch(
       `${API_BASE_URL}/api/files/?page=${page}&limit=${limit}`,
       {
         method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        mode: "cors",
       }
     );
 
@@ -292,6 +295,18 @@ export async function getFiles(page = 1, limit = 10): Promise<FilesResponse> {
     return data;
   } catch (error) {
     console.error("Error fetching files:", error);
+
+    // Enhanced error logging for CORS debugging
+    if (
+      error instanceof TypeError &&
+      error.message.includes("Failed to fetch")
+    ) {
+      console.error(
+        "CORS or Network Error: Check if backend allows your domain"
+      );
+      console.error("Backend URL:", `${API_BASE_URL}/api/files/`);
+    }
+
     return {
       success: false,
       data: [],

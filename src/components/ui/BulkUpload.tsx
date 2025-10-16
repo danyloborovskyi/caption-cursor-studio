@@ -10,6 +10,17 @@ interface BulkUploadProps {
   className?: string;
 }
 
+interface BulkUploadResult {
+  message?: string;
+  uploadCount?: number;
+  results?: Array<{
+    id: number;
+    filename: string;
+    description: string;
+    tags: string[];
+  }>;
+}
+
 interface SelectedFile {
   file: File;
   previewUrl: string;
@@ -20,7 +31,7 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({ className = "" }) => {
   const [selectedFiles, setSelectedFiles] = useState<SelectedFile[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [results, setResults] = useState<any>(null);
+  const [results, setResults] = useState<BulkUploadResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const { refreshGallery } = useGallery();
 

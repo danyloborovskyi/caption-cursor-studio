@@ -82,7 +82,7 @@ export const CaptionGenerator: React.FC<CaptionGeneratorProps> = ({
     try {
       const result: UploadResponse = await uploadAndAnalyzeImage(selectedImage);
 
-      if (result.success && result.data) {
+      if (result.success && result.data && result.data.analysis) {
         setCaption(result.data.analysis.caption);
         setConfidence(result.data.analysis.confidence);
         // Refresh the gallery to show the newly uploaded image
