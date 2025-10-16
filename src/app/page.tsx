@@ -6,7 +6,7 @@ import {
   CardHeader,
   CardTitle,
   CardContent,
-  CaptionGenerator,
+  UploadTabs,
   PhotoGallery,
 } from "@/components";
 import { GalleryProvider } from "@/lib/contexts";
@@ -66,9 +66,12 @@ export default function Home() {
                 <CardTitle className="text-center">
                   🤖 AI Caption Generator
                 </CardTitle>
+                <p className="text-center text-sm text-gray-600 dark:text-gray-400 mt-2">
+                  Upload single images or batch process up to 3 images at once
+                </p>
               </CardHeader>
               <CardContent>
-                <CaptionGenerator />
+                <UploadTabs />
               </CardContent>
             </Card>
           </div>
