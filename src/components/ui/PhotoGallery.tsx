@@ -19,7 +19,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [deletingPhotoId, setDeletingPhotoId] = useState<number | null>(null);
-  const { refreshTrigger, refreshGallery } = useGallery();
+  const { refreshTrigger, refreshGallery, newPhotos, clearNewPhotos, removePhoto } = useGallery();
 
   const fetchPhotos = async (page = 1) => {
     try {
@@ -30,10 +30,11 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
 
       if (result.success && result.data) {
         // Backend returns data as array directly
-        setPhotos(Array.isArray(result.data) ? result.data : []);
+        const fetchedPhotos = Array.isArray(result.data) ? result.data : [];
+        setPhotos(fetchedPhotos);
         setCurrentPage(page);
         // Since backend doesn't provide pagination info, calculate based on data
-        setTotalPages(Math.ceil(result.data.length / 12) || 1);
+        setTotalPages(Math.ceil(fetchedPhotos.length / 12) || 1);
       } else {
         setError(result.error || "Failed to load photos");
       }
@@ -49,12 +50,16 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
     fetchPhotos(1);
   }, []);
 
-  // Refresh gallery when refreshTrigger changes (new image uploaded)
+  // Refresh gallery when refreshTrigger changes (for deletion or errors)
   useEffect(() => {
     if (refreshTrigger > 0) {
       fetchPhotos(currentPage);
+      clearNewPhotos(); // Clear new photos when doing full refresh
     }
   }, [refreshTrigger, currentPage]);
+
+  // Merge new photos with existing ones
+  const allPhotos = [...newPhotos, ...photos];
 
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {
@@ -69,9 +74,9 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
 
       if (result.success) {
         console.log("File deleted successfully:", result.message);
-        // Refresh gallery to show updated list
-        refreshGallery();
-        fetchPhotos(currentPage);
+        // Remove photo from both arrays without full refresh
+        setPhotos((prev) => prev.filter((p) => p.id !== photo.id));
+        removePhoto(photo.id); // Remove from newPhotos as well
       } else {
         setError(result.error || "Failed to delete photo");
       }
@@ -153,7 +158,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
     );
   }
 
-  if (photos.length === 0) {
+  if (allPhotos.length === 0) {
     return (
       <div className={`w-full ${className}`}>
         <div className="text-center p-12 bg-gray-50 dark:bg-gray-800 rounded-lg">
@@ -190,13 +195,13 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
           Photo Gallery
         </h2>
         <p className="text-gray-600 dark:text-gray-400">
-          {photos.length} photo{photos.length !== 1 ? "s" : ""} with
+          {allPhotos.length} photo{allPhotos.length !== 1 ? "s" : ""} with
           AI-generated captions
         </p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        {photos.map((photo) => (
+        {allPhotos.map((photo) => (
           <div
             key={photo.id}
             className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md transition-shadow"

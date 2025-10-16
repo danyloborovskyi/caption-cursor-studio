@@ -350,3 +350,32 @@ export async function deleteFile(fileId: number): Promise<DeleteResponse> {
     };
   }
 }
+
+/**
+ * Convert upload response data to FileItem format
+ */
+export function convertUploadToFileItem(uploadData: any): FileItem {
+  return {
+    id: uploadData.id,
+    filename: uploadData.filename,
+    file_path: uploadData.path || uploadData.file_path,
+    file_size: uploadData.size || uploadData.file_size,
+    mime_type: uploadData.type || uploadData.mime_type,
+    public_url: uploadData.publicUrl || uploadData.public_url,
+    description: uploadData.description || "",
+    tags: uploadData.tags || [],
+    status: uploadData.status || "completed",
+    uploaded_at:
+      uploadData.uploadedAt ||
+      uploadData.uploaded_at ||
+      new Date().toISOString(),
+    updated_at:
+      uploadData.analyzedAt ||
+      uploadData.updated_at ||
+      new Date().toISOString(),
+    file_size_mb:
+      uploadData.file_size_mb || (uploadData.size / (1024 * 1024)).toFixed(2),
+    has_ai_analysis: uploadData.analysis?.success || true,
+    is_image: uploadData.type?.startsWith("image/") || true,
+  };
+}

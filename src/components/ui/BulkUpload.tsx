@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback } from "react";
 import Image from "next/image";
-import { bulkUploadAndAnalyzeImages, UploadResponse } from "@/lib/api";
+import { bulkUploadAndAnalyzeImages, UploadResponse, convertUploadToFileItem } from "@/lib/api";
 import { useGallery } from "@/lib/contexts";
 import { Button } from "./Button";
 
@@ -33,7 +33,7 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({ className = "" }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [results, setResults] = useState<BulkUploadResult | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const { refreshGallery } = useGallery();
+  const { addNewPhotos } = useGallery();
 
   const createFilePreview = (file: File): SelectedFile => ({
     file,
@@ -156,7 +156,12 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({ className = "" }) => {
           results: result.data?.results || [],
         });
 
-        refreshGallery();
+        // Add new photos to gallery without full refresh
+        if (result.data?.results) {
+          const newPhotos = result.data.results.map(convertUploadToFileItem);
+          addNewPhotos(newPhotos);
+        }
+
         // Clear files after successful upload
         clearAll();
       } else {

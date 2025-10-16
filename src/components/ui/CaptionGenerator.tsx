@@ -85,7 +85,10 @@ export const CaptionGenerator: React.FC<CaptionGeneratorProps> = ({
       if (result.success && result.data && result.data.analysis) {
         setCaption(result.data.analysis.caption);
         setConfidence(result.data.analysis.confidence);
-        // Refresh the gallery to show the newly uploaded image
+
+        // For single uploads, we don't get the real ID back from the API
+        // So we need to refresh the gallery to get the actual data
+        // This is different from bulk uploads which return proper IDs
         refreshGallery();
       } else {
         setError(
