@@ -113,147 +113,51 @@ export async function uploadAndAnalyzeImage(
 export async function bulkUploadAndAnalyzeImages(
   files: File[]
 ): Promise<UploadResponse> {
-  // Try multiple field naming patterns since backends can vary
-  const fieldPatterns = [
-    // Pattern 1: image1, image2, image3 (most common)
-    (formData: FormData, files: File[]) => {
-      files.forEach((file, index) => {
-        formData.append(`image${index + 1}`, file);
-      });
-      return "image1, image2, image3";
-    },
-    // Pattern 2: images[] (array notation)
-    (formData: FormData, files: File[]) => {
-      files.forEach((file) => {
-        formData.append("images[]", file);
-      });
-      return "images[]";
-    },
-    // Pattern 3: images (without brackets)
-    (formData: FormData, files: File[]) => {
-      files.forEach((file) => {
-        formData.append("images", file);
-      });
-      return "images (multiple)";
-    },
-    // Pattern 4: files[] (generic files array)
-    (formData: FormData, files: File[]) => {
-      files.forEach((file) => {
-        formData.append("files[]", file);
-      });
-      return "files[]";
-    },
-    // Pattern 5: files (without brackets)
-    (formData: FormData, files: File[]) => {
-      files.forEach((file) => {
-        formData.append("files", file);
-      });
-      return "files (multiple)";
-    },
-    // Pattern 6: uploads[] (specific to upload endpoints)
-    (formData: FormData, files: File[]) => {
-      files.forEach((file) => {
-        formData.append("uploads[]", file);
-      });
-      return "uploads[]";
-    },
-    // Pattern 7: file (single field name for multiple files)
-    (formData: FormData, files: File[]) => {
-      files.forEach((file) => {
-        formData.append("file", file);
-      });
-      return "file (multiple)";
-    },
-    // Pattern 8: image (single field name, backend might expect this)
-    (formData: FormData, files: File[]) => {
-      files.forEach((file) => {
-        formData.append("image", file);
-      });
-      return "image (multiple)";
-    },
-    // Pattern 9: Try specific naming that might match your backend
-    (formData: FormData, files: File[]) => {
-      files.forEach((file, index) => {
-        formData.append(`file_${index}`, file);
-      });
-      return "file_0, file_1, file_2";
-    },
-  ];
-
   try {
     if (files.length > 3) {
       throw new Error("Maximum 3 files allowed for bulk upload");
     }
 
-    // Try each pattern until one succeeds
-    for (let i = 0; i < fieldPatterns.length; i++) {
-      const formData = new FormData();
-      const patternName = fieldPatterns[i](formData, files);
+    console.log("🚀 Starting bulk upload with", files.length, "files");
+    console.log(
+      "Files to upload:",
+      files.map((f) => `${f.name} (${f.size} bytes, ${f.type})`)
+    );
 
-      if (i === 0) {
-        console.log("🚀 Starting bulk upload with", files.length, "files");
-        console.log(
-          "Files to upload:",
-          files.map((f) => `${f.name} (${f.size} bytes, ${f.type})`)
-        );
+    // Use the correct field pattern that matches your Postman setup
+    const formData = new FormData();
+    files.forEach((file) => {
+      formData.append("images", file);
+    });
+
+    console.log("📤 Using field pattern: images (multiple)");
+
+    const response = await fetch(
+      `${API_BASE_URL}/api/upload/bulk-upload-and-analyze`,
+      {
+        method: "POST",
+        body: formData,
+        mode: "cors",
       }
-      console.log(
-        `📤 Attempt ${i + 1}/${fieldPatterns.length}: ${patternName}`
-      );
+    );
 
+    if (response.ok) {
       try {
-        const response = await fetch(
-          `${API_BASE_URL}/api/upload/bulk-upload-and-analyze`,
-          {
-            method: "POST",
-            body: formData,
-          }
-        );
-
-        if (response.ok) {
-          const data = await response.json();
-          console.log("✅ Bulk upload successful with pattern:", patternName);
-          return data;
-        } else {
-          // Just log that this pattern didn't work (not as an error)
-          console.log(
-            `❌ Pattern ${patternName} not supported (${response.status})`
-          );
-
-          // If this is the last pattern, we'll fall back to single uploads
-          if (i === fieldPatterns.length - 1) {
-            console.log(
-              "📝 All bulk patterns attempted, will try fallback method"
-            );
-          }
-
-          continue;
-        }
-      } catch {
-        console.log(
-          `🌐 Network issue with pattern ${patternName}, trying next...`
-        );
-
-        // If this is the last pattern, we'll fall back to single uploads
-        if (i === fieldPatterns.length - 1) {
-          console.log(
-            "📝 All patterns had network issues, will try fallback method"
-          );
-        }
-
-        continue;
+        const data = await response.json();
+        console.log("✅ Bulk upload successful!");
+        console.log("✅ Response data:", data);
+        return data;
+      } catch (parseError) {
+        console.error("❌ Failed to parse successful response:", parseError);
+        throw new Error("Invalid JSON response from server");
       }
+    } else {
+      const errorText = await response.text();
+      console.log(`❌ Bulk upload failed (${response.status}): ${errorText}`);
+      throw new Error(`HTTP ${response.status}: ${errorText}`);
     }
-
-    // If we get here, all patterns failed - try fallback to single uploads
-    console.log(
-      "🔄 Backend doesn't support bulk upload, using individual uploads..."
-    );
-    return await bulkUploadFallback(files);
   } catch (error) {
-    console.log(
-      "🔄 Network issues with bulk upload, trying individual uploads..."
-    );
+    console.log("🔄 Bulk upload failed, using individual uploads...");
     try {
       return await bulkUploadFallback(files);
     } catch (fallbackError) {
