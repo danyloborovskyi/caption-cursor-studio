@@ -11,6 +11,7 @@ import {
 } from "@/lib/api";
 import { useGallery } from "@/lib/contexts";
 import { Button } from "./Button";
+import { SearchBar } from "./SearchBar";
 
 interface PhotoGalleryProps {
   className?: string;
@@ -29,6 +30,8 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   const [searchResults, setSearchResults] = useState<FileItem[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
+  const [searchCurrentPage, setSearchCurrentPage] = useState(1);
+  const [searchTotalPages, setSearchTotalPages] = useState(1);
   const { refreshTrigger, newPhotos, removePhoto, clearNewPhotos } =
     useGallery();
 
@@ -83,13 +86,13 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
     }
   }, [refreshTrigger, currentPage, newPhotos.length, clearNewPhotos]);
 
-  const handleSearch = async (query: string) => {
-    setSearchQuery(query);
-
+  const performSearch = async (query: string, page = 1) => {
     if (!query.trim()) {
       // Clear search results if query is empty
       setSearchResults([]);
       setSearchError(null);
+      setSearchCurrentPage(1);
+      setSearchTotalPages(1);
       return;
     }
 
@@ -97,27 +100,55 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
     setSearchError(null);
 
     try {
-      const result = await searchFiles(query);
+      const result = await searchFiles(query, page, 12); // 12 results per page
 
       if (result.success) {
         setSearchResults(result.data);
+
+        // Use backend pagination info if available
+        if (result.pagination) {
+          setSearchCurrentPage(result.pagination.current_page);
+          setSearchTotalPages(result.pagination.total_pages);
+        } else {
+          // Fallback: assume single page if no pagination info
+          setSearchCurrentPage(1);
+          setSearchTotalPages(1);
+        }
       } else {
         setSearchError(result.error || "Failed to search photos");
         setSearchResults([]);
+        setSearchCurrentPage(1);
+        setSearchTotalPages(1);
       }
     } catch (error) {
       setSearchError("An unexpected error occurred while searching");
       setSearchResults([]);
+      setSearchCurrentPage(1);
+      setSearchTotalPages(1);
       console.error("Search error:", error);
     } finally {
       setIsSearching(false);
     }
   };
 
+  const handleSearch = async (query: string) => {
+    setSearchQuery(query);
+    // Reset to page 1 when starting a new search
+    await performSearch(query, 1);
+  };
+
   const clearSearch = () => {
     setSearchQuery("");
     setSearchResults([]);
     setSearchError(null);
+    setSearchCurrentPage(1);
+    setSearchTotalPages(1);
+  };
+
+  const handleSearchPageChange = (newPage: number) => {
+    if (searchQuery.trim() && newPage >= 1 && newPage <= searchTotalPages) {
+      performSearch(searchQuery, newPage);
+    }
   };
 
   // Determine which photos to display (search results or regular photos)
@@ -186,22 +217,6 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
     } finally {
       setDeletingPhotoId(null);
     }
-  };
-
-  const formatFileSize = (bytes: number): string => {
-    if (bytes === 0) return "0 Bytes";
-    const k = 1024;
-    const sizes = ["Bytes", "KB", "MB", "GB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
-  };
-
-  const formatDate = (dateString: string): string => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
   };
 
   if (isLoading) {
@@ -298,83 +313,37 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
         </p>
 
         {/* Search Bar */}
-        <div className="max-w-md mx-auto mb-8">
-          <div className="relative">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => handleSearch(e.target.value)}
-              placeholder="Search by description, tags, or filename..."
-              className="glass-input w-full px-4 py-3 pl-12 pr-10 text-white placeholder-white/50 rounded-2xl focus:outline-none focus:ring-2 focus:ring-white/30"
-              disabled={isSearching}
-            />
+        <SearchBar
+          onSearch={handleSearch}
+          onClear={clearSearch}
+          placeholder="Search by description, tags, or filename..."
+          isLoading={isSearching}
+          className="mb-8"
+        />
 
-            {/* Search Icon */}
-            <svg
-              className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-white/50"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
+        {/* Search Status */}
+        {isSearchMode && (
+          <p className="text-white/60 text-sm mt-2 font-light text-center">
+            {isSearching
+              ? "Searching..."
+              : searchResults.length > 0
+              ? `Found ${searchResults.length} result${
+                  searchResults.length !== 1 ? "s" : ""
+                }${
+                  searchTotalPages > 1
+                    ? ` (Page ${searchCurrentPage} of ${searchTotalPages})`
+                    : ""
+                }`
+              : "No photos found"}
+          </p>
+        )}
 
-            {/* Clear Button */}
-            {searchQuery && (
-              <button
-                onClick={clearSearch}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/50 hover:text-white transition-colors"
-                disabled={isSearching}
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            )}
-
-            {/* Loading indicator */}
-            {isSearching && (
-              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white/50"></div>
-              </div>
-            )}
-          </div>
-
-          {/* Search Status */}
-          {isSearchMode && (
-            <p className="text-white/60 text-sm mt-2 font-light">
-              {isSearching
-                ? "Searching..."
-                : searchResults.length > 0
-                ? `Found ${searchResults.length} result${
-                    searchResults.length !== 1 ? "s" : ""
-                  }`
-                : "No photos found"}
-            </p>
-          )}
-
-          {/* Search Error */}
-          {searchError && (
-            <p className="text-red-300 text-sm mt-2 font-light">
-              {searchError}
-            </p>
-          )}
-        </div>
+        {/* Search Error */}
+        {searchError && (
+          <p className="text-red-300 text-sm mt-2 font-light text-center">
+            {searchError}
+          </p>
+        )}
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
@@ -475,45 +444,98 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
         </div>
       )}
 
-      {/* Pagination - Only show when not in search mode */}
-      {!isSearchMode && totalPages > 1 && (
+      {/* Pagination Controls */}
+      {((!isSearchMode && totalPages > 1) ||
+        (isSearchMode && searchTotalPages > 1)) && (
         <div className="flex items-center justify-center space-x-3">
-          <Button
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-            variant="outline"
-            size="sm"
-          >
-            Previous
-          </Button>
+          {/* Use search pagination when in search mode, regular pagination otherwise */}
+          {isSearchMode ? (
+            <>
+              <Button
+                onClick={() => handleSearchPageChange(searchCurrentPage - 1)}
+                disabled={searchCurrentPage === 1}
+                variant="outline"
+                size="sm"
+              >
+                Previous
+              </Button>
 
-          <div className="flex items-center space-x-1">
-            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-              const page = currentPage <= 3 ? i + 1 : currentPage - 2 + i;
-              if (page > totalPages) return null;
+              <div className="flex items-center space-x-1">
+                {Array.from(
+                  { length: Math.min(5, searchTotalPages) },
+                  (_, i) => {
+                    const page =
+                      searchCurrentPage <= 3
+                        ? i + 1
+                        : searchCurrentPage - 2 + i;
+                    if (page > searchTotalPages) return null;
 
-              return (
-                <Button
-                  key={page}
-                  onClick={() => handlePageChange(page)}
-                  variant={currentPage === page ? "primary" : "outline"}
-                  size="sm"
-                  className="min-w-[40px]"
-                >
-                  {page}
-                </Button>
-              );
-            })}
-          </div>
+                    return (
+                      <Button
+                        key={page}
+                        onClick={() => handleSearchPageChange(page)}
+                        variant={
+                          searchCurrentPage === page ? "primary" : "outline"
+                        }
+                        size="sm"
+                        className="min-w-[40px]"
+                      >
+                        {page}
+                      </Button>
+                    );
+                  }
+                )}
+              </div>
 
-          <Button
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            variant="outline"
-            size="sm"
-          >
-            Next
-          </Button>
+              <Button
+                onClick={() => handleSearchPageChange(searchCurrentPage + 1)}
+                disabled={searchCurrentPage === searchTotalPages}
+                variant="outline"
+                size="sm"
+              >
+                Next
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                variant="outline"
+                size="sm"
+              >
+                Previous
+              </Button>
+
+              <div className="flex items-center space-x-1">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  const page = currentPage <= 3 ? i + 1 : currentPage - 2 + i;
+                  if (page > totalPages) return null;
+
+                  return (
+                    <Button
+                      key={page}
+                      onClick={() => handlePageChange(page)}
+                      variant={currentPage === page ? "primary" : "outline"}
+                      size="sm"
+                      className="min-w-[40px]"
+                    >
+                      {page}
+                    </Button>
+                  );
+                })}
+              </div>
+
+              <Button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                variant="outline"
+                size="sm"
+              >
+                Next
+              </Button>
+            </>
+          )}
         </div>
       )}
     </div>

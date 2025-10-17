@@ -7,3 +7,4 @@ export { CaptionGenerator } from "./ui/CaptionGenerator";
 export { BulkUpload } from "./ui/BulkUpload";
 export { UploadTabs } from "./ui/UploadTabs";
 export { PhotoGallery } from "./ui/PhotoGallery";
+export { SearchBar } from "./ui/SearchBar";

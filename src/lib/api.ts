@@ -76,6 +76,16 @@ export interface DeleteResponse {
 export interface SearchResponse {
   success: boolean;
   data: FileItem[];
+  pagination?: {
+    current_page: number;
+    per_page: number;
+    total_items: number;
+    total_pages: number;
+    has_next_page: boolean;
+    has_prev_page: boolean;
+    next_page?: number;
+    prev_page?: number;
+  };
   error?: string;
 }
 
@@ -390,9 +400,13 @@ export function convertUploadToFileItem(uploadData: UploadData): FileItem {
 }
 
 /**
- * Search for files by query
+ * Search for files by query with pagination
  */
-export async function searchFiles(query: string): Promise<SearchResponse> {
+export async function searchFiles(
+  query: string,
+  page = 1,
+  limit = 12
+): Promise<SearchResponse> {
   try {
     if (!query.trim()) {
       return {
@@ -401,10 +415,14 @@ export async function searchFiles(query: string): Promise<SearchResponse> {
       };
     }
 
-    console.log(`Searching files with query: "${query}"`);
+    console.log(
+      `Searching files with query: "${query}", page: ${page}, limit: ${limit}`
+    );
 
     const response = await fetch(
-      `${API_BASE_URL}/api/files/search?q=${encodeURIComponent(query)}`,
+      `${API_BASE_URL}/api/files/search?q=${encodeURIComponent(
+        query
+      )}&page=${page}&limit=${limit}`,
       {
         method: "GET",
         mode: "cors",
