@@ -73,6 +73,12 @@ export interface DeleteResponse {
   error?: string;
 }
 
+export interface SearchResponse {
+  success: boolean;
+  data: FileItem[];
+  error?: string;
+}
+
 /**
  * Upload a single image and get AI-generated caption
  */
@@ -381,4 +387,45 @@ export function convertUploadToFileItem(uploadData: UploadData): FileItem {
       uploadData.mime_type?.startsWith("image/") ||
       true,
   };
+}
+
+/**
+ * Search for files by query
+ */
+export async function searchFiles(query: string): Promise<SearchResponse> {
+  try {
+    if (!query.trim()) {
+      return {
+        success: true,
+        data: [],
+      };
+    }
+
+    console.log(`Searching files with query: "${query}"`);
+
+    const response = await fetch(
+      `${API_BASE_URL}/api/files/search?q=${encodeURIComponent(query)}`,
+      {
+        method: "GET",
+        mode: "cors",
+      }
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Search API Error: ${response.status} - ${errorText}`);
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log("Search API response:", data);
+    return data;
+  } catch (error) {
+    console.error("Error searching files:", error);
+    return {
+      success: false,
+      data: [],
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
 }

@@ -2,7 +2,13 @@
 
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
-import { getFiles, deleteFile, FileItem, DeleteResponse } from "@/lib/api";
+import {
+  getFiles,
+  deleteFile,
+  searchFiles,
+  FileItem,
+  DeleteResponse,
+} from "@/lib/api";
 import { useGallery } from "@/lib/contexts";
 import { Button } from "./Button";
 
@@ -19,6 +25,10 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [deletingPhotoId, setDeletingPhotoId] = useState<number | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<FileItem[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
   const { refreshTrigger, newPhotos, removePhoto, clearNewPhotos } =
     useGallery();
 
@@ -73,8 +83,48 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
     }
   }, [refreshTrigger, currentPage, newPhotos.length, clearNewPhotos]);
 
-  // Merge new photos with existing ones
-  const allPhotos = [...newPhotos, ...photos];
+  const handleSearch = async (query: string) => {
+    setSearchQuery(query);
+
+    if (!query.trim()) {
+      // Clear search results if query is empty
+      setSearchResults([]);
+      setSearchError(null);
+      return;
+    }
+
+    setIsSearching(true);
+    setSearchError(null);
+
+    try {
+      const result = await searchFiles(query);
+
+      if (result.success) {
+        setSearchResults(result.data);
+      } else {
+        setSearchError(result.error || "Failed to search photos");
+        setSearchResults([]);
+      }
+    } catch (error) {
+      setSearchError("An unexpected error occurred while searching");
+      setSearchResults([]);
+      console.error("Search error:", error);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const clearSearch = () => {
+    setSearchQuery("");
+    setSearchResults([]);
+    setSearchError(null);
+  };
+
+  // Determine which photos to display (search results or regular photos)
+  const isSearchMode = searchQuery.trim().length > 0;
+  const displayPhotos = isSearchMode
+    ? [...searchResults]
+    : [...newPhotos, ...photos];
 
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {
@@ -208,7 +258,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
     );
   }
 
-  if (allPhotos.length === 0) {
+  if (displayPhotos.length === 0 && !isSearchMode) {
     return (
       <div className={`w-full ${className}`}>
         <div className="text-center p-12 bg-gray-50 dark:bg-gray-800 rounded-lg">
@@ -242,14 +292,93 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
         <h2 className="text-4xl font-light text-white mb-4 tracking-wide">
           Photo Gallery
         </h2>
-        <p className="text-white/70 font-light text-lg">
-          {allPhotos.length} photo{allPhotos.length !== 1 ? "s" : ""} with
-          AI-generated captions
+        <p className="text-white/70 font-light text-lg mb-8">
+          {displayPhotos.length} photo{displayPhotos.length !== 1 ? "s" : ""}{" "}
+          with AI-generated captions
         </p>
+
+        {/* Search Bar */}
+        <div className="max-w-md mx-auto mb-8">
+          <div className="relative">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => handleSearch(e.target.value)}
+              placeholder="Search by description, tags, or filename..."
+              className="glass-input w-full px-4 py-3 pl-12 pr-10 text-white placeholder-white/50 rounded-2xl focus:outline-none focus:ring-2 focus:ring-white/30"
+              disabled={isSearching}
+            />
+
+            {/* Search Icon */}
+            <svg
+              className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-white/50"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+
+            {/* Clear Button */}
+            {searchQuery && (
+              <button
+                onClick={clearSearch}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/50 hover:text-white transition-colors"
+                disabled={isSearching}
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            )}
+
+            {/* Loading indicator */}
+            {isSearching && (
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white/50"></div>
+              </div>
+            )}
+          </div>
+
+          {/* Search Status */}
+          {isSearchMode && (
+            <p className="text-white/60 text-sm mt-2 font-light">
+              {isSearching
+                ? "Searching..."
+                : searchResults.length > 0
+                ? `Found ${searchResults.length} result${
+                    searchResults.length !== 1 ? "s" : ""
+                  }`
+                : "No photos found"}
+            </p>
+          )}
+
+          {/* Search Error */}
+          {searchError && (
+            <p className="text-red-300 text-sm mt-2 font-light">
+              {searchError}
+            </p>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        {allPhotos.map((photo) => (
+        {displayPhotos.map((photo) => (
           <div
             key={photo.id}
             className="glass glass-hover rounded-2xl overflow-hidden"
@@ -316,8 +445,38 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
         ))}
       </div>
 
-      {/* Pagination */}
-      {totalPages > 1 && (
+      {/* Empty Search Results */}
+      {isSearchMode && displayPhotos.length === 0 && !isSearching && (
+        <div className="text-center p-12 glass rounded-2xl">
+          <div className="mx-auto w-16 h-16 text-white/40 mb-4">
+            <svg
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+          </div>
+          <h3 className="text-2xl font-light text-white mb-4">
+            No results found
+          </h3>
+          <p className="text-white/70 font-light text-lg mb-4">
+            No photos match your search for &ldquo;{searchQuery}&rdquo;
+          </p>
+          <Button onClick={clearSearch} variant="outline" size="sm">
+            Clear Search
+          </Button>
+        </div>
+      )}
+
+      {/* Pagination - Only show when not in search mode */}
+      {!isSearchMode && totalPages > 1 && (
         <div className="flex items-center justify-center space-x-3">
           <Button
             onClick={() => handlePageChange(currentPage - 1)}
