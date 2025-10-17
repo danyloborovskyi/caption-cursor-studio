@@ -168,11 +168,17 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
 
     // Optimistically remove photo immediately for smooth UX
     const isFromNewPhotos = newPhotos.some((p) => p.id === photo.id);
+    const isFromSearchResults =
+      isSearchMode && searchResults.some((p) => p.id === photo.id);
     const originalPhotos = photos; // Store original photos for potential revert
+    const originalSearchResults = searchResults; // Store original search results for potential revert
 
     if (isFromNewPhotos) {
       // If it's from newPhotos, just remove it from there
       removePhoto(photo.id);
+    } else if (isFromSearchResults) {
+      // If it's from search results, remove it optimistically
+      setSearchResults((prev) => prev.filter((p) => p.id !== photo.id));
     } else {
       // If it's from regular photos, remove it optimistically
       setPhotos((prev) => prev.filter((p) => p.id !== photo.id));
@@ -184,36 +190,67 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
       if (result.success) {
         console.log("File deleted successfully:", result.message);
 
-        // Always refetch the current page to fill any gaps with new photos
-        // This ensures that if there are more photos on subsequent pages,
-        // they will be loaded to fill the gap left by the deleted photo
-        const remainingPhotos = originalPhotos.filter((p) => p.id !== photo.id);
+        if (isSearchMode) {
+          // Handle search results pagination after deletion
+          const remainingSearchResults = originalSearchResults.filter(
+            (p) => p.id !== photo.id
+          );
 
-        if (remainingPhotos.length === 0 && currentPage > 1) {
-          // Page became completely empty, navigate to previous page
-          console.log("Page became empty, navigating to previous page");
-          setCurrentPage(currentPage - 1);
-          await fetchPhotos(currentPage - 1, true);
+          if (remainingSearchResults.length === 0 && searchCurrentPage > 1) {
+            // Search page became completely empty, navigate to previous page
+            console.log(
+              "Search page became empty, navigating to previous page"
+            );
+            await performSearch(searchQuery, searchCurrentPage - 1);
+          } else {
+            // Refetch current search page to fill the gap with next available result
+            console.log(
+              "Refetching current search page to fill gap after deletion"
+            );
+            await performSearch(searchQuery, searchCurrentPage);
+          }
         } else {
-          // Refetch current page to fill the gap with next available photo
-          console.log("Refetching current page to fill gap after deletion");
-          await fetchPhotos(currentPage, false);
+          // Handle regular gallery pagination after deletion
+          const remainingPhotos = originalPhotos.filter(
+            (p) => p.id !== photo.id
+          );
+
+          if (remainingPhotos.length === 0 && currentPage > 1) {
+            // Page became completely empty, navigate to previous page
+            console.log("Page became empty, navigating to previous page");
+            setCurrentPage(currentPage - 1);
+            await fetchPhotos(currentPage - 1, true);
+          } else {
+            // Refetch current page to fill the gap with next available photo
+            console.log("Refetching current page to fill gap after deletion");
+            await fetchPhotos(currentPage, false);
+          }
         }
       } else {
         // Deletion failed, revert the optimistic update
         console.error("Delete failed, reverting optimistic update");
         setError(result.error || "Failed to delete photo");
 
-        // Re-fetch to restore the photo that failed to delete
-        await fetchPhotos(currentPage, false);
+        if (isSearchMode) {
+          // Re-fetch search results to restore the photo that failed to delete
+          await performSearch(searchQuery, searchCurrentPage);
+        } else {
+          // Re-fetch regular photos to restore the photo that failed to delete
+          await fetchPhotos(currentPage, false);
+        }
       }
     } catch (err) {
       // Network error, revert the optimistic update
       console.error("Delete error, reverting optimistic update:", err);
       setError("An unexpected error occurred while deleting photo");
 
-      // Re-fetch to restore the photo that failed to delete
-      await fetchPhotos(currentPage, false);
+      if (isSearchMode) {
+        // Re-fetch search results to restore the photo that failed to delete
+        await performSearch(searchQuery, searchCurrentPage);
+      } else {
+        // Re-fetch regular photos to restore the photo that failed to delete
+        await fetchPhotos(currentPage, false);
+      }
     } finally {
       setDeletingPhotoId(null);
     }
