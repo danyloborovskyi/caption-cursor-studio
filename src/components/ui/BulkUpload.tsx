@@ -2,12 +2,7 @@
 
 import React, { useState, useCallback } from "react";
 import Image from "next/image";
-import {
-  bulkUploadAndAnalyzeImages,
-  UploadResponse,
-  convertUploadToFileItem,
-  UploadData,
-} from "@/lib/api";
+import { bulkUploadAndAnalyzeImages, UploadResponse } from "@/lib/api";
 import { useGallery } from "@/lib/contexts";
 import { Button } from "./Button";
 
@@ -38,7 +33,7 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({ className = "" }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [results, setResults] = useState<BulkUploadResult | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const { addNewPhotos } = useGallery();
+  const { refreshGallery } = useGallery();
 
   const createFilePreview = (file: File): SelectedFile => ({
     file,
@@ -171,11 +166,8 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({ className = "" }) => {
           results: result.data?.results || [],
         });
 
-        // Add new photos to gallery without full refresh
-        if (result.data?.results) {
-          const newPhotos = result.data.results.map(convertUploadToFileItem);
-          addNewPhotos(newPhotos);
-        }
+        // Refresh gallery to show new photos from backend
+        refreshGallery();
 
         // Clear files after successful upload
         clearAll();

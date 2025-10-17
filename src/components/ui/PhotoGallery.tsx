@@ -19,7 +19,8 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [deletingPhotoId, setDeletingPhotoId] = useState<number | null>(null);
-  const { refreshTrigger, newPhotos, removePhoto } = useGallery();
+  const { refreshTrigger, newPhotos, removePhoto, clearNewPhotos } =
+    useGallery();
 
   const fetchPhotos = async (page = 1, showLoading = true) => {
     try {
@@ -62,12 +63,15 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   }, []);
 
   // Refresh gallery when refreshTrigger changes (for deletion or errors)
-  // Only refresh if we don't have new photos (to avoid disrupting smooth additions)
   useEffect(() => {
-    if (refreshTrigger > 0 && newPhotos.length === 0) {
+    if (refreshTrigger > 0) {
+      // Clear new photos before refreshing to avoid duplicates
+      if (newPhotos.length > 0) {
+        clearNewPhotos();
+      }
       fetchPhotos(currentPage, false); // Background refresh without loading state
     }
-  }, [refreshTrigger, currentPage, newPhotos.length]);
+  }, [refreshTrigger, currentPage, newPhotos.length, clearNewPhotos]);
 
   // Merge new photos with existing ones
   const allPhotos = [...newPhotos, ...photos];
