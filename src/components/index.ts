@@ -8,3 +8,6 @@ export { BulkUpload } from "./ui/BulkUpload";
 export { UploadTabs } from "./ui/UploadTabs";
 export { PhotoGallery } from "./ui/PhotoGallery";
 export { SearchBar } from "./ui/SearchBar";
+export { LoginForm } from "./ui/LoginForm";
+export { SignupForm } from "./ui/SignupForm";
+export { AuthModal } from "./ui/AuthModal";

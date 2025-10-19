@@ -1,7 +1,16 @@
 "use client";
 
-import React, { createContext, useContext, useState } from "react";
-import { FileItem } from "@/lib/api";
+import React, { createContext, useContext, useState, useEffect } from "react";
+import {
+  FileItem,
+  User,
+  getCurrentUser as apiGetCurrentUser,
+  logout as apiLogout,
+} from "@/lib/api";
+
+// =====================
+// Gallery Context
+// =====================
 
 interface GalleryContextType {
   refreshTrigger: number;
@@ -73,6 +82,87 @@ export const useGallery = () => {
   const context = useContext(GalleryContext);
   if (context === undefined) {
     throw new Error("useGallery must be used within a GalleryProvider");
+  }
+  return context;
+};
+
+// =====================
+// Auth Context
+// =====================
+
+interface AuthContextType {
+  user: User | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  login: (user: User) => void;
+  logout: () => Promise<void>;
+  refreshUser: () => Promise<void>;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Check if user is logged in on mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      const token = localStorage.getItem("access_token");
+      if (token) {
+        const response = await apiGetCurrentUser();
+        if (response.success && response.data?.user) {
+          setUser(response.data.user);
+        } else {
+          // Token is invalid, clear it
+          localStorage.removeItem("access_token");
+          localStorage.removeItem("refresh_token");
+        }
+      }
+      setIsLoading(false);
+    };
+
+    checkAuth();
+  }, []);
+
+  const login = (userData: User) => {
+    setUser(userData);
+  };
+
+  const logout = async () => {
+    await apiLogout();
+    setUser(null);
+  };
+
+  const refreshUser = async () => {
+    const response = await apiGetCurrentUser();
+    if (response.success && response.data?.user) {
+      setUser(response.data.user);
+    }
+  };
+
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        isAuthenticated: !!user,
+        isLoading,
+        login,
+        logout,
+        refreshUser,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };
