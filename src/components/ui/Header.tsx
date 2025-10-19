@@ -16,6 +16,13 @@ export const Header: React.FC<HeaderProps> = ({ className = "" }) => {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
+  // Debug: Log auth state changes
+  useEffect(() => {
+    console.log("🎯 Header - Auth state changed:");
+    console.log("   user:", user);
+    console.log("   isAuthenticated:", isAuthenticated);
+  }, [user, isAuthenticated]);
+
   // Close user menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

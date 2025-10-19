@@ -110,17 +110,67 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   // Check if user is logged in on mount
   useEffect(() => {
     const checkAuth = async () => {
+      console.log("🔍 Checking auth on mount...");
+
+      // Ensure we're on the client side
+      if (typeof window === "undefined") {
+        console.log("⚠️ Window is undefined, skipping auth check");
+        setIsLoading(false);
+        return;
+      }
+
       const token = localStorage.getItem("access_token");
-      if (token) {
+      const storedUser = localStorage.getItem("user_data");
+
+      console.log("📦 Token exists:", !!token);
+      console.log("📦 Stored user exists:", !!storedUser);
+      console.log("📦 Stored user value:", storedUser);
+
+      // Restore user from localStorage if available (token check moved below)
+      if (storedUser) {
+        try {
+          const parsedUser = JSON.parse(storedUser);
+          console.log("✅ Parsed user from localStorage:", parsedUser);
+          setUser(parsedUser);
+          console.log("✅ User state set, UI should update now");
+        } catch (e) {
+          console.error("❌ Failed to parse stored user data:", e);
+          localStorage.removeItem("user_data");
+        }
+      }
+
+      if (token && storedUser) {
+        // Verify token with backend in the background
+        const response = await apiGetCurrentUser();
+        if (response.success && response.data?.user) {
+          // Update user data if backend returns newer data
+          setUser(response.data.user);
+          localStorage.setItem("user_data", JSON.stringify(response.data.user));
+        } else {
+          // Only clear on authentication errors (401, 403)
+          const status = (response as { status?: number }).status;
+          if (status === 401 || status === 403) {
+            // Token is invalid, clear everything
+            localStorage.removeItem("access_token");
+            localStorage.removeItem("refresh_token");
+            localStorage.removeItem("user_data");
+            setUser(null);
+          }
+          // On other errors, keep the user logged in with cached data
+        }
+      } else if (token && !storedUser) {
+        // Has token but no cached user data - fetch from backend
         const response = await apiGetCurrentUser();
         if (response.success && response.data?.user) {
           setUser(response.data.user);
+          localStorage.setItem("user_data", JSON.stringify(response.data.user));
         } else {
           // Token is invalid, clear it
           localStorage.removeItem("access_token");
           localStorage.removeItem("refresh_token");
         }
       }
+
       setIsLoading(false);
     };
 
@@ -128,11 +178,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   const login = (userData: User) => {
+    console.log("🔐 Login called with user data:", userData);
     setUser(userData);
+
+    // Store user data for persistence across reloads
+    if (typeof window !== "undefined") {
+      const userDataString = JSON.stringify(userData);
+      localStorage.setItem("user_data", userDataString);
+      console.log("💾 Stored user_data in localStorage:", userDataString);
+    }
+
+    console.log(
+      "✅ User state updated, isAuthenticated should be:",
+      !!userData
+    );
   };
 
   const logout = async () => {
     await apiLogout();
+    localStorage.removeItem("user_data");
     setUser(null);
   };
 
@@ -140,6 +204,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     const response = await apiGetCurrentUser();
     if (response.success && response.data?.user) {
       setUser(response.data.user);
+      localStorage.setItem("user_data", JSON.stringify(response.data.user));
     }
   };
 

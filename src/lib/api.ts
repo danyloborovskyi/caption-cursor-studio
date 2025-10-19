@@ -17,8 +17,12 @@ export interface AuthResponse {
   message?: string;
   data?: {
     user: User;
-    access_token: string;
-    refresh_token?: string;
+    session?: {
+      access_token: string;
+      refresh_token?: string;
+      expires_at?: number;
+      expires_in?: number;
+    };
   };
   error?: string;
 }
@@ -79,12 +83,18 @@ export async function signup(
 
     const data = await response.json();
 
-    // Store tokens if provided
-    if (data.data?.access_token) {
-      localStorage.setItem("access_token", data.data.access_token);
+    console.log("🔐 Signup response:", data);
+
+    // Store tokens from session object (Supabase format)
+    if (data.data?.session?.access_token) {
+      localStorage.setItem("access_token", data.data.session.access_token);
+      console.log("✅ Stored access_token in localStorage");
+    } else {
+      console.warn("⚠️ No access_token in signup response!");
     }
-    if (data.data?.refresh_token) {
-      localStorage.setItem("refresh_token", data.data.refresh_token);
+    if (data.data?.session?.refresh_token) {
+      localStorage.setItem("refresh_token", data.data.session.refresh_token);
+      console.log("✅ Stored refresh_token in localStorage");
     }
 
     return data;
@@ -122,12 +132,18 @@ export async function login(
 
     const data = await response.json();
 
-    // Store tokens if provided
-    if (data.data?.access_token) {
-      localStorage.setItem("access_token", data.data.access_token);
+    console.log("🔐 Login response:", data);
+
+    // Store tokens from session object (Supabase format)
+    if (data.data?.session?.access_token) {
+      localStorage.setItem("access_token", data.data.session.access_token);
+      console.log("✅ Stored access_token in localStorage");
+    } else {
+      console.warn("⚠️ No access_token in login response!");
     }
-    if (data.data?.refresh_token) {
-      localStorage.setItem("refresh_token", data.data.refresh_token);
+    if (data.data?.session?.refresh_token) {
+      localStorage.setItem("refresh_token", data.data.session.refresh_token);
+      console.log("✅ Stored refresh_token in localStorage");
     }
 
     return data;
