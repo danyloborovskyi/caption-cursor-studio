@@ -49,14 +49,12 @@ export const AuthSection: React.FC = () => {
                 onSuccess={() => {
                   // User will be redirected or page will update automatically
                 }}
-                onSwitchToSignup={() => setActiveTab("signup")}
               />
             ) : (
               <SignupForm
                 onSuccess={() => {
                   // User will be redirected or page will update automatically
                 }}
-                onSwitchToLogin={() => setActiveTab("login")}
               />
             )}
           </div>

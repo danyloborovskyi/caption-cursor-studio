@@ -51,14 +51,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
       onClick={handleBackdropClick}
     >
-      <div className="relative w-full max-w-md mx-4 bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl shadow-2xl border border-white/10 p-8">
+      <div className="relative w-full max-w-md bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-white/60 hover:text-white transition-colors"
+          className="absolute top-4 right-4 z-10 text-white/60 hover:text-white transition-colors"
           aria-label="Close modal"
         >
           <svg
@@ -76,18 +76,36 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           </svg>
         </button>
 
+        {/* Tabs */}
+        <div className="flex border-b border-white/10">
+          <button
+            onClick={() => setMode("login")}
+            className={`flex-1 py-4 px-6 text-center font-medium transition-all ${
+              mode === "login"
+                ? "text-white bg-white/10 border-b-2 border-blue-500"
+                : "text-white/60 hover:text-white hover:bg-white/5"
+            }`}
+          >
+            Login
+          </button>
+          <button
+            onClick={() => setMode("signup")}
+            className={`flex-1 py-4 px-6 text-center font-medium transition-all ${
+              mode === "signup"
+                ? "text-white bg-white/10 border-b-2 border-blue-500"
+                : "text-white/60 hover:text-white hover:bg-white/5"
+            }`}
+          >
+            Sign Up
+          </button>
+        </div>
+
         {/* Form content */}
-        <div className="mt-2">
+        <div className="p-8">
           {mode === "login" ? (
-            <LoginForm
-              onSuccess={handleSuccess}
-              onSwitchToSignup={() => setMode("signup")}
-            />
+            <LoginForm onSuccess={handleSuccess} />
           ) : (
-            <SignupForm
-              onSuccess={handleSuccess}
-              onSwitchToLogin={() => setMode("login")}
-            />
+            <SignupForm onSuccess={handleSuccess} />
           )}
         </div>
       </div>

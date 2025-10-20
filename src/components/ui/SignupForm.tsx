@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { Button } from "./Button";
 import { signup } from "@/lib/api";
 import { useAuth } from "@/lib/contexts";
+import { useRouter } from "next/navigation";
 
 interface SignupFormProps {
   onSuccess?: () => void;
@@ -15,6 +16,7 @@ export const SignupForm: React.FC<SignupFormProps> = ({
   onSwitchToLogin,
 }) => {
   const { login: setUser } = useAuth();
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -46,6 +48,8 @@ export const SignupForm: React.FC<SignupFormProps> = ({
       if (response.success && response.data?.user) {
         setUser(response.data.user);
         onSuccess?.();
+        // Redirect to upload page after successful signup
+        router.push("/upload");
       } else {
         setError(response.error || "Failed to sign up");
       }
