@@ -116,52 +116,92 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         return;
       }
 
+      console.log("AuthProvider: checkAuth started");
       const token = localStorage.getItem("access_token");
       const storedUser = localStorage.getItem("user_data");
+      console.log(
+        "AuthProvider: token exists:",
+        !!token,
+        "user_data exists:",
+        !!storedUser
+      );
 
-      // Restore user from localStorage if available (token check moved below)
-      if (storedUser) {
+      // Only restore user if we have BOTH token and user_data
+      if (token && storedUser) {
         try {
           const parsedUser = JSON.parse(storedUser);
+          console.log(
+            "AuthProvider: Restored user from localStorage:",
+            parsedUser.email
+          );
           setUser(parsedUser);
         } catch (e) {
           console.error("Failed to parse stored user data:", e);
           localStorage.removeItem("user_data");
+          localStorage.removeItem("access_token");
+          localStorage.removeItem("refresh_token");
+          setUser(null);
+          setIsLoading(false);
+          return;
         }
-      }
 
-      if (token && storedUser) {
         // Verify token with backend in the background
+        console.log("AuthProvider: Verifying token with backend...");
         const response = await apiGetCurrentUser();
+        console.log("AuthProvider: Token verification response:", response);
+
         if (response.success && response.data?.user) {
           // Update user data if backend returns newer data
+          console.log("AuthProvider: Token valid, user verified");
           setUser(response.data.user);
           localStorage.setItem("user_data", JSON.stringify(response.data.user));
         } else {
           // Only clear on authentication errors (401, 403)
           const status = (response as { status?: number }).status;
+          console.log(
+            "AuthProvider: Token verification failed, status:",
+            status
+          );
+
           if (status === 401 || status === 403) {
             // Token is invalid, clear everything
+            console.error("AuthProvider: Token invalid (401/403), logging out");
             localStorage.removeItem("access_token");
             localStorage.removeItem("refresh_token");
             localStorage.removeItem("user_data");
             setUser(null);
+          } else {
+            // On other errors, keep the user logged in with cached data
+            console.log(
+              "AuthProvider: Non-auth error, keeping user logged in with cached data"
+            );
           }
-          // On other errors, keep the user logged in with cached data
         }
       } else if (token && !storedUser) {
         // Has token but no cached user data - fetch from backend
+        console.log(
+          "AuthProvider: Token exists but no user_data, fetching from backend"
+        );
         const response = await apiGetCurrentUser();
         if (response.success && response.data?.user) {
           setUser(response.data.user);
           localStorage.setItem("user_data", JSON.stringify(response.data.user));
         } else {
           // Token is invalid, clear it
+          console.log("AuthProvider: Failed to fetch user, clearing token");
           localStorage.removeItem("access_token");
           localStorage.removeItem("refresh_token");
         }
+      } else if (!token && storedUser) {
+        // No token but has cached user data - clear the stale data
+        console.log(
+          "AuthProvider: No token but user_data exists, clearing stale data"
+        );
+        localStorage.removeItem("user_data");
+        setUser(null);
       }
 
+      console.log("AuthProvider: checkAuth completed");
       setIsLoading(false);
     };
 

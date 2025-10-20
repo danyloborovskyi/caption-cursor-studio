@@ -54,14 +54,30 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
         const result = await getFiles(page, 12); // 12 photos per page
 
         if (result.success && result.data) {
-          // Backend returns data as array directly
-          const fetchedPhotos = Array.isArray(result.data) ? result.data : [];
+          // Check if data has nested files array (Supabase format)
+          let fetchedPhotos: FileItem[] = [];
+          let paginationInfo = result.pagination;
+
+          if (Array.isArray(result.data)) {
+            // Format 1: data is array directly
+            fetchedPhotos = result.data;
+          } else if (result.data && typeof result.data === "object") {
+            // Format 2: data is object with files property
+            const dataObj = result.data as Record<string, unknown>;
+            if (Array.isArray(dataObj.files)) {
+              fetchedPhotos = dataObj.files as FileItem[];
+            }
+            if (dataObj.pagination) {
+              paginationInfo = dataObj.pagination as typeof result.pagination;
+            }
+          }
+
           setPhotos(fetchedPhotos);
 
-          // Use backend pagination info if available, otherwise calculate
-          if (result.pagination) {
-            setCurrentPage(result.pagination.current_page);
-            setTotalPages(result.pagination.total_pages);
+          // Use backend pagination info if available
+          if (paginationInfo) {
+            setCurrentPage(paginationInfo.current_page);
+            setTotalPages(paginationInfo.total_pages);
           } else {
             // Fallback: if no pagination info, assume we got all data
             setCurrentPage(page);
@@ -90,29 +106,31 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
         const token = localStorage.getItem("access_token");
         if (token) {
           fetchPhotos(1);
+        } else {
+          // No token, stop loading
+          setIsLoading(false);
         }
       }, 100); // 100ms delay
 
       return () => clearTimeout(timeoutId);
+    } else if (!authLoading && !isAuthenticated) {
+      // Not authenticated, stop loading
+      setIsLoading(false);
     }
-  }, [isAuthenticated, authLoading, fetchPhotos]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, authLoading]);
 
   // Refresh gallery when refreshTrigger changes (for deletion or errors)
   useEffect(() => {
-    if (refreshTrigger > 0) {
+    if (refreshTrigger > 0 && isAuthenticated) {
       // Clear new photos before refreshing to avoid duplicates
       if (newPhotos.length > 0) {
         clearNewPhotos();
       }
       fetchPhotos(currentPage, false); // Background refresh without loading state
     }
-  }, [
-    refreshTrigger,
-    currentPage,
-    newPhotos.length,
-    clearNewPhotos,
-    fetchPhotos,
-  ]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refreshTrigger, currentPage]);
 
   const performSearch = async (query: string, page = 1) => {
     if (!query.trim()) {

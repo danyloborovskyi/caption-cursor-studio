@@ -27,18 +27,25 @@ export const LoginForm: React.FC<LoginFormProps> = ({
     setError("");
     setIsLoading(true);
 
+    console.log("Login form submitted");
+
     try {
       const response = await login({ email, password });
+      console.log("Login API response:", response);
 
       if (response.success && response.data?.user) {
+        console.log("Login successful, user:", response.data.user);
         setUser(response.data.user);
         onSuccess?.();
         // Redirect to upload page after successful login
+        console.log("Redirecting to /upload");
         router.push("/upload");
       } else {
+        console.error("Login failed:", response.error);
         setError(response.error || "Failed to login");
       }
     } catch (err) {
+      console.error("Login error:", err);
       setError("An unexpected error occurred");
     } finally {
       setIsLoading(false);
