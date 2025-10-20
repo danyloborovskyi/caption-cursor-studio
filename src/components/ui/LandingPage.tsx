@@ -4,17 +4,11 @@ import React from "react";
 import { Hero } from "./Hero";
 import { AuthSection } from "./AuthSection";
 import { useAuth } from "@/lib/contexts";
-import { Button } from "./Button";
+import { useRouter } from "next/navigation";
 
 export const LandingPage: React.FC = () => {
   const { isAuthenticated } = useAuth();
-
-  const scrollToApp = () => {
-    const appSection = document.getElementById("app-section");
-    if (appSection) {
-      appSection.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  };
+  const router = useRouter();
 
   return (
     <div className="min-h-screen">
@@ -34,14 +28,46 @@ export const LandingPage: React.FC = () => {
             <p className="text-white/70 mb-8 text-lg">
               Upload your images and let AI do the magic
             </p>
-            <Button
-              onClick={scrollToApp}
-              variant="primary"
-              size="lg"
-              className="px-12"
-            >
-              Go to Upload
-            </Button>
+            <div className="flex gap-4 justify-center">
+              <button
+                onClick={() => router.push("/upload")}
+                className="inline-flex items-center gap-2 px-8 py-4 bg-blue-600 hover:bg-blue-700 rounded-xl text-white font-medium transition-colors shadow-lg"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+                  />
+                </svg>
+                Upload Images
+              </button>
+              <button
+                onClick={() => router.push("/gallery")}
+                className="inline-flex items-center gap-2 px-8 py-4 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-white font-medium transition-colors"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
+                </svg>
+                View Gallery
+              </button>
+            </div>
           </div>
         </section>
       )}

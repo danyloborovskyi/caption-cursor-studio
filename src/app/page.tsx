@@ -1,17 +1,10 @@
 "use client";
 
-import {
-  Header,
-  Card,
-  CardContent,
-  UploadTabs,
-  PhotoGallery,
-  LandingPage,
-} from "@/components";
+import { Header, LandingPage } from "@/components";
 import { GalleryProvider, AuthProvider, useAuth } from "@/lib/contexts";
 
 function HomeContent() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isLoading } = useAuth();
 
   if (isLoading) {
     return (
@@ -28,31 +21,6 @@ function HomeContent() {
 
       {/* Landing Page with Hero, Auth, and How It Works */}
       <LandingPage />
-
-      {/* App Section (Upload & Gallery) - Only show if authenticated */}
-      {isAuthenticated && (
-        <main id="app-section" className="max-w-6xl mx-auto px-4 py-16">
-          {/* Upload Section */}
-          <section className="mb-24 mt-12">
-            <h2 className="text-3xl font-bold text-white text-center mb-8">
-              Upload Your Images
-            </h2>
-            <Card as="article" className="max-w-4xl mx-auto">
-              <CardContent as="main" role="application">
-                <UploadTabs />
-              </CardContent>
-            </Card>
-          </section>
-
-          {/* Photo Gallery Section */}
-          <section className="mb-16" aria-label="Photo Gallery">
-            <h2 className="text-3xl font-bold text-white text-center mb-8">
-              Your Images
-            </h2>
-            <PhotoGallery />
-          </section>
-        </main>
-      )}
     </div>
   );
 }
