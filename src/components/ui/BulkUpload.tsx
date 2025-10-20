@@ -2,7 +2,11 @@
 
 import React, { useState, useCallback } from "react";
 import Image from "next/image";
-import { bulkUploadAndAnalyzeImages, UploadResponse } from "@/lib/api";
+import {
+  bulkUploadAndAnalyzeImages,
+  UploadResponse,
+  UploadProgress,
+} from "@/lib/api";
 import { useGallery } from "@/lib/contexts";
 import { Button } from "./Button";
 
@@ -31,6 +35,9 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({ className = "" }) => {
   const [selectedFiles, setSelectedFiles] = useState<SelectedFile[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<UploadProgress | null>(
+    null
+  );
   const [results, setResults] = useState<BulkUploadResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const { refreshGallery } = useGallery();
@@ -63,10 +70,10 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({ className = "" }) => {
         validFiles.push(file);
       }
 
-      // Check total count (max 3 files)
+      // Check total count (max 10 files)
       const totalFiles = selectedFiles.length + validFiles.length;
-      if (totalFiles > 3) {
-        setError("Maximum 3 images allowed for bulk upload");
+      if (totalFiles > 10) {
+        setError("Maximum 10 images allowed for bulk upload");
         return;
       }
 
@@ -127,41 +134,30 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({ className = "" }) => {
     if (selectedFiles.length === 0) return;
 
     setIsLoading(true);
+    setResults(null);
     setError(null);
+    setUploadProgress(null);
 
     try {
       const files = selectedFiles.map((f) => f.file);
-      console.log(
-        "Starting bulk upload for files:",
-        files.map((f) => `${f.name} (${f.type})`)
+
+      const result: UploadResponse = await bulkUploadAndAnalyzeImages(
+        files,
+        (progress) => {
+          setUploadProgress(progress);
+        }
       );
 
-      const result: UploadResponse = await bulkUploadAndAnalyzeImages(files);
-
       if (result.success) {
-        // Handle the new bulk response structure
-        const successMessage = result.message || "Upload successful";
+        const successMessage =
+          result.message || "Upload completed successfully";
         const uploadCount =
-          result.data?.successful_uploads || selectedFiles.length;
-
-        console.log("Bulk upload successful:", {
-          message: successMessage,
-          uploads: uploadCount,
-          results: result.data?.results,
-        });
-
-        // Check if this was individual uploads (indicated by message content)
-        const isIndividualUploads =
-          successMessage.includes("individual uploads");
-        const displayMessage = isIndividualUploads
-          ? successMessage.replace(
-              "(individual uploads)",
-              "- processed individually"
-            )
-          : successMessage;
+          result.data?.totalFiles ||
+          result.data?.successful_uploads ||
+          selectedFiles.length;
 
         setResults({
-          message: displayMessage,
+          message: successMessage,
           uploadCount,
           results: result.data?.results || [],
         });
@@ -169,19 +165,20 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({ className = "" }) => {
         // Refresh gallery to show new photos from backend
         refreshGallery();
 
-        // Clear files after successful upload
+        // Clear files and progress after successful upload
         clearAll();
+        setUploadProgress(null);
       } else {
         const errorMsg =
           result.error || result.message || "Failed to upload images";
-        console.error("Bulk upload failed:", errorMsg);
         setError(errorMsg);
+        setUploadProgress(null);
       }
     } catch (err) {
-      console.error("Bulk upload error:", err);
       setError(
         `Upload failed: ${err instanceof Error ? err.message : "Unknown error"}`
       );
+      setUploadProgress(null);
     } finally {
       setIsLoading(false);
     }
@@ -210,7 +207,7 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({ className = "" }) => {
           multiple
           onChange={handleFileInputChange}
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-          disabled={isLoading || selectedFiles.length >= 3}
+          disabled={isLoading || selectedFiles.length >= 10}
         />
         <div className="space-y-3">
           <div className="mx-auto w-10 h-10 text-gray-400">
@@ -230,7 +227,7 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({ className = "" }) => {
           </div>
           <div>
             <p className="text-lg font-medium text-gray-900 dark:text-gray-100">
-              Drop up to 3 images here
+              Drop up to 10 images here
             </p>
             <p className="text-sm text-gray-500 dark:text-gray-400">
               or click to select files
@@ -238,7 +235,7 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({ className = "" }) => {
           </div>
           <p className="text-xs text-gray-400">
             Supports: JPG, PNG, GIF, WebP (max 10MB each) •{" "}
-            {selectedFiles.length}/3 selected
+            {selectedFiles.length}/10 selected
           </p>
         </div>
       </div>
@@ -310,6 +307,45 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({ className = "" }) => {
               AI is analyzing {selectedFiles.length} image
               {selectedFiles.length !== 1 ? "s" : ""}...
             </p>
+          </div>
+        </div>
+      )}
+
+      {/* Upload Progress */}
+      {uploadProgress && (
+        <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg">
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="font-medium text-blue-900 dark:text-blue-100">
+                {uploadProgress.status === "uploading"
+                  ? "📤 Uploading files..."
+                  : uploadProgress.status === "processing"
+                  ? "🤖 Processing with AI..."
+                  : uploadProgress.status === "completed"
+                  ? "✅ Upload complete!"
+                  : "❌ Upload error"}
+              </span>
+              <span className="text-sm text-blue-700 dark:text-blue-300 font-medium">
+                {uploadProgress.processedFiles}/{uploadProgress.totalFiles}
+              </span>
+            </div>
+            {/* Progress Bar */}
+            <div className="w-full bg-blue-200 dark:bg-blue-900 rounded-full h-2.5">
+              <div
+                className="bg-blue-600 dark:bg-blue-400 h-2.5 rounded-full transition-all duration-300 ease-out"
+                style={{ width: `${uploadProgress.progress}%` }}
+              />
+            </div>
+            {uploadProgress.currentFile && (
+              <p className="text-xs text-blue-600 dark:text-blue-400">
+                Processing: {uploadProgress.currentFile}
+              </p>
+            )}
+            {uploadProgress.message && (
+              <p className="text-sm text-blue-700 dark:text-blue-300">
+                {uploadProgress.message}
+              </p>
+            )}
           </div>
         </div>
       )}

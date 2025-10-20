@@ -460,6 +460,9 @@ export interface UploadResponse {
   success: boolean;
   message: string;
   data?: {
+    uploadId?: string;
+    totalFiles?: number;
+    progressUrl?: string;
     successful_uploads?: number;
     total_attempts?: number;
     results?: Array<{
@@ -546,65 +549,25 @@ export interface SearchResponse {
 }
 
 /**
- * Upload a single image and get AI-generated caption
- */
-export async function uploadAndAnalyzeImage(
-  file: File
-): Promise<UploadResponse> {
-  try {
-    const token = localStorage.getItem("access_token");
-    const formData = new FormData();
-    formData.append("image", file);
-
-    const response = await fetch(
-      `${API_BASE_URL}/api/upload/upload-and-analyze`,
-      {
-        method: "POST",
-        headers: getAuthHeaders(token || undefined),
-        body: formData,
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error("Error uploading and analyzing image:", error);
-    return {
-      success: false,
-      message: "Failed to upload and analyze image",
-      error: error instanceof Error ? error.message : "Unknown error",
-    };
-  }
-}
-
-/**
- * Upload multiple images (up to 3) and get AI-generated captions
+ * Upload multiple images (up to 10) and get AI-generated captions
  */
 export async function bulkUploadAndAnalyzeImages(
-  files: File[]
+  files: File[],
+  onProgress?: (progress: UploadProgress) => void
 ): Promise<UploadResponse> {
   try {
-    if (files.length > 3) {
-      throw new Error("Maximum 3 files allowed for bulk upload");
+    if (files.length > 10) {
+      throw new Error("Maximum 10 files allowed for bulk upload");
     }
 
-    console.log("🚀 Starting bulk upload with", files.length, "files");
-    console.log(
-      "Files to upload:",
-      files.map((f) => `${f.name} (${f.size} bytes, ${f.type})`)
-    );
+    if (files.length === 0) {
+      throw new Error("Please select at least one file");
+    }
 
-    // Use the correct field pattern that matches your Postman setup
     const formData = new FormData();
     files.forEach((file) => {
       formData.append("images", file);
     });
-
-    console.log("📤 Using field pattern: images (multiple)");
 
     const token = localStorage.getItem("access_token");
     const response = await fetch(
@@ -617,104 +580,99 @@ export async function bulkUploadAndAnalyzeImages(
       }
     );
 
-    if (response.ok) {
-      try {
-        const data = await response.json();
-        console.log("✅ Bulk upload successful!");
-        console.log("✅ Response data:", data);
-        return data;
-      } catch (parseError) {
-        console.error("❌ Failed to parse successful response:", parseError);
-        throw new Error("Invalid JSON response from server");
-      }
-    } else {
+    if (!response.ok) {
       const errorText = await response.text();
-      console.log(`❌ Bulk upload failed (${response.status}): ${errorText}`);
       throw new Error(`HTTP ${response.status}: ${errorText}`);
     }
-  } catch (error) {
-    console.log("🔄 Bulk upload failed, using individual uploads...");
-    try {
-      return await bulkUploadFallback(files);
-    } catch (fallbackError) {
-      console.error("❌ Both bulk upload and fallback failed:", fallbackError);
-      return {
-        success: false,
-        message: "Both bulk upload and individual upload methods failed",
-        error: error instanceof Error ? error.message : "Unknown error",
-      };
+
+    const data = await response.json();
+
+    // If we have an uploadId and progress callback, track progress via SSE
+    // Make this optional - don't fail if progress tracking fails
+    if (data.data?.uploadId && onProgress) {
+      try {
+        await trackUploadProgress(data.data.uploadId, onProgress);
+      } catch (progressError) {
+        console.warn(
+          "Progress tracking failed, but upload may have succeeded:",
+          progressError
+        );
+        // Continue anyway - the upload already started on the backend
+      }
     }
+
+    return data;
+  } catch (error) {
+    console.error("Bulk upload error:", error);
+    return {
+      success: false,
+      message: "Failed to upload images",
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
   }
 }
 
 /**
- * Fallback: Use multiple single uploads when bulk upload fails
+ * Track upload progress via Server-Sent Events (SSE)
  */
-async function bulkUploadFallback(files: File[]): Promise<UploadResponse> {
-  try {
-    console.log("📤 Starting fallback: multiple single uploads");
-    const results = [];
-    let successCount = 0;
+export interface UploadProgress {
+  uploadId: string;
+  totalFiles: number;
+  processedFiles: number;
+  currentFile?: string;
+  status: "uploading" | "processing" | "completed" | "error";
+  progress: number; // 0-100
+  message?: string;
+  error?: string;
+}
 
-    for (let i = 0; i < files.length; i++) {
-      console.log(
-        `📤 Uploading file ${i + 1}/${files.length}: ${files[i].name}`
-      );
+async function trackUploadProgress(
+  uploadId: string,
+  onProgress: (progress: UploadProgress) => void
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const token = localStorage.getItem("access_token");
+    const url = `${API_BASE_URL}/api/upload/progress/${uploadId}`;
 
-      const singleResult = await uploadAndAnalyzeImage(files[i]);
+    // Create EventSource with auth token in URL (SSE doesn't support custom headers)
+    const eventSource = new EventSource(`${url}?token=${token}`);
 
-      if (singleResult.success && singleResult.data) {
-        successCount++;
-        // Convert single upload response to bulk format
-        results.push({
-          id: Date.now() + i, // Temporary ID since single uploads don't return real IDs
-          filename: singleResult.data.filename || files[i].name,
-          size: files[i].size,
-          type: files[i].type,
-          path: `fallback-${Date.now()}-${i}`,
-          publicUrl: URL.createObjectURL(files[i]), // Temporary preview URL
-          description: singleResult.data.analysis?.caption || "",
-          tags: singleResult.data.analysis?.tags || [],
-          status: "completed",
-          uploadedAt: new Date().toISOString(),
-          analyzedAt: new Date().toISOString(),
-          analysis: {
-            success: true,
-            error: null,
-          },
-        });
-      } else {
-        console.error(
-          `❌ Failed to upload ${files[i].name}:`,
-          singleResult.error
-        );
+    eventSource.onmessage = (event) => {
+      try {
+        const progress: UploadProgress = JSON.parse(event.data);
+        onProgress(progress);
+
+        // Close connection when completed or error
+        if (progress.status === "completed" || progress.status === "error") {
+          eventSource.close();
+          if (progress.status === "completed") {
+            resolve();
+          } else {
+            reject(new Error(progress.error || "Upload failed"));
+          }
+        }
+      } catch (error) {
+        console.error("Error parsing progress data:", error);
       }
-    }
-
-    const message =
-      successCount === files.length
-        ? `✅ All ${successCount} images uploaded successfully (individual uploads)`
-        : `⚠️  Individual uploads completed: ${successCount}/${files.length} images uploaded successfully`;
-
-    console.log(message);
-
-    return {
-      success: successCount > 0,
-      message: message,
-      data: {
-        successful_uploads: successCount,
-        total_attempts: files.length,
-        results: results,
-      },
     };
-  } catch (error) {
-    console.error("Fallback upload error:", error);
-    return {
-      success: false,
-      message: "Fallback upload failed",
-      error: error instanceof Error ? error.message : "Unknown error",
+
+    eventSource.onerror = (error) => {
+      console.warn("SSE connection error:", error);
+      eventSource.close();
+      // Don't reject - the upload may still be processing on the backend
+      // Just resolve so the upload can complete without progress tracking
+      resolve();
     };
-  }
+
+    // Timeout after 10 minutes - just close connection, don't fail the upload
+    setTimeout(() => {
+      eventSource.close();
+      console.warn(
+        "Progress tracking timeout - upload may still be processing"
+      );
+      resolve();
+    }, 10 * 60 * 1000);
+  });
 }
 
 /**
