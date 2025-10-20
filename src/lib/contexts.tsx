@@ -110,11 +110,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   // Check if user is logged in on mount
   useEffect(() => {
     const checkAuth = async () => {
-      console.log("🔍 Checking auth on mount...");
-
       // Ensure we're on the client side
       if (typeof window === "undefined") {
-        console.log("⚠️ Window is undefined, skipping auth check");
         setIsLoading(false);
         return;
       }
@@ -122,19 +119,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       const token = localStorage.getItem("access_token");
       const storedUser = localStorage.getItem("user_data");
 
-      console.log("📦 Token exists:", !!token);
-      console.log("📦 Stored user exists:", !!storedUser);
-      console.log("📦 Stored user value:", storedUser);
-
       // Restore user from localStorage if available (token check moved below)
       if (storedUser) {
         try {
           const parsedUser = JSON.parse(storedUser);
-          console.log("✅ Parsed user from localStorage:", parsedUser);
           setUser(parsedUser);
-          console.log("✅ User state set, UI should update now");
         } catch (e) {
-          console.error("❌ Failed to parse stored user data:", e);
+          console.error("Failed to parse stored user data:", e);
           localStorage.removeItem("user_data");
         }
       }
@@ -178,20 +169,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   const login = (userData: User) => {
-    console.log("🔐 Login called with user data:", userData);
     setUser(userData);
 
     // Store user data for persistence across reloads
     if (typeof window !== "undefined") {
-      const userDataString = JSON.stringify(userData);
-      localStorage.setItem("user_data", userDataString);
-      console.log("💾 Stored user_data in localStorage:", userDataString);
+      localStorage.setItem("user_data", JSON.stringify(userData));
     }
-
-    console.log(
-      "✅ User state updated, isAuthenticated should be:",
-      !!userData
-    );
   };
 
   const logout = async () => {

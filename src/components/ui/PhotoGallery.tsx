@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import {
   getFiles,
@@ -9,7 +9,7 @@ import {
   FileItem,
   DeleteResponse,
 } from "@/lib/api";
-import { useGallery } from "@/lib/contexts";
+import { useGallery, useAuth } from "@/lib/contexts";
 import { Button } from "./Button";
 import { SearchBar } from "./SearchBar";
 
@@ -20,6 +20,7 @@ interface PhotoGalleryProps {
 export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   className = "",
 }) => {
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const [photos, setPhotos] = useState<FileItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -35,45 +36,66 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   const { refreshTrigger, newPhotos, removePhoto, clearNewPhotos } =
     useGallery();
 
-  const fetchPhotos = async (page = 1, showLoading = true) => {
-    try {
-      if (showLoading) {
-        setIsLoading(true);
-      }
-      setError(null);
-
-      const result = await getFiles(page, 12); // 12 photos per page
-
-      if (result.success && result.data) {
-        // Backend returns data as array directly
-        const fetchedPhotos = Array.isArray(result.data) ? result.data : [];
-        setPhotos(fetchedPhotos);
-
-        // Use backend pagination info if available, otherwise calculate
-        if (result.pagination) {
-          setCurrentPage(result.pagination.current_page);
-          setTotalPages(result.pagination.total_pages);
-        } else {
-          // Fallback: if no pagination info, assume we got all data
-          setCurrentPage(page);
-          setTotalPages(Math.ceil(fetchedPhotos.length / 12) || 1);
-        }
-      } else {
-        setError(result.error || "Failed to load photos");
-      }
-    } catch (err) {
-      setError("An unexpected error occurred while loading photos");
-      console.error("Photo gallery error:", err);
-    } finally {
-      if (showLoading) {
+  const fetchPhotos = useCallback(
+    async (page = 1, showLoading = true) => {
+      // Don't fetch if not authenticated or no token available
+      const token = localStorage.getItem("access_token");
+      if (!isAuthenticated || !token) {
         setIsLoading(false);
+        return;
       }
-    }
-  };
 
+      try {
+        if (showLoading) {
+          setIsLoading(true);
+        }
+        setError(null);
+
+        const result = await getFiles(page, 12); // 12 photos per page
+
+        if (result.success && result.data) {
+          // Backend returns data as array directly
+          const fetchedPhotos = Array.isArray(result.data) ? result.data : [];
+          setPhotos(fetchedPhotos);
+
+          // Use backend pagination info if available, otherwise calculate
+          if (result.pagination) {
+            setCurrentPage(result.pagination.current_page);
+            setTotalPages(result.pagination.total_pages);
+          } else {
+            // Fallback: if no pagination info, assume we got all data
+            setCurrentPage(page);
+            setTotalPages(Math.ceil(fetchedPhotos.length / 12) || 1);
+          }
+        } else {
+          setError(result.error || "Failed to load photos");
+        }
+      } catch (err) {
+        setError("An unexpected error occurred while loading photos");
+        console.error("Photo gallery error:", err);
+      } finally {
+        if (showLoading) {
+          setIsLoading(false);
+        }
+      }
+    },
+    [isAuthenticated]
+  );
+
+  // Initial fetch on component mount - only when authenticated and token exists
   useEffect(() => {
-    fetchPhotos(1);
-  }, []);
+    if (isAuthenticated && !authLoading) {
+      // Add a small delay to ensure token is fully written to localStorage
+      const timeoutId = setTimeout(() => {
+        const token = localStorage.getItem("access_token");
+        if (token) {
+          fetchPhotos(1);
+        }
+      }, 100); // 100ms delay
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [isAuthenticated, authLoading, fetchPhotos]);
 
   // Refresh gallery when refreshTrigger changes (for deletion or errors)
   useEffect(() => {
@@ -84,7 +106,13 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
       }
       fetchPhotos(currentPage, false); // Background refresh without loading state
     }
-  }, [refreshTrigger, currentPage, newPhotos.length, clearNewPhotos]);
+  }, [
+    refreshTrigger,
+    currentPage,
+    newPhotos.length,
+    clearNewPhotos,
+    fetchPhotos,
+  ]);
 
   const performSearch = async (query: string, page = 1) => {
     if (!query.trim()) {
@@ -93,6 +121,13 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
       setSearchError(null);
       setSearchCurrentPage(1);
       setSearchTotalPages(1);
+      return;
+    }
+
+    // Don't search if not authenticated or no token
+    const token = localStorage.getItem("access_token");
+    if (!isAuthenticated || !token) {
+      setSearchError("Please log in to search photos");
       return;
     }
 
@@ -164,6 +199,13 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   };
 
   const handleDeleteClick = async (photo: FileItem) => {
+    // Don't delete if not authenticated or no token
+    const token = localStorage.getItem("access_token");
+    if (!isAuthenticated || !token) {
+      alert("Please log in to delete photos");
+      return;
+    }
+
     setDeletingPhotoId(photo.id);
 
     // Optimistically remove photo immediately for smooth UX

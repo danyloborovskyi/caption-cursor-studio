@@ -16,13 +16,6 @@ export const Header: React.FC<HeaderProps> = ({ className = "" }) => {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
-  // Debug: Log auth state changes
-  useEffect(() => {
-    console.log("🎯 Header - Auth state changed:");
-    console.log("   user:", user);
-    console.log("   isAuthenticated:", isAuthenticated);
-  }, [user, isAuthenticated]);
-
   // Close user menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -42,19 +35,6 @@ export const Header: React.FC<HeaderProps> = ({ className = "" }) => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [showUserMenu]);
-
-  const handleGetStarted = () => {
-    // Scroll to upload section
-    const uploadSection = document.querySelector(
-      '[aria-labelledby="upload-section-title"]'
-    );
-    if (uploadSection) {
-      uploadSection.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-    }
-  };
 
   const handleLoginClick = () => {
     setAuthMode("login");

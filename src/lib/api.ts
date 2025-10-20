@@ -83,18 +83,12 @@ export async function signup(
 
     const data = await response.json();
 
-    console.log("🔐 Signup response:", data);
-
     // Store tokens from session object (Supabase format)
     if (data.data?.session?.access_token) {
       localStorage.setItem("access_token", data.data.session.access_token);
-      console.log("✅ Stored access_token in localStorage");
-    } else {
-      console.warn("⚠️ No access_token in signup response!");
     }
     if (data.data?.session?.refresh_token) {
       localStorage.setItem("refresh_token", data.data.session.refresh_token);
-      console.log("✅ Stored refresh_token in localStorage");
     }
 
     return data;
@@ -132,18 +126,12 @@ export async function login(
 
     const data = await response.json();
 
-    console.log("🔐 Login response:", data);
-
     // Store tokens from session object (Supabase format)
     if (data.data?.session?.access_token) {
       localStorage.setItem("access_token", data.data.session.access_token);
-      console.log("✅ Stored access_token in localStorage");
-    } else {
-      console.warn("⚠️ No access_token in login response!");
     }
     if (data.data?.session?.refresh_token) {
       localStorage.setItem("refresh_token", data.data.session.refresh_token);
-      console.log("✅ Stored refresh_token in localStorage");
     }
 
     return data;
@@ -530,6 +518,7 @@ export async function uploadAndAnalyzeImage(
   file: File
 ): Promise<UploadResponse> {
   try {
+    const token = localStorage.getItem("access_token");
     const formData = new FormData();
     formData.append("image", file);
 
@@ -537,6 +526,7 @@ export async function uploadAndAnalyzeImage(
       `${API_BASE_URL}/api/upload/upload-and-analyze`,
       {
         method: "POST",
+        headers: getAuthHeaders(token || undefined),
         body: formData,
       }
     );
@@ -582,10 +572,12 @@ export async function bulkUploadAndAnalyzeImages(
 
     console.log("📤 Using field pattern: images (multiple)");
 
+    const token = localStorage.getItem("access_token");
     const response = await fetch(
       `${API_BASE_URL}/api/upload/bulk-upload-and-analyze`,
       {
         method: "POST",
+        headers: getAuthHeaders(token || undefined),
         body: formData,
         mode: "cors",
       }
@@ -696,15 +688,17 @@ async function bulkUploadFallback(files: File[]): Promise<UploadResponse> {
  */
 export async function getFiles(page = 1, limit = 10): Promise<FilesResponse> {
   try {
+    const token = localStorage.getItem("access_token");
+
     console.log(
       `Fetching files from: ${API_BASE_URL}/api/files/?page=${page}&limit=${limit}`
     );
 
-    // Don't send Content-Type header for GET requests to avoid CORS preflight
     const response = await fetch(
       `${API_BASE_URL}/api/files/?page=${page}&limit=${limit}`,
       {
         method: "GET",
+        headers: getAuthHeaders(token || undefined),
         mode: "cors",
       }
     );
@@ -744,10 +738,12 @@ export async function getFiles(page = 1, limit = 10): Promise<FilesResponse> {
  */
 export async function deleteFile(fileId: number): Promise<DeleteResponse> {
   try {
+    const token = localStorage.getItem("access_token");
     console.log(`Deleting file with ID: ${fileId}`);
 
     const response = await fetch(`${API_BASE_URL}/api/files/${fileId}`, {
       method: "DELETE",
+      headers: getAuthHeaders(token || undefined),
       mode: "cors",
     });
 
@@ -849,6 +845,8 @@ export async function searchFiles(
       };
     }
 
+    const token = localStorage.getItem("access_token");
+
     console.log(
       `Searching files with query: "${query}", page: ${page}, limit: ${limit}`
     );
@@ -859,6 +857,7 @@ export async function searchFiles(
       )}&page=${page}&limit=${limit}`,
       {
         method: "GET",
+        headers: getAuthHeaders(token || undefined),
         mode: "cors",
       }
     );
