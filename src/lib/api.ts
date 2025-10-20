@@ -113,7 +113,6 @@ export async function login(
   credentials: LoginCredentials
 ): Promise<AuthResponse> {
   try {
-    console.log("API login called with email:", credentials.email);
     const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
       method: "POST",
       headers: {
@@ -123,8 +122,6 @@ export async function login(
       mode: "cors",
     });
 
-    console.log("Login response status:", response.status);
-
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(
@@ -133,64 +130,33 @@ export async function login(
     }
 
     const data = await response.json();
-    console.log("Login API raw response:", data);
-    console.log("Response structure check:");
-    console.log("  data.data:", data.data);
-    console.log("  data.data?.session:", data.data?.session);
-    console.log("  data.data?.access_token:", data.data?.access_token);
-    console.log("  data.access_token:", data.access_token);
 
-    // Store tokens - try multiple possible paths
-    let tokenStored = false;
-
+    // Store tokens - try multiple possible paths (camelCase and snake_case)
     // Path 1: data.data.session.accessToken (camelCase - your backend)
     if (data.data?.session?.accessToken) {
-      console.log("✅ Storing access_token from data.data.session.accessToken");
       localStorage.setItem("access_token", data.data.session.accessToken);
-      tokenStored = true;
     }
     // Path 2: data.data.session.access_token (snake_case - Supabase format)
     else if (data.data?.session?.access_token) {
-      console.log(
-        "✅ Storing access_token from data.data.session.access_token"
-      );
       localStorage.setItem("access_token", data.data.session.access_token);
-      tokenStored = true;
     }
     // Path 3: data.data.access_token
     else if (data.data?.access_token) {
-      console.log("✅ Storing access_token from data.data.access_token");
       localStorage.setItem("access_token", data.data.access_token);
-      tokenStored = true;
     }
     // Path 4: data.access_token
     else if (data.access_token) {
-      console.log("✅ Storing access_token from data.access_token");
       localStorage.setItem("access_token", data.access_token);
-      tokenStored = true;
-    }
-
-    if (!tokenStored) {
-      console.error("❌ No access_token found in any expected path!");
-      console.error("Full response:", JSON.stringify(data, null, 2));
     }
 
     // Store refresh_token if available (check both camelCase and snake_case)
     if (data.data?.session?.refreshToken) {
-      console.log(
-        "✅ Storing refresh_token from data.data.session.refreshToken"
-      );
       localStorage.setItem("refresh_token", data.data.session.refreshToken);
     } else if (data.data?.session?.refresh_token) {
-      console.log(
-        "✅ Storing refresh_token from data.data.session.refresh_token"
-      );
       localStorage.setItem("refresh_token", data.data.session.refresh_token);
     } else if (data.data?.refresh_token) {
-      console.log("✅ Storing refresh_token from data.data.refresh_token");
       localStorage.setItem("refresh_token", data.data.refresh_token);
     } else if (data.refresh_token) {
-      console.log("✅ Storing refresh_token from data.refresh_token");
       localStorage.setItem("refresh_token", data.refresh_token);
     }
 
@@ -296,7 +262,6 @@ export async function getCurrentUser(): Promise<
     const token = localStorage.getItem("access_token");
 
     if (!token) {
-      console.warn("getCurrentUser: No access token available");
       return {
         success: false,
         error: "No access token available",
@@ -304,22 +269,14 @@ export async function getCurrentUser(): Promise<
       };
     }
 
-    console.log("getCurrentUser: Fetching user with token");
-    const response = await fetch(`${API_BASE_URL}/api/auth/user`, {
+    const response = await fetch(`${API_BASE_URL}/api/user/profile`, {
       method: "GET",
       headers: getAuthHeaders(token),
       mode: "cors",
     });
 
-    console.log("getCurrentUser: Response status:", response.status);
-
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      console.error(
-        "getCurrentUser: Failed with status",
-        response.status,
-        errorData
-      );
       return {
         success: false,
         error: errorData.error || `HTTP error! status: ${response.status}`,
@@ -328,7 +285,6 @@ export async function getCurrentUser(): Promise<
     }
 
     const data = await response.json();
-    console.log("getCurrentUser: Success, user:", data.data?.user?.email);
     return data;
   } catch (error) {
     console.error("Error getting current user:", error);
@@ -352,7 +308,7 @@ export async function updateProfile(
       throw new Error("No access token available");
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/auth/update-profile`, {
+    const response = await fetch(`${API_BASE_URL}/api/user/update-profile`, {
       method: "POST",
       headers: {
         ...getAuthHeaders(token),
