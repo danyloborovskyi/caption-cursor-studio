@@ -613,26 +613,27 @@ export async function getFiles(
   try {
     const token = localStorage.getItem("access_token");
 
-    const params = new URLSearchParams({
-      page: page.toString(),
-      limit: limit.toString(),
-      sort_by: sortBy,
-      sort_order: sortOrder,
-      status: status,
+    // Try simple request first (like Postman) - without query params to match working Postman request
+    const url = `${API_BASE_URL}/api/files`;
+
+    console.log(`Fetching files from: ${url}`);
+    console.log(
+      `Authorization token:`,
+      token ? `${token.substring(0, 20)}...` : "NO TOKEN"
+    );
+    console.log(`Parameters (not sent yet):`, {
+      page,
+      limit,
+      sortBy,
+      sortOrder,
+      status,
     });
 
-    console.log(
-      `Fetching files from: ${API_BASE_URL}/api/files/?${params.toString()}`
-    );
-
-    const response = await fetch(
-      `${API_BASE_URL}/api/files/?${params.toString()}`,
-      {
-        method: "GET",
-        headers: getAuthHeaders(token || undefined),
-        mode: "cors",
-      }
-    );
+    const response = await fetch(url, {
+      method: "GET",
+      headers: getAuthHeaders(token || undefined),
+      mode: "cors",
+    });
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -641,6 +642,19 @@ export async function getFiles(
     }
 
     const data = await response.json();
+
+    // Detailed logging for debugging
+    console.log("=== getFiles API Response Details ===");
+    console.log("Success:", data.success);
+    console.log("Data array:", data.data);
+    console.log("Data length:", data.data?.length);
+    console.log("Data is array?:", Array.isArray(data.data));
+    console.log("First item:", data.data?.[0]);
+    console.log("Pagination:", data.pagination);
+    console.log("Summary:", data.summary);
+    console.log("Full response:", JSON.stringify(data, null, 2));
+    console.log("=====================================");
+
     return data;
   } catch (error) {
     console.error("Error fetching files:", error);
@@ -659,6 +673,41 @@ export async function getFiles(
     return {
       success: false,
       data: [],
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
+/**
+ * Delete a single file by ID
+ */
+export async function deleteFile(fileId: number): Promise<DeleteResponse> {
+  try {
+    const token = localStorage.getItem("access_token");
+
+    if (!token) {
+      throw new Error("Authentication required");
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/files/${fileId}`, {
+      method: "DELETE",
+      headers: getAuthHeaders(token),
+      mode: "cors",
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Delete Error: ${response.status} - ${errorText}`);
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error deleting file:", error);
+    return {
+      success: false,
+      message: "Failed to delete file",
       error: error instanceof Error ? error.message : "Unknown error",
     };
   }

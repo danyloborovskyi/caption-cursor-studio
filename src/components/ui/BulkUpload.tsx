@@ -3,6 +3,7 @@
 import React, { useState, useCallback } from "react";
 import Image from "next/image";
 import { bulkUploadAndAnalyzeImages, UploadResponse } from "@/lib/api";
+import { useGallery } from "@/lib/contexts";
 import { Button } from "./Button";
 
 interface BulkUploadProps {
@@ -20,6 +21,7 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({
   className = "",
   onUploadSuccess,
 }) => {
+  const { refreshGallery } = useGallery();
   const [selectedFiles, setSelectedFiles] = useState<SelectedFile[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -144,6 +146,13 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({
 
         // Clear form after successful upload
         clearAll();
+
+        // Refresh the gallery to show new images (with a small delay to ensure backend sync)
+        console.log("BulkUpload: Triggering gallery refresh in 1 second...");
+        setTimeout(() => {
+          console.log("BulkUpload: Now refreshing gallery");
+          refreshGallery();
+        }, 1000);
 
         // Call success callback if provided
         onUploadSuccess?.();

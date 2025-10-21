@@ -1,8 +1,8 @@
 "use client";
 
-import { Header } from "@/components";
+import { Header, Gallery } from "@/components";
 import { BulkUpload } from "@/components/ui/BulkUpload";
-import { AuthProvider, useAuth } from "@/lib/contexts";
+import { AuthProvider, GalleryProvider, useAuth } from "@/lib/contexts";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
@@ -48,12 +48,21 @@ function UploadPageContent() {
           <div className="glass rounded-2xl p-8">
             <BulkUpload
               onUploadSuccess={() => {
-                // Optional: Add any post-upload actions here
                 console.log("Upload completed successfully!");
               }}
             />
           </div>
         </section>
+
+        {/* Gallery Section */}
+        <section className="mb-16">
+          <Gallery />
+        </section>
+
+        {/* Divider */}
+        <div className="max-w-5xl mx-auto mb-16">
+          <div className="border-t border-white/10"></div>
+        </div>
 
         {/* Info Section */}
         <section className="max-w-3xl mx-auto">
@@ -128,7 +137,9 @@ function UploadPageContent() {
 export default function UploadPage() {
   return (
     <AuthProvider>
-      <UploadPageContent />
+      <GalleryProvider>
+        <UploadPageContent />
+      </GalleryProvider>
     </AuthProvider>
   );
 }

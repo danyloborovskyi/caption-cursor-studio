@@ -2,6 +2,8 @@
 export { Button } from "./ui/Button";
 export { Header } from "./ui/Header";
 export { BulkUpload } from "./ui/BulkUpload";
+export { Gallery } from "./ui/Gallery";
+export { ImageCard } from "./ui/ImageCard";
 export { LoginForm } from "./ui/LoginForm";
 export { SignupForm } from "./ui/SignupForm";
 export { AuthModal } from "./ui/AuthModal";
