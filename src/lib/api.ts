@@ -552,8 +552,7 @@ export interface SearchResponse {
  * Upload multiple images (up to 10) and get AI-generated captions
  */
 export async function bulkUploadAndAnalyzeImages(
-  files: File[],
-  onProgress?: (progress: UploadProgress) => void
+  files: File[]
 ): Promise<UploadResponse> {
   try {
     if (files.length > 10) {
@@ -586,21 +585,6 @@ export async function bulkUploadAndAnalyzeImages(
     }
 
     const data = await response.json();
-
-    // If we have an uploadId and progress callback, track progress via SSE
-    // Make this optional - don't fail if progress tracking fails
-    if (data.data?.uploadId && onProgress) {
-      try {
-        await trackUploadProgress(data.data.uploadId, onProgress);
-      } catch (progressError) {
-        console.warn(
-          "Progress tracking failed, but upload may have succeeded:",
-          progressError
-        );
-        // Continue anyway - the upload already started on the backend
-      }
-    }
-
     return data;
   } catch (error) {
     console.error("Bulk upload error:", error);
@@ -610,69 +594,6 @@ export async function bulkUploadAndAnalyzeImages(
       error: error instanceof Error ? error.message : "Unknown error",
     };
   }
-}
-
-/**
- * Track upload progress via Server-Sent Events (SSE)
- */
-export interface UploadProgress {
-  uploadId: string;
-  totalFiles: number;
-  processedFiles: number;
-  currentFile?: string;
-  status: "uploading" | "processing" | "completed" | "error";
-  progress: number; // 0-100
-  message?: string;
-  error?: string;
-}
-
-async function trackUploadProgress(
-  uploadId: string,
-  onProgress: (progress: UploadProgress) => void
-): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const token = localStorage.getItem("access_token");
-    const url = `${API_BASE_URL}/api/upload/progress/${uploadId}`;
-
-    // Create EventSource with auth token in URL (SSE doesn't support custom headers)
-    const eventSource = new EventSource(`${url}?token=${token}`);
-
-    eventSource.onmessage = (event) => {
-      try {
-        const progress: UploadProgress = JSON.parse(event.data);
-        onProgress(progress);
-
-        // Close connection when completed or error
-        if (progress.status === "completed" || progress.status === "error") {
-          eventSource.close();
-          if (progress.status === "completed") {
-            resolve();
-          } else {
-            reject(new Error(progress.error || "Upload failed"));
-          }
-        }
-      } catch (error) {
-        console.error("Error parsing progress data:", error);
-      }
-    };
-
-    eventSource.onerror = (error) => {
-      console.warn("SSE connection error:", error);
-      eventSource.close();
-      // Don't reject - the upload may still be processing on the backend
-      // Just resolve so the upload can complete without progress tracking
-      resolve();
-    };
-
-    // Timeout after 10 minutes - just close connection, don't fail the upload
-    setTimeout(() => {
-      eventSource.close();
-      console.warn(
-        "Progress tracking timeout - upload may still be processing"
-      );
-      resolve();
-    }, 10 * 60 * 1000);
-  });
 }
 
 /**

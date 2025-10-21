@@ -188,7 +188,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const logout = async () => {
     await apiLogout();
-    localStorage.removeItem("user_data");
+
+    // Clear user data on client side only
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("user_data");
+    }
+
     setUser(null);
   };
 
@@ -196,7 +201,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     const response = await apiGetCurrentUser();
     if (response.success && response.data?.user) {
       setUser(response.data.user);
-      localStorage.setItem("user_data", JSON.stringify(response.data.user));
+
+      // Store user data on client side only
+      if (typeof window !== "undefined") {
+        localStorage.setItem("user_data", JSON.stringify(response.data.user));
+      }
     }
   };
 

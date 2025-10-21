@@ -2,27 +2,11 @@
 
 import React, { useState, useCallback } from "react";
 import Image from "next/image";
-import {
-  bulkUploadAndAnalyzeImages,
-  UploadResponse,
-  UploadProgress,
-} from "@/lib/api";
-import { useGallery } from "@/lib/contexts";
+import { bulkUploadAndAnalyzeImages, UploadResponse } from "@/lib/api";
 import { Button } from "./Button";
 
 interface BulkUploadProps {
   className?: string;
-}
-
-interface BulkUploadResult {
-  message?: string;
-  uploadCount?: number;
-  results?: Array<{
-    id: number;
-    filename: string;
-    description: string;
-    tags: string[];
-  }>;
 }
 
 interface SelectedFile {
@@ -35,12 +19,7 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({ className = "" }) => {
   const [selectedFiles, setSelectedFiles] = useState<SelectedFile[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState<UploadProgress | null>(
-    null
-  );
-  const [results, setResults] = useState<BulkUploadResult | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const { refreshGallery } = useGallery();
 
   const createFilePreview = (file: File): SelectedFile => ({
     file,
@@ -123,62 +102,35 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({ className = "" }) => {
     });
   };
 
-  const clearAll = () => {
+  const clearAll = useCallback(() => {
     selectedFiles.forEach((f) => URL.revokeObjectURL(f.previewUrl));
     setSelectedFiles([]);
-    setResults(null);
     setError(null);
-  };
+  }, [selectedFiles]);
 
   const uploadFiles = async () => {
     if (selectedFiles.length === 0) return;
 
     setIsLoading(true);
-    setResults(null);
     setError(null);
-    setUploadProgress(null);
 
     try {
       const files = selectedFiles.map((f) => f.file);
 
-      const result: UploadResponse = await bulkUploadAndAnalyzeImages(
-        files,
-        (progress) => {
-          setUploadProgress(progress);
-        }
-      );
+      const result: UploadResponse = await bulkUploadAndAnalyzeImages(files);
 
       if (result.success) {
-        const successMessage =
-          result.message || "Upload completed successfully";
-        const uploadCount =
-          result.data?.totalFiles ||
-          result.data?.successful_uploads ||
-          selectedFiles.length;
-
-        setResults({
-          message: successMessage,
-          uploadCount,
-          results: result.data?.results || [],
-        });
-
-        // Refresh gallery to show new photos from backend
-        refreshGallery();
-
-        // Clear files and progress after successful upload
+        // Clear form after successful upload
         clearAll();
-        setUploadProgress(null);
       } else {
         const errorMsg =
           result.error || result.message || "Failed to upload images";
         setError(errorMsg);
-        setUploadProgress(null);
       }
     } catch (err) {
       setError(
         `Upload failed: ${err instanceof Error ? err.message : "Unknown error"}`
       );
-      setUploadProgress(null);
     } finally {
       setIsLoading(false);
     }
@@ -304,48 +256,9 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({ className = "" }) => {
           <div className="flex items-center space-x-3">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
             <p className="text-blue-700 dark:text-blue-300">
-              AI is analyzing {selectedFiles.length} image
+              Uploading and analyzing {selectedFiles.length} image
               {selectedFiles.length !== 1 ? "s" : ""}...
             </p>
-          </div>
-        </div>
-      )}
-
-      {/* Upload Progress */}
-      {uploadProgress && (
-        <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg">
-          <div className="space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="font-medium text-blue-900 dark:text-blue-100">
-                {uploadProgress.status === "uploading"
-                  ? "📤 Uploading files..."
-                  : uploadProgress.status === "processing"
-                  ? "🤖 Processing with AI..."
-                  : uploadProgress.status === "completed"
-                  ? "✅ Upload complete!"
-                  : "❌ Upload error"}
-              </span>
-              <span className="text-sm text-blue-700 dark:text-blue-300 font-medium">
-                {uploadProgress.processedFiles}/{uploadProgress.totalFiles}
-              </span>
-            </div>
-            {/* Progress Bar */}
-            <div className="w-full bg-blue-200 dark:bg-blue-900 rounded-full h-2.5">
-              <div
-                className="bg-blue-600 dark:bg-blue-400 h-2.5 rounded-full transition-all duration-300 ease-out"
-                style={{ width: `${uploadProgress.progress}%` }}
-              />
-            </div>
-            {uploadProgress.currentFile && (
-              <p className="text-xs text-blue-600 dark:text-blue-400">
-                Processing: {uploadProgress.currentFile}
-              </p>
-            )}
-            {uploadProgress.message && (
-              <p className="text-sm text-blue-700 dark:text-blue-300">
-                {uploadProgress.message}
-              </p>
-            )}
           </div>
         </div>
       )}
@@ -376,40 +289,6 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({ className = "" }) => {
               </p>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* Success Results */}
-      {results && (
-        <div className="p-6 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg">
-          <div className="flex items-center space-x-3 mb-4">
-            <svg
-              className="w-6 h-6 text-green-600 dark:text-green-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
-            <h4 className="text-lg font-medium text-green-800 dark:text-green-200">
-              Bulk Upload Successful!
-            </h4>
-          </div>
-          <p className="text-green-700 dark:text-green-300 mb-3">
-            {results?.message ||
-              "All images have been processed and added to your gallery."}
-          </p>
-          {results?.uploadCount && (
-            <p className="text-sm text-green-600 dark:text-green-400">
-              Successfully processed {results.uploadCount} image
-              {results.uploadCount !== 1 ? "s" : ""}
-            </p>
-          )}
         </div>
       )}
     </div>
