@@ -513,8 +513,19 @@ export interface FilesResponse {
     total_pages: number;
     has_next_page: boolean;
     has_prev_page: boolean;
-    next_page?: number;
-    prev_page?: number;
+    next_page?: number | null;
+    prev_page?: number | null;
+  };
+  filters?: {
+    status: string;
+    sort_by: string;
+    sort_order: string;
+  };
+  summary?: {
+    total_files: number;
+    page_count: number;
+    files_with_ai: number;
+    image_files: number;
   };
   error?: string;
 }
@@ -584,6 +595,70 @@ export async function bulkUploadAndAnalyzeImages(
     return {
       success: false,
       message: "Failed to upload images",
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
+/**
+ * Get list of all uploaded files with pagination
+ */
+export async function getFiles(
+  page = 1,
+  limit = 20,
+  sortBy = "uploaded_at",
+  sortOrder: "asc" | "desc" = "desc",
+  status = "all"
+): Promise<FilesResponse> {
+  try {
+    const token = localStorage.getItem("access_token");
+
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+      sort_by: sortBy,
+      sort_order: sortOrder,
+      status: status,
+    });
+
+    console.log(
+      `Fetching files from: ${API_BASE_URL}/api/files/?${params.toString()}`
+    );
+
+    const response = await fetch(
+      `${API_BASE_URL}/api/files/?${params.toString()}`,
+      {
+        method: "GET",
+        headers: getAuthHeaders(token || undefined),
+        mode: "cors",
+      }
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`API Error: ${response.status} - ${errorText}`);
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching files:", error);
+
+    // Enhanced error logging for CORS debugging
+    if (
+      error instanceof TypeError &&
+      error.message.includes("Failed to fetch")
+    ) {
+      console.error(
+        "CORS or Network Error: Check if backend allows your domain"
+      );
+      console.error("Backend URL:", `${API_BASE_URL}/api/files/`);
+    }
+
+    return {
+      success: false,
+      data: [],
       error: error instanceof Error ? error.message : "Unknown error",
     };
   }
