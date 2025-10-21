@@ -33,6 +33,9 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isWaitingForAnalysis, setIsWaitingForAnalysis] = useState(false);
   const [analysisComplete, setAnalysisComplete] = useState(false);
+  const [tagStyle, setTagStyle] = useState<"neutral" | "playful" | "seo">(
+    "playful"
+  );
 
   const createFilePreview = (file: File): SelectedFile => ({
     file,
@@ -134,7 +137,10 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({
 
     try {
       const files = selectedFiles.map((f) => f.file);
-      const result: UploadResponse = await bulkUploadAndAnalyzeImages(files);
+      const result: UploadResponse = await bulkUploadAndAnalyzeImages(
+        files,
+        tagStyle
+      );
 
       if (result.success) {
         const count =
@@ -280,6 +286,57 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({
             Supports: JPG, PNG, GIF, WebP (max 10MB each) •{" "}
             {selectedFiles.length}/10 selected
           </p>
+        </div>
+      </div>
+
+      {/* Tag Style Selector */}
+      <div className="mb-6">
+        <label className="block text-sm font-medium text-white mb-3">
+          Tag Style
+        </label>
+        <div className="flex gap-3">
+          <button
+            type="button"
+            onClick={() => setTagStyle("neutral")}
+            className={`flex-1 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
+              tagStyle === "neutral"
+                ? "bg-blue-500 text-white shadow-lg shadow-blue-500/30"
+                : "glass text-white/70 hover:text-white"
+            }`}
+          >
+            <div className="font-semibold">Neutral</div>
+            <div className="text-xs opacity-80 mt-1">
+              Professional, balanced descriptions
+            </div>
+          </button>
+          <button
+            type="button"
+            onClick={() => setTagStyle("playful")}
+            className={`flex-1 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
+              tagStyle === "playful"
+                ? "bg-blue-500 text-white shadow-lg shadow-blue-500/30"
+                : "glass text-white/70 hover:text-white"
+            }`}
+          >
+            <div className="font-semibold">Playful</div>
+            <div className="text-xs opacity-80 mt-1">
+              Creative, engaging language
+            </div>
+          </button>
+          <button
+            type="button"
+            onClick={() => setTagStyle("seo")}
+            className={`flex-1 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
+              tagStyle === "seo"
+                ? "bg-blue-500 text-white shadow-lg shadow-blue-500/30"
+                : "glass text-white/70 hover:text-white"
+            }`}
+          >
+            <div className="font-semibold">SEO</div>
+            <div className="text-xs opacity-80 mt-1">
+              Search-optimized keywords
+            </div>
+          </button>
         </div>
       </div>
 

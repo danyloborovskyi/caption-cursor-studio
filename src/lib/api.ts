@@ -556,7 +556,8 @@ export interface SearchResponse {
  * Upload multiple images (up to 10) and get AI-generated captions
  */
 export async function bulkUploadAndAnalyzeImages(
-  files: File[]
+  files: File[],
+  tagStyle: "neutral" | "playful" | "seo" = "playful"
 ): Promise<UploadResponse> {
   try {
     if (files.length > 10) {
@@ -571,6 +572,7 @@ export async function bulkUploadAndAnalyzeImages(
     files.forEach((file) => {
       formData.append("images", file);
     });
+    formData.append("tagStyle", tagStyle);
 
     const token = localStorage.getItem("access_token");
     const response = await fetch(
