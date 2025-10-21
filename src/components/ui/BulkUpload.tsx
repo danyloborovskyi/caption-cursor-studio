@@ -3,6 +3,7 @@
 import React, { useState, useCallback } from "react";
 import Image from "next/image";
 import { bulkUploadAndAnalyzeImages, UploadResponse } from "@/lib/api";
+import { useGallery } from "@/lib/contexts";
 import { Button } from "./Button";
 
 interface BulkUploadProps {
@@ -20,6 +21,7 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({ className = "" }) => {
   const [isDragOver, setIsDragOver] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { refreshGallery } = useGallery();
 
   const createFilePreview = (file: File): SelectedFile => ({
     file,
@@ -122,6 +124,10 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({ className = "" }) => {
       if (result.success) {
         // Clear form after successful upload
         clearAll();
+
+        // Refresh gallery to show new photos with tags
+        // Backend completes AI analysis before returning
+        refreshGallery();
       } else {
         const errorMsg =
           result.error || result.message || "Failed to upload images";
