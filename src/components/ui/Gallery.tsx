@@ -70,13 +70,14 @@ export const Gallery: React.FC<GalleryProps> = ({ className = "" }) => {
     }
   }, [isAuthenticated, fetchPhotos]);
 
-  // Refresh when trigger changes
+  // Refresh when trigger changes - reset to page 1 to show new uploads
   useEffect(() => {
     if (refreshTrigger > 0 && isAuthenticated) {
-      console.log("Gallery: Refresh triggered");
-      fetchPhotos(currentPage, false);
+      console.log("Gallery: Refresh triggered - fetching page 1");
+      setCurrentPage(1);
+      fetchPhotos(1, false);
     }
-  }, [refreshTrigger, currentPage, isAuthenticated, fetchPhotos]);
+  }, [refreshTrigger, isAuthenticated, fetchPhotos]);
 
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {

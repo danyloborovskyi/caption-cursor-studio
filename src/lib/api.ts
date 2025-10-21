@@ -679,6 +679,43 @@ export async function getFiles(
 }
 
 /**
+ * Check if recent files are fully analyzed (helper for polling)
+ */
+export async function checkRecentFilesAnalyzed(
+  count: number
+): Promise<{ allAnalyzed: boolean; processingCount: number }> {
+  try {
+    const result = await getFiles(1, count);
+
+    if (!result.success || !result.data) {
+      return { allAnalyzed: false, processingCount: count };
+    }
+
+    // Check first 'count' files - recent uploads should be at the top
+    const recentFiles = result.data.slice(0, count);
+    const processingFiles = recentFiles.filter(
+      (file) =>
+        file.status === "processing" ||
+        !file.has_ai_analysis ||
+        !file.tags ||
+        file.tags.length === 0
+    );
+
+    console.log(
+      `checkRecentFilesAnalyzed: Checked ${recentFiles.length} files, ${processingFiles.length} still processing`
+    );
+
+    return {
+      allAnalyzed: processingFiles.length === 0,
+      processingCount: processingFiles.length,
+    };
+  } catch (error) {
+    console.error("Error checking file analysis status:", error);
+    return { allAnalyzed: false, processingCount: count };
+  }
+}
+
+/**
  * Delete a single file by ID
  */
 export async function deleteFile(fileId: number): Promise<DeleteResponse> {

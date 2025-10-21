@@ -2,7 +2,11 @@
 
 import React, { useState, useCallback } from "react";
 import Image from "next/image";
-import { bulkUploadAndAnalyzeImages, UploadResponse } from "@/lib/api";
+import {
+  bulkUploadAndAnalyzeImages,
+  checkRecentFilesAnalyzed,
+  UploadResponse,
+} from "@/lib/api";
 import { useGallery } from "@/lib/contexts";
 import { Button } from "./Button";
 
@@ -27,6 +31,7 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [isWaitingForAnalysis, setIsWaitingForAnalysis] = useState(false);
 
   const createFilePreview = (file: File): SelectedFile => ({
     file,
@@ -115,6 +120,7 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({
     setSelectedFiles([]);
     setError(null);
     setSuccessMessage(null);
+    setIsWaitingForAnalysis(false);
   }, [selectedFiles]);
 
   const uploadFiles = async () => {
@@ -147,12 +153,59 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({
         // Clear form after successful upload
         clearAll();
 
-        // Refresh the gallery to show new images (with a small delay to ensure backend sync)
-        console.log("BulkUpload: Triggering gallery refresh in 1 second...");
-        setTimeout(() => {
-          console.log("BulkUpload: Now refreshing gallery");
-          refreshGallery();
-        }, 1000);
+        console.log(`BulkUpload: Backend processing took ${processingTime}s`);
+        console.log(
+          `BulkUpload: Starting polling to wait for all ${count} images to be fully analyzed`
+        );
+
+        setIsWaitingForAnalysis(true);
+
+        // Poll until all images are fully analyzed
+        const pollForAnalysis = async () => {
+          let attempts = 0;
+          const maxAttempts = 30; // Max 30 attempts (1 minute with 2s intervals)
+          const pollInterval = 2000; // Check every 2 seconds
+
+          const checkAnalysis = async (): Promise<void> => {
+            attempts++;
+            console.log(
+              `BulkUpload: Polling attempt ${attempts}/${maxAttempts}`
+            );
+
+            const { allAnalyzed, processingCount } =
+              await checkRecentFilesAnalyzed(count);
+
+            if (allAnalyzed) {
+              console.log(
+                "BulkUpload: All images fully analyzed! Refreshing gallery..."
+              );
+              setIsWaitingForAnalysis(false);
+              refreshGallery();
+              return;
+            }
+
+            if (attempts >= maxAttempts) {
+              console.warn(
+                `BulkUpload: Max polling attempts reached. ${processingCount} images still processing. Refreshing anyway...`
+              );
+              setIsWaitingForAnalysis(false);
+              refreshGallery();
+              return;
+            }
+
+            console.log(
+              `BulkUpload: ${processingCount} images still processing, checking again in ${
+                pollInterval / 1000
+              }s...`
+            );
+            setTimeout(checkAnalysis, pollInterval);
+          };
+
+          // Start initial check after a small delay (backend needs time to save)
+          setTimeout(checkAnalysis, 3000);
+        };
+
+        pollForAnalysis();
 
         // Call success callback if provided
         onUploadSuccess?.();
@@ -165,6 +218,7 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({
       setError(
         `Upload failed: ${err instanceof Error ? err.message : "Unknown error"}`
       );
+      setIsWaitingForAnalysis(false);
     } finally {
       setIsLoading(false);
     }
@@ -308,9 +362,24 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({
                 d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-            <div>
+            <div className="flex-1">
               <h4 className="text-sm font-medium text-green-400">Success!</h4>
               <p className="text-sm text-white/70 mt-1">{successMessage}</p>
+              {isWaitingForAnalysis ? (
+                <div className="flex items-center gap-2 mt-2">
+                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-400"></div>
+                  <p className="text-xs text-white/50">
+                    Waiting for AI analysis to complete... Checking every 2
+                    seconds
+                  </p>
+                </div>
+              ) : (
+                successMessage && (
+                  <p className="text-xs text-green-300 mt-2">
+                    ✓ Gallery updated with your fully analyzed images!
+                  </p>
+                )
+              )}
             </div>
           </div>
         </div>
