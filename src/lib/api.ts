@@ -749,3 +749,62 @@ export async function deleteFile(fileId: number): Promise<DeleteResponse> {
     };
   }
 }
+
+/**
+ * Search files by query (searches description, tags, and filename)
+ */
+export async function searchFiles(
+  query: string,
+  page = 1,
+  limit = 12
+): Promise<SearchResponse> {
+  try {
+    const token = localStorage.getItem("access_token");
+
+    if (!token) {
+      throw new Error("Authentication required");
+    }
+
+    const params = new URLSearchParams({
+      q: query,
+      page: page.toString(),
+      limit: limit.toString(),
+    });
+
+    console.log(
+      `Searching files: ${API_BASE_URL}/api/files/search?${params.toString()}`
+    );
+
+    const response = await fetch(
+      `${API_BASE_URL}/api/files/search?${params.toString()}`,
+      {
+        method: "GET",
+        headers: getAuthHeaders(token),
+        mode: "cors",
+      }
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Search Error: ${response.status} - ${errorText}`);
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log("Search results:", data);
+
+    return {
+      success: data.success,
+      data: data.data || [],
+      pagination: data.pagination,
+      error: data.error,
+    };
+  } catch (error) {
+    console.error("Error searching files:", error);
+    return {
+      success: false,
+      data: [],
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}

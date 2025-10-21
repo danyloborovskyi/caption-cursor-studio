@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { getFiles, deleteFile, FileItem } from "@/lib/api";
+import { getFiles, deleteFile, searchFiles, FileItem } from "@/lib/api";
 import { useGallery, useAuth } from "@/lib/contexts";
 import { Button } from "./Button";
 import { ImageCard } from "./ImageCard";
+import { SearchBar } from "./SearchBar";
 
 interface GalleryProps {
   className?: string;
@@ -19,6 +20,11 @@ export const Gallery: React.FC<GalleryProps> = ({ className = "" }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [deletingPhotoId, setDeletingPhotoId] = useState<number | null>(null);
+
+  // Search state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
+  const [isSearchMode, setIsSearchMode] = useState(false);
 
   const fetchPhotos = useCallback(
     async (page = 1, showLoading = true) => {
@@ -74,14 +80,73 @@ export const Gallery: React.FC<GalleryProps> = ({ className = "" }) => {
   useEffect(() => {
     if (refreshTrigger > 0 && isAuthenticated) {
       console.log("Gallery: Refresh triggered - fetching page 1");
+      setIsSearchMode(false);
+      setSearchQuery("");
       setCurrentPage(1);
       fetchPhotos(1, false);
     }
   }, [refreshTrigger, isAuthenticated, fetchPhotos]);
 
+  const handleSearch = async (query: string) => {
+    if (!query.trim()) return;
+
+    setIsSearching(true);
+    setIsSearchMode(true);
+    setSearchQuery(query);
+    setError(null);
+
+    try {
+      const result = await searchFiles(query, 1, 12);
+
+      if (result.success) {
+        setPhotos(result.data);
+        setCurrentPage(result.pagination?.current_page || 1);
+        setTotalPages(result.pagination?.total_pages || 1);
+      } else {
+        setError(result.error || "Search failed");
+        setPhotos([]);
+      }
+    } catch (err) {
+      setError("An error occurred while searching");
+      console.error("Search error:", err);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleClearSearch = () => {
+    setSearchQuery("");
+    setIsSearchMode(false);
+    setCurrentPage(1);
+    fetchPhotos(1, true);
+  };
+
+  const handleSearchPageChange = async (newPage: number) => {
+    if (!searchQuery.trim() || newPage < 1 || newPage > totalPages) return;
+
+    setIsSearching(true);
+    try {
+      const result = await searchFiles(searchQuery, newPage, 12);
+
+      if (result.success) {
+        setPhotos(result.data);
+        setCurrentPage(result.pagination?.current_page || newPage);
+        setTotalPages(result.pagination?.total_pages || 1);
+      }
+    } catch (err) {
+      console.error("Search pagination error:", err);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
   const handlePageChange = (newPage: number) => {
-    if (newPage >= 1 && newPage <= totalPages) {
-      fetchPhotos(newPage);
+    if (isSearchMode) {
+      handleSearchPageChange(newPage);
+    } else {
+      if (newPage >= 1 && newPage <= totalPages) {
+        fetchPhotos(newPage);
+      }
     }
   };
 
@@ -227,38 +292,33 @@ export const Gallery: React.FC<GalleryProps> = ({ className = "" }) => {
   return (
     <div className={`w-full ${className}`}>
       {/* Header */}
-      <div className="mb-8 text-center">
-        <h2 className="text-3xl font-light text-white mb-2 tracking-wide">
-          Your Gallery
-        </h2>
-        <p className="text-white/60 font-light mb-4">
-          {photos.length} image{photos.length !== 1 ? "s" : ""} with
-          AI-generated tags
-        </p>
-        <Button
-          onClick={() => {
-            console.log("Manual refresh clicked");
-            fetchPhotos(currentPage, true);
-          }}
-          variant="outline"
-          size="sm"
-          className="mt-2"
-        >
-          <svg
-            className="w-4 h-4 mr-2"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-            />
-          </svg>
-          Refresh Gallery
-        </Button>
+      <div className="mb-8">
+        <div className="text-center mb-6">
+          <h2 className="text-3xl font-light text-white mb-2 tracking-wide">
+            Your Gallery
+          </h2>
+          <p className="text-white/60 font-light">
+            {isSearchMode && searchQuery ? (
+              <>
+                Found {photos.length} result{photos.length !== 1 ? "s" : ""} for
+                &ldquo;{searchQuery}&rdquo;
+              </>
+            ) : (
+              <>
+                {photos.length} image{photos.length !== 1 ? "s" : ""} with
+                AI-generated tags
+              </>
+            )}
+          </p>
+        </div>
+
+        {/* Search Bar */}
+        <SearchBar
+          onSearch={handleSearch}
+          onClear={handleClearSearch}
+          placeholder="Search by description, tags, or filename..."
+          isLoading={isSearching}
+        />
       </div>
 
       {/* Grid of Image Cards */}
