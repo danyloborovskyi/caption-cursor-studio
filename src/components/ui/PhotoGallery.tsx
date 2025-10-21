@@ -33,8 +33,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   const [searchError, setSearchError] = useState<string | null>(null);
   const [searchCurrentPage, setSearchCurrentPage] = useState(1);
   const [searchTotalPages, setSearchTotalPages] = useState(1);
-  const { refreshTrigger, newPhotos, removePhoto, clearNewPhotos } =
-    useGallery();
+  const { refreshTrigger } = useGallery();
 
   const fetchPhotos = useCallback(
     async (page = 1, showLoading = true) => {
@@ -123,10 +122,6 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   // Refresh gallery when refreshTrigger changes (for deletion or errors)
   useEffect(() => {
     if (refreshTrigger > 0 && isAuthenticated) {
-      // Clear new photos before refreshing to avoid duplicates
-      if (newPhotos.length > 0) {
-        clearNewPhotos();
-      }
       fetchPhotos(currentPage, false); // Background refresh without loading state
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -206,9 +201,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
 
   // Determine which photos to display (search results or regular photos)
   const isSearchMode = searchQuery.trim().length > 0;
-  const displayPhotos = isSearchMode
-    ? [...searchResults]
-    : [...newPhotos, ...photos];
+  const displayPhotos = isSearchMode ? searchResults : photos;
 
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {
@@ -227,16 +220,12 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
     setDeletingPhotoId(photo.id);
 
     // Optimistically remove photo immediately for smooth UX
-    const isFromNewPhotos = newPhotos.some((p) => p.id === photo.id);
     const isFromSearchResults =
       isSearchMode && searchResults.some((p) => p.id === photo.id);
     const originalPhotos = photos; // Store original photos for potential revert
     const originalSearchResults = searchResults; // Store original search results for potential revert
 
-    if (isFromNewPhotos) {
-      // If it's from newPhotos, just remove it from there
-      removePhoto(photo.id);
-    } else if (isFromSearchResults) {
+    if (isFromSearchResults) {
       // If it's from search results, remove it optimistically
       setSearchResults((prev) => prev.filter((p) => p.id !== photo.id));
     } else {
