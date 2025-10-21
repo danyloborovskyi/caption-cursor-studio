@@ -32,7 +32,7 @@ export const ImageCard: React.FC<ImageCardProps> = ({
   };
 
   return (
-    <div className="glass glass-hover rounded-2xl overflow-hidden transition-all duration-300 flex flex-col">
+    <div className="glass glass-hover rounded-2xl overflow-hidden transition-all duration-300 flex flex-col relative">
       {/* Image */}
       <div className="aspect-square relative bg-white/5">
         <Image
@@ -81,7 +81,7 @@ export const ImageCard: React.FC<ImageCardProps> = ({
             variant="outline"
             size="sm"
             onClick={handleDeleteClick}
-            disabled={isDeleting}
+            disabled={isDeleting || showConfirmation}
             className="w-full text-red-300 hover:text-red-200 hover:bg-red-500/20 border-red-300/50 hover:border-red-300/70 disabled:opacity-50 transition-colors"
           >
             <svg
@@ -102,15 +102,15 @@ export const ImageCard: React.FC<ImageCardProps> = ({
         </div>
       </div>
 
-      {/* Custom Confirmation Modal */}
+      {/* Inline Confirmation Overlay */}
       {showConfirmation && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="glass rounded-2xl p-6 max-w-md w-full border border-white/20 shadow-2xl animate-scale-in">
-            {/* Icon */}
+        <div className="absolute inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-6 animate-fade-in z-10">
+          <div className="text-center">
+            {/* Warning Icon */}
             <div className="flex justify-center mb-4">
-              <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center">
                 <svg
-                  className="w-8 h-8 text-red-400"
+                  className="w-6 h-6 text-red-400"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -126,32 +126,28 @@ export const ImageCard: React.FC<ImageCardProps> = ({
             </div>
 
             {/* Title */}
-            <h3 className="text-xl font-semibold text-white text-center mb-2">
+            <h3 className="text-lg font-semibold text-white mb-2">
               Delete Image?
             </h3>
 
             {/* Message */}
-            <p className="text-white/70 text-center mb-3 font-light">
-              Are you sure you want to delete
-            </p>
-            <p className="text-white font-medium text-center mb-6 truncate px-4">
-              &ldquo;{photo.filename}&rdquo;
-            </p>
-            <p className="text-white/60 text-sm text-center mb-6">
+            <p className="text-white/70 text-sm mb-4 font-light">
               This action cannot be undone.
             </p>
 
             {/* Action Buttons */}
-            <div className="flex gap-3">
+            <div className="flex gap-2">
               <Button
                 variant="outline"
+                size="sm"
                 onClick={handleCancelDelete}
-                className="flex-1"
+                className="flex-1 text-white/80 hover:text-white border-white/30 hover:border-white/50"
               >
                 Cancel
               </Button>
               <Button
                 variant="primary"
+                size="sm"
                 onClick={handleConfirmDelete}
                 className="flex-1 bg-red-500 hover:bg-red-600 border-red-500"
               >
