@@ -241,54 +241,6 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({
 
   return (
     <div className={`w-full ${className}`}>
-      {/* Upload Area */}
-      <div
-        className={`
-          relative border-2 border-dashed rounded-lg p-6 text-center transition-colors mb-4
-          ${isDragOver ? "border-blue-500 bg-blue-50/10" : "border-white/30"}
-          hover:border-white/50
-        `}
-        onDrop={handleDrop}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-      >
-        <input
-          type="file"
-          accept="image/*"
-          multiple
-          onChange={handleFileInputChange}
-          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-          disabled={isLoading || selectedFiles.length >= 10}
-        />
-        <div className="space-y-3">
-          <div className="mx-auto w-10 h-10 text-white/60">
-            <svg
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-              />
-            </svg>
-          </div>
-          <div>
-            <p className="text-lg font-light text-white">
-              Drop up to 10 images here
-            </p>
-            <p className="text-sm text-white/60">or click to select files</p>
-          </div>
-          <p className="text-xs text-white/50">
-            Supports: JPG, PNG, GIF, WebP (max 10MB each) •{" "}
-            {selectedFiles.length}/10 selected
-          </p>
-        </div>
-      </div>
-
       {/* Tag Style Selector */}
       <div className="mb-6">
         <label className="block text-sm font-medium text-white mb-3">
@@ -340,34 +292,64 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({
         </div>
       </div>
 
+      {/* Upload Area */}
+      <div
+        className={`
+          relative border-2 border-dashed rounded-lg p-6 text-center transition-colors mb-4
+          ${isDragOver ? "border-blue-500 bg-blue-50/10" : "border-white/30"}
+          hover:border-white/50
+        `}
+        onDrop={handleDrop}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+      >
+        <input
+          type="file"
+          accept="image/*"
+          multiple
+          onChange={handleFileInputChange}
+          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+          disabled={isLoading || selectedFiles.length >= 10}
+        />
+        <div className="space-y-3">
+          <div className="mx-auto w-10 h-10 text-white/60">
+            <svg
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+              />
+            </svg>
+          </div>
+          <div>
+            <p className="text-lg font-light text-white">
+              Drop up to 10 images here
+            </p>
+            <p className="text-sm text-white/60">or click to select files</p>
+          </div>
+          <p className="text-xs text-white/50">
+            Supports: JPG, PNG, GIF, WebP (max 10MB each) •{" "}
+            {selectedFiles.length}/10 selected
+          </p>
+        </div>
+      </div>
+
       {/* Selected Files Preview */}
       {selectedFiles.length > 0 && (
         <div className="mb-6">
-          <div className="flex items-center justify-between mb-3">
-            <h4 className="font-light text-white">
+          <div className="mb-4">
+            <h4 className="font-light text-white text-lg">
               Selected Images ({selectedFiles.length})
             </h4>
-            <div className="flex gap-2">
-              {!isLoading && !isWaitingForAnalysis && (
-                <>
-                  <Button onClick={uploadFiles} variant="primary">
-                    Analyze All Images
-                  </Button>
-                  <Button onClick={clearAll} variant="outline" size="sm">
-                    Clear All
-                  </Button>
-                </>
-              )}
-              {isWaitingForAnalysis && (
-                <div className="flex items-center gap-2 text-blue-400 text-sm">
-                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-400/30 border-t-blue-400"></div>
-                  <span>AI Analysis in progress...</span>
-                </div>
-              )}
-            </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
             {selectedFiles.map((fileObj) => (
               <div
                 key={fileObj.id}
@@ -455,6 +437,30 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({
                 )}
               </div>
             ))}
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex items-center justify-center gap-3">
+            {!isLoading && !isWaitingForAnalysis && (
+              <>
+                <Button
+                  onClick={uploadFiles}
+                  variant="primary"
+                  className="px-8 py-3 text-base"
+                >
+                  Analyze All Images
+                </Button>
+                <Button onClick={clearAll} variant="outline" className="px-6">
+                  Clear All
+                </Button>
+              </>
+            )}
+            {isWaitingForAnalysis && (
+              <div className="flex items-center gap-2 text-blue-400">
+                <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-400/30 border-t-blue-400"></div>
+                <span className="font-medium">AI Analysis in progress...</span>
+              </div>
+            )}
           </div>
         </div>
       )}
