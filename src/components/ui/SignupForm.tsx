@@ -48,8 +48,8 @@ export const SignupForm: React.FC<SignupFormProps> = ({
       if (response.success && response.data?.user) {
         setUser(response.data.user);
         onSuccess?.();
-        // Redirect to upload page after successful signup
-        router.push("/upload");
+        // Redirect to home page after successful signup
+        router.push("/");
       } else {
         setError(response.error || "Failed to sign up");
       }
