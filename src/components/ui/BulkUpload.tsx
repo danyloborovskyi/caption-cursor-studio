@@ -32,6 +32,7 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isWaitingForAnalysis, setIsWaitingForAnalysis] = useState(false);
+  const [analysisComplete, setAnalysisComplete] = useState(false);
 
   const createFilePreview = (file: File): SelectedFile => ({
     file,
@@ -121,6 +122,7 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({
     setError(null);
     setSuccessMessage(null);
     setIsWaitingForAnalysis(false);
+    setAnalysisComplete(false);
   }, [selectedFiles]);
 
   const uploadFiles = async () => {
@@ -150,9 +152,6 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({
 
         setSuccessMessage(message);
 
-        // Clear form after successful upload
-        clearAll();
-
         console.log(`BulkUpload: Backend processing took ${processingTime}s`);
         console.log(
           `BulkUpload: Starting polling to wait for all ${count} images to be fully analyzed`
@@ -180,7 +179,14 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({
                 "BulkUpload: All images fully analyzed! Refreshing gallery..."
               );
               setIsWaitingForAnalysis(false);
+              setAnalysisComplete(true);
               refreshGallery();
+
+              // Show success state briefly, then clear form
+              setTimeout(() => {
+                clearAll();
+                setAnalysisComplete(false);
+              }, 2000);
               return;
             }
 
@@ -190,6 +196,8 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({
               );
               setIsWaitingForAnalysis(false);
               refreshGallery();
+              // Clear form even if not all analyzed
+              clearAll();
               return;
             }
 
@@ -219,6 +227,7 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({
         `Upload failed: ${err instanceof Error ? err.message : "Unknown error"}`
       );
       setIsWaitingForAnalysis(false);
+      setAnalysisComplete(false);
     } finally {
       setIsLoading(false);
     }
@@ -282,7 +291,7 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({
               Selected Images ({selectedFiles.length})
             </h4>
             <div className="flex gap-2">
-              {!isLoading && (
+              {!isLoading && !isWaitingForAnalysis && (
                 <>
                   <Button onClick={uploadFiles} variant="primary">
                     Analyze All Images
@@ -291,6 +300,12 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({
                     Clear All
                   </Button>
                 </>
+              )}
+              {isWaitingForAnalysis && (
+                <div className="flex items-center gap-2 text-blue-400 text-sm">
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-400/30 border-t-blue-400"></div>
+                  <span>AI Analysis in progress...</span>
+                </div>
               )}
             </div>
           </div>
@@ -306,9 +321,64 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({
                     src={fileObj.previewUrl}
                     alt={fileObj.file.name}
                     fill
-                    className="object-cover"
+                    className={`object-cover transition-opacity duration-300 ${
+                      isWaitingForAnalysis ? "opacity-60" : ""
+                    }`}
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                   />
+
+                  {/* Loading Overlay During Analysis */}
+                  {isWaitingForAnalysis && !analysisComplete && (
+                    <div className="absolute inset-0 bg-black/40 backdrop-blur-sm flex flex-col items-center justify-center">
+                      <div className="relative">
+                        <div className="animate-spin rounded-full h-10 w-10 border-4 border-blue-500/30 border-t-blue-500"></div>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <svg
+                            className="w-5 h-5 text-blue-400"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                            />
+                          </svg>
+                        </div>
+                      </div>
+                      <p className="text-xs text-white mt-3 font-medium">
+                        Analyzing...
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Success Overlay After Analysis Complete */}
+                  {analysisComplete && (
+                    <div className="absolute inset-0 bg-green-500/20 backdrop-blur-sm flex flex-col items-center justify-center animate-fade-in">
+                      <div className="relative">
+                        <div className="rounded-full h-10 w-10 bg-green-500 flex items-center justify-center">
+                          <svg
+                            className="w-6 h-6 text-white"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={3}
+                              d="M5 13l4 4L19 7"
+                            />
+                          </svg>
+                        </div>
+                      </div>
+                      <p className="text-xs text-white mt-3 font-medium">
+                        Analyzed ✓
+                      </p>
+                    </div>
+                  )}
                 </div>
                 <div className="p-3">
                   <p className="text-sm font-light text-white truncate">
@@ -318,7 +388,7 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({
                     {(fileObj.file.size / 1024 / 1024).toFixed(2)} MB
                   </p>
                 </div>
-                {!isLoading && (
+                {!isLoading && !isWaitingForAnalysis && (
                   <button
                     onClick={() => removeFile(fileObj.id)}
                     className="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-600 transition-colors"
