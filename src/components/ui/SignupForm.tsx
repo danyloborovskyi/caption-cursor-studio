@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { Button } from "./Button";
 import { signup } from "@/lib/api";
 import { useAuth } from "@/lib/contexts";
+import { useRouter } from "next/navigation";
 
 interface SignupFormProps {
   onSuccess?: () => void;
@@ -15,6 +16,7 @@ export const SignupForm: React.FC<SignupFormProps> = ({
   onSwitchToLogin,
 }) => {
   const { login: setUser } = useAuth();
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -46,6 +48,8 @@ export const SignupForm: React.FC<SignupFormProps> = ({
       if (response.success && response.data?.user) {
         setUser(response.data.user);
         onSuccess?.();
+        // Redirect to upload page after successful signup
+        router.push("/upload");
       } else {
         setError(response.error || "Failed to sign up");
       }
@@ -57,9 +61,7 @@ export const SignupForm: React.FC<SignupFormProps> = ({
   };
 
   return (
-    <div className="w-full max-w-md">
-      <h2 className="text-2xl font-bold text-white mb-6">Sign Up</h2>
-
+    <div className="w-full">
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
           <div className="bg-red-500/10 border border-red-500/50 text-red-200 px-4 py-3 rounded-lg text-sm">
@@ -154,16 +156,18 @@ export const SignupForm: React.FC<SignupFormProps> = ({
           {isLoading ? "Signing up..." : "Sign Up"}
         </Button>
 
-        <div className="text-center text-sm text-white/60">
-          Already have an account?{" "}
-          <button
-            type="button"
-            onClick={onSwitchToLogin}
-            className="text-blue-400 hover:text-blue-300 font-medium"
-          >
-            Login
-          </button>
-        </div>
+        {onSwitchToLogin && (
+          <div className="text-center text-sm text-white/60">
+            Already have an account?{" "}
+            <button
+              type="button"
+              onClick={onSwitchToLogin}
+              className="text-blue-400 hover:text-blue-300 font-medium"
+            >
+              Login
+            </button>
+          </div>
+        )}
       </form>
     </div>
   );

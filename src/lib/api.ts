@@ -83,18 +83,17 @@ export async function signup(
 
     const data = await response.json();
 
-    console.log("🔐 Signup response:", data);
-
-    // Store tokens from session object (Supabase format)
-    if (data.data?.session?.access_token) {
+    // Store tokens - check both camelCase and snake_case
+    if (data.data?.session?.accessToken) {
+      localStorage.setItem("access_token", data.data.session.accessToken);
+    } else if (data.data?.session?.access_token) {
       localStorage.setItem("access_token", data.data.session.access_token);
-      console.log("✅ Stored access_token in localStorage");
-    } else {
-      console.warn("⚠️ No access_token in signup response!");
     }
-    if (data.data?.session?.refresh_token) {
+
+    if (data.data?.session?.refreshToken) {
+      localStorage.setItem("refresh_token", data.data.session.refreshToken);
+    } else if (data.data?.session?.refresh_token) {
       localStorage.setItem("refresh_token", data.data.session.refresh_token);
-      console.log("✅ Stored refresh_token in localStorage");
     }
 
     return data;
@@ -132,18 +131,33 @@ export async function login(
 
     const data = await response.json();
 
-    console.log("🔐 Login response:", data);
-
-    // Store tokens from session object (Supabase format)
-    if (data.data?.session?.access_token) {
-      localStorage.setItem("access_token", data.data.session.access_token);
-      console.log("✅ Stored access_token in localStorage");
-    } else {
-      console.warn("⚠️ No access_token in login response!");
+    // Store tokens - try multiple possible paths (camelCase and snake_case)
+    // Path 1: data.data.session.accessToken (camelCase - your backend)
+    if (data.data?.session?.accessToken) {
+      localStorage.setItem("access_token", data.data.session.accessToken);
     }
-    if (data.data?.session?.refresh_token) {
+    // Path 2: data.data.session.access_token (snake_case - Supabase format)
+    else if (data.data?.session?.access_token) {
+      localStorage.setItem("access_token", data.data.session.access_token);
+    }
+    // Path 3: data.data.access_token
+    else if (data.data?.access_token) {
+      localStorage.setItem("access_token", data.data.access_token);
+    }
+    // Path 4: data.access_token
+    else if (data.access_token) {
+      localStorage.setItem("access_token", data.access_token);
+    }
+
+    // Store refresh_token if available (check both camelCase and snake_case)
+    if (data.data?.session?.refreshToken) {
+      localStorage.setItem("refresh_token", data.data.session.refreshToken);
+    } else if (data.data?.session?.refresh_token) {
       localStorage.setItem("refresh_token", data.data.session.refresh_token);
-      console.log("✅ Stored refresh_token in localStorage");
+    } else if (data.data?.refresh_token) {
+      localStorage.setItem("refresh_token", data.data.refresh_token);
+    } else if (data.refresh_token) {
+      localStorage.setItem("refresh_token", data.refresh_token);
     }
 
     return data;
@@ -241,15 +255,21 @@ export async function refreshAccessToken(): Promise<AuthResponse> {
 /**
  * Get current user profile
  */
-export async function getCurrentUser(): Promise<AuthResponse> {
+export async function getCurrentUser(): Promise<
+  AuthResponse & { status?: number }
+> {
   try {
     const token = localStorage.getItem("access_token");
 
     if (!token) {
-      throw new Error("No access token available");
+      return {
+        success: false,
+        error: "No access token available",
+        status: 401,
+      };
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/auth/user`, {
+    const response = await fetch(`${API_BASE_URL}/api/user/profile`, {
       method: "GET",
       headers: getAuthHeaders(token),
       mode: "cors",
@@ -257,9 +277,11 @@ export async function getCurrentUser(): Promise<AuthResponse> {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(
-        errorData.error || `HTTP error! status: ${response.status}`
-      );
+      return {
+        success: false,
+        error: errorData.error || `HTTP error! status: ${response.status}`,
+        status: response.status,
+      };
     }
 
     const data = await response.json();
@@ -286,7 +308,7 @@ export async function updateProfile(
       throw new Error("No access token available");
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/auth/update-profile`, {
+    const response = await fetch(`${API_BASE_URL}/api/user/update-profile`, {
       method: "POST",
       headers: {
         ...getAuthHeaders(token),
@@ -438,32 +460,28 @@ export interface UploadResponse {
   success: boolean;
   message: string;
   data?: {
-    successful_uploads?: number;
-    total_attempts?: number;
+    successfulUploads?: number;
+    totalAttempts?: number;
+    processingTimeSeconds?: number;
     results?: Array<{
       id: number;
       filename: string;
       size: number;
-      type: string;
-      path: string;
+      mimeType: string;
+      filePath: string;
       publicUrl: string;
       description: string;
       tags: string[];
       status: string;
       uploadedAt: string;
       analyzedAt: string;
+      hasAiAnalysis: boolean;
+      isImage: boolean;
       analysis: {
         success: boolean;
         error: null | string;
       };
     }>;
-    // Keep backward compatibility for single upload
-    filename?: string;
-    analysis?: {
-      caption: string;
-      confidence: number;
-      tags?: string[];
-    };
   };
   error?: string;
 }
@@ -495,8 +513,19 @@ export interface FilesResponse {
     total_pages: number;
     has_next_page: boolean;
     has_prev_page: boolean;
-    next_page?: number;
-    prev_page?: number;
+    next_page?: number | null;
+    prev_page?: number | null;
+  };
+  filters?: {
+    status: string;
+    sort_by: string;
+    sort_order: string;
+  };
+  summary?: {
+    total_files: number;
+    page_count: number;
+    files_with_ai: number;
+    image_files: number;
   };
   error?: string;
 }
@@ -524,168 +553,48 @@ export interface SearchResponse {
 }
 
 /**
- * Upload a single image and get AI-generated caption
- */
-export async function uploadAndAnalyzeImage(
-  file: File
-): Promise<UploadResponse> {
-  try {
-    const formData = new FormData();
-    formData.append("image", file);
-
-    const response = await fetch(
-      `${API_BASE_URL}/api/upload/upload-and-analyze`,
-      {
-        method: "POST",
-        body: formData,
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error("Error uploading and analyzing image:", error);
-    return {
-      success: false,
-      message: "Failed to upload and analyze image",
-      error: error instanceof Error ? error.message : "Unknown error",
-    };
-  }
-}
-
-/**
- * Upload multiple images (up to 3) and get AI-generated captions
+ * Upload multiple images (up to 10) and get AI-generated captions
  */
 export async function bulkUploadAndAnalyzeImages(
   files: File[]
 ): Promise<UploadResponse> {
   try {
-    if (files.length > 3) {
-      throw new Error("Maximum 3 files allowed for bulk upload");
+    if (files.length > 10) {
+      throw new Error("Maximum 10 files allowed for bulk upload");
     }
 
-    console.log("🚀 Starting bulk upload with", files.length, "files");
-    console.log(
-      "Files to upload:",
-      files.map((f) => `${f.name} (${f.size} bytes, ${f.type})`)
-    );
+    if (files.length === 0) {
+      throw new Error("Please select at least one file");
+    }
 
-    // Use the correct field pattern that matches your Postman setup
     const formData = new FormData();
     files.forEach((file) => {
       formData.append("images", file);
     });
 
-    console.log("📤 Using field pattern: images (multiple)");
-
+    const token = localStorage.getItem("access_token");
     const response = await fetch(
       `${API_BASE_URL}/api/upload/bulk-upload-and-analyze`,
       {
         method: "POST",
+        headers: getAuthHeaders(token || undefined),
         body: formData,
         mode: "cors",
       }
     );
 
-    if (response.ok) {
-      try {
-        const data = await response.json();
-        console.log("✅ Bulk upload successful!");
-        console.log("✅ Response data:", data);
-        return data;
-      } catch (parseError) {
-        console.error("❌ Failed to parse successful response:", parseError);
-        throw new Error("Invalid JSON response from server");
-      }
-    } else {
+    if (!response.ok) {
       const errorText = await response.text();
-      console.log(`❌ Bulk upload failed (${response.status}): ${errorText}`);
       throw new Error(`HTTP ${response.status}: ${errorText}`);
     }
+
+    const data = await response.json();
+    return data;
   } catch (error) {
-    console.log("🔄 Bulk upload failed, using individual uploads...");
-    try {
-      return await bulkUploadFallback(files);
-    } catch (fallbackError) {
-      console.error("❌ Both bulk upload and fallback failed:", fallbackError);
-      return {
-        success: false,
-        message: "Both bulk upload and individual upload methods failed",
-        error: error instanceof Error ? error.message : "Unknown error",
-      };
-    }
-  }
-}
-
-/**
- * Fallback: Use multiple single uploads when bulk upload fails
- */
-async function bulkUploadFallback(files: File[]): Promise<UploadResponse> {
-  try {
-    console.log("📤 Starting fallback: multiple single uploads");
-    const results = [];
-    let successCount = 0;
-
-    for (let i = 0; i < files.length; i++) {
-      console.log(
-        `📤 Uploading file ${i + 1}/${files.length}: ${files[i].name}`
-      );
-
-      const singleResult = await uploadAndAnalyzeImage(files[i]);
-
-      if (singleResult.success && singleResult.data) {
-        successCount++;
-        // Convert single upload response to bulk format
-        results.push({
-          id: Date.now() + i, // Temporary ID since single uploads don't return real IDs
-          filename: singleResult.data.filename || files[i].name,
-          size: files[i].size,
-          type: files[i].type,
-          path: `fallback-${Date.now()}-${i}`,
-          publicUrl: URL.createObjectURL(files[i]), // Temporary preview URL
-          description: singleResult.data.analysis?.caption || "",
-          tags: singleResult.data.analysis?.tags || [],
-          status: "completed",
-          uploadedAt: new Date().toISOString(),
-          analyzedAt: new Date().toISOString(),
-          analysis: {
-            success: true,
-            error: null,
-          },
-        });
-      } else {
-        console.error(
-          `❌ Failed to upload ${files[i].name}:`,
-          singleResult.error
-        );
-      }
-    }
-
-    const message =
-      successCount === files.length
-        ? `✅ All ${successCount} images uploaded successfully (individual uploads)`
-        : `⚠️  Individual uploads completed: ${successCount}/${files.length} images uploaded successfully`;
-
-    console.log(message);
-
-    return {
-      success: successCount > 0,
-      message: message,
-      data: {
-        successful_uploads: successCount,
-        total_attempts: files.length,
-        results: results,
-      },
-    };
-  } catch (error) {
-    console.error("Fallback upload error:", error);
+    console.error("Bulk upload error:", error);
     return {
       success: false,
-      message: "Fallback upload failed",
+      message: "Failed to upload images",
       error: error instanceof Error ? error.message : "Unknown error",
     };
   }
@@ -694,20 +603,37 @@ async function bulkUploadFallback(files: File[]): Promise<UploadResponse> {
 /**
  * Get list of all uploaded files with pagination
  */
-export async function getFiles(page = 1, limit = 10): Promise<FilesResponse> {
+export async function getFiles(
+  page = 1,
+  limit = 20,
+  sortBy = "uploaded_at",
+  sortOrder: "asc" | "desc" = "desc",
+  status = "all"
+): Promise<FilesResponse> {
   try {
-    console.log(
-      `Fetching files from: ${API_BASE_URL}/api/files/?page=${page}&limit=${limit}`
-    );
+    const token = localStorage.getItem("access_token");
 
-    // Don't send Content-Type header for GET requests to avoid CORS preflight
-    const response = await fetch(
-      `${API_BASE_URL}/api/files/?page=${page}&limit=${limit}`,
-      {
-        method: "GET",
-        mode: "cors",
-      }
+    // Try simple request first (like Postman) - without query params to match working Postman request
+    const url = `${API_BASE_URL}/api/files`;
+
+    console.log(`Fetching files from: ${url}`);
+    console.log(
+      `Authorization token:`,
+      token ? `${token.substring(0, 20)}...` : "NO TOKEN"
     );
+    console.log(`Parameters (not sent yet):`, {
+      page,
+      limit,
+      sortBy,
+      sortOrder,
+      status,
+    });
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: getAuthHeaders(token || undefined),
+      mode: "cors",
+    });
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -716,6 +642,19 @@ export async function getFiles(page = 1, limit = 10): Promise<FilesResponse> {
     }
 
     const data = await response.json();
+
+    // Detailed logging for debugging
+    console.log("=== getFiles API Response Details ===");
+    console.log("Success:", data.success);
+    console.log("Data array:", data.data);
+    console.log("Data length:", data.data?.length);
+    console.log("Data is array?:", Array.isArray(data.data));
+    console.log("First item:", data.data?.[0]);
+    console.log("Pagination:", data.pagination);
+    console.log("Summary:", data.summary);
+    console.log("Full response:", JSON.stringify(data, null, 2));
+    console.log("=====================================");
+
     return data;
   } catch (error) {
     console.error("Error fetching files:", error);
@@ -740,20 +679,62 @@ export async function getFiles(page = 1, limit = 10): Promise<FilesResponse> {
 }
 
 /**
- * Delete a file by ID
+ * Check if recent files are fully analyzed (helper for polling)
+ */
+export async function checkRecentFilesAnalyzed(
+  count: number
+): Promise<{ allAnalyzed: boolean; processingCount: number }> {
+  try {
+    const result = await getFiles(1, count);
+
+    if (!result.success || !result.data) {
+      return { allAnalyzed: false, processingCount: count };
+    }
+
+    // Check first 'count' files - recent uploads should be at the top
+    const recentFiles = result.data.slice(0, count);
+    const processingFiles = recentFiles.filter(
+      (file) =>
+        file.status === "processing" ||
+        !file.has_ai_analysis ||
+        !file.tags ||
+        file.tags.length === 0
+    );
+
+    console.log(
+      `checkRecentFilesAnalyzed: Checked ${recentFiles.length} files, ${processingFiles.length} still processing`
+    );
+
+    return {
+      allAnalyzed: processingFiles.length === 0,
+      processingCount: processingFiles.length,
+    };
+  } catch (error) {
+    console.error("Error checking file analysis status:", error);
+    return { allAnalyzed: false, processingCount: count };
+  }
+}
+
+/**
+ * Delete a single file by ID
  */
 export async function deleteFile(fileId: number): Promise<DeleteResponse> {
   try {
-    console.log(`Deleting file with ID: ${fileId}`);
+    const token = localStorage.getItem("access_token");
+
+    if (!token) {
+      throw new Error("Authentication required");
+    }
 
     const response = await fetch(`${API_BASE_URL}/api/files/${fileId}`, {
       method: "DELETE",
+      headers: getAuthHeaders(token),
       mode: "cors",
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`Delete API Error: ${response.status} - ${errorText}`);
+      console.error(`Delete Error: ${response.status} - ${errorText}`);
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
@@ -764,119 +745,6 @@ export async function deleteFile(fileId: number): Promise<DeleteResponse> {
     return {
       success: false,
       message: "Failed to delete file",
-      error: error instanceof Error ? error.message : "Unknown error",
-    };
-  }
-}
-
-/**
- * Interface for upload data that can be converted to FileItem
- */
-export interface UploadData {
-  id?: number;
-  filename?: string;
-  path?: string;
-  file_path?: string;
-  size?: number;
-  file_size?: number;
-  type?: string;
-  mime_type?: string;
-  publicUrl?: string;
-  public_url?: string;
-  description?: string;
-  tags?: string[];
-  status?: string;
-  uploadedAt?: string;
-  uploaded_at?: string;
-  analyzedAt?: string;
-  updated_at?: string;
-  file_size_mb?: string;
-  analysis?: {
-    success?: boolean;
-    error?: string | null;
-  };
-}
-
-/**
- * Convert upload response data to FileItem format
- */
-export function convertUploadToFileItem(uploadData: UploadData): FileItem {
-  return {
-    id: uploadData.id || 0,
-    filename: uploadData.filename || "unknown-file",
-    file_path: uploadData.path || uploadData.file_path || "",
-    file_size: uploadData.size || uploadData.file_size || 0,
-    mime_type:
-      uploadData.type || uploadData.mime_type || "application/octet-stream",
-    public_url: uploadData.publicUrl || uploadData.public_url || "",
-    description: uploadData.description || "",
-    tags: uploadData.tags || [],
-    status: uploadData.status || "completed",
-    uploaded_at:
-      uploadData.uploadedAt ||
-      uploadData.uploaded_at ||
-      new Date().toISOString(),
-    updated_at:
-      uploadData.analyzedAt ||
-      uploadData.updated_at ||
-      new Date().toISOString(),
-    file_size_mb:
-      uploadData.file_size_mb ||
-      ((uploadData.size || uploadData.file_size || 0) / (1024 * 1024)).toFixed(
-        2
-      ),
-    has_ai_analysis: uploadData.analysis?.success ?? true,
-    is_image:
-      uploadData.type?.startsWith("image/") ||
-      uploadData.mime_type?.startsWith("image/") ||
-      true,
-  };
-}
-
-/**
- * Search for files by query with pagination
- */
-export async function searchFiles(
-  query: string,
-  page = 1,
-  limit = 12
-): Promise<SearchResponse> {
-  try {
-    if (!query.trim()) {
-      return {
-        success: true,
-        data: [],
-      };
-    }
-
-    console.log(
-      `Searching files with query: "${query}", page: ${page}, limit: ${limit}`
-    );
-
-    const response = await fetch(
-      `${API_BASE_URL}/api/files/search?q=${encodeURIComponent(
-        query
-      )}&page=${page}&limit=${limit}`,
-      {
-        method: "GET",
-        mode: "cors",
-      }
-    );
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`Search API Error: ${response.status} - ${errorText}`);
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    console.log("Search API response:", data);
-    return data;
-  } catch (error) {
-    console.error("Error searching files:", error);
-    return {
-      success: false,
-      data: [],
       error: error instanceof Error ? error.message : "Unknown error",
     };
   }

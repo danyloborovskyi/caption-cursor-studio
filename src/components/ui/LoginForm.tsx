@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { Button } from "./Button";
 import { login } from "@/lib/api";
 import { useAuth } from "@/lib/contexts";
+import { useRouter } from "next/navigation";
 
 interface LoginFormProps {
   onSuccess?: () => void;
@@ -15,6 +16,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   onSwitchToSignup,
 }) => {
   const { login: setUser } = useAuth();
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -31,6 +33,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({
       if (response.success && response.data?.user) {
         setUser(response.data.user);
         onSuccess?.();
+        // Redirect to upload page after successful login
+        router.push("/upload");
       } else {
         setError(response.error || "Failed to login");
       }
@@ -42,9 +46,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   };
 
   return (
-    <div className="w-full max-w-md">
-      <h2 className="text-2xl font-bold text-white mb-6">Login</h2>
-
+    <div className="w-full">
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
           <div className="bg-red-500/10 border border-red-500/50 text-red-200 px-4 py-3 rounded-lg text-sm">
@@ -100,16 +102,18 @@ export const LoginForm: React.FC<LoginFormProps> = ({
           {isLoading ? "Logging in..." : "Login"}
         </Button>
 
-        <div className="text-center text-sm text-white/60">
-          Don&apos;t have an account?{" "}
-          <button
-            type="button"
-            onClick={onSwitchToSignup}
-            className="text-blue-400 hover:text-blue-300 font-medium"
-          >
-            Sign up
-          </button>
-        </div>
+        {onSwitchToSignup && (
+          <div className="text-center text-sm text-white/60">
+            Don&apos;t have an account?{" "}
+            <button
+              type="button"
+              onClick={onSwitchToSignup}
+              className="text-blue-400 hover:text-blue-300 font-medium"
+            >
+              Sign up
+            </button>
+          </div>
+        )}
       </form>
     </div>
   );

@@ -15,10 +15,6 @@ import {
 interface GalleryContextType {
   refreshTrigger: number;
   refreshGallery: () => void;
-  addNewPhotos: (photos: FileItem[]) => void;
-  newPhotos: FileItem[];
-  clearNewPhotos: () => void;
-  removePhoto: (photoId: number) => void;
 }
 
 const GalleryContext = createContext<GalleryContextType | undefined>(undefined);
@@ -27,39 +23,9 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-  const [newPhotos, setNewPhotos] = useState<FileItem[]>([]);
 
   const refreshGallery = () => {
     setRefreshTrigger((prev) => prev + 1);
-  };
-
-  const addNewPhotos = (photos: FileItem[]) => {
-    setNewPhotos((prev) => {
-      // Filter out duplicates based on filename and size to prevent duplicates
-      const existingIds = new Set(
-        prev.map((p) => `${p.filename}-${p.file_size}`)
-      );
-      const uniqueNewPhotos = photos.filter(
-        (p) => !existingIds.has(`${p.filename}-${p.file_size}`)
-      );
-      return [...uniqueNewPhotos, ...prev];
-    });
-
-    // Auto-clear new photos after 30 seconds to prevent stale data
-    setTimeout(() => {
-      setNewPhotos((prev) => {
-        const photosToRemove = new Set(photos.map((p) => p.id));
-        return prev.filter((p) => !photosToRemove.has(p.id));
-      });
-    }, 30000);
-  };
-
-  const clearNewPhotos = () => {
-    setNewPhotos([]);
-  };
-
-  const removePhoto = (photoId: number) => {
-    setNewPhotos((prev) => prev.filter((photo) => photo.id !== photoId));
   };
 
   return (
@@ -67,10 +33,6 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({
       value={{
         refreshTrigger,
         refreshGallery,
-        addNewPhotos,
-        newPhotos,
-        clearNewPhotos,
-        removePhoto,
       }}
     >
       {children}
@@ -110,11 +72,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   // Check if user is logged in on mount
   useEffect(() => {
     const checkAuth = async () => {
-      console.log("🔍 Checking auth on mount...");
-
       // Ensure we're on the client side
       if (typeof window === "undefined") {
-        console.log("⚠️ Window is undefined, skipping auth check");
         setIsLoading(false);
         return;
       }
@@ -122,26 +81,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       const token = localStorage.getItem("access_token");
       const storedUser = localStorage.getItem("user_data");
 
-      console.log("📦 Token exists:", !!token);
-      console.log("📦 Stored user exists:", !!storedUser);
-      console.log("📦 Stored user value:", storedUser);
-
-      // Restore user from localStorage if available (token check moved below)
-      if (storedUser) {
+      // Only restore user if we have BOTH token and user_data
+      if (token && storedUser) {
         try {
           const parsedUser = JSON.parse(storedUser);
-          console.log("✅ Parsed user from localStorage:", parsedUser);
           setUser(parsedUser);
-          console.log("✅ User state set, UI should update now");
         } catch (e) {
-          console.error("❌ Failed to parse stored user data:", e);
+          console.error("Failed to parse stored user data:", e);
           localStorage.removeItem("user_data");
+          localStorage.removeItem("access_token");
+          localStorage.removeItem("refresh_token");
+          setUser(null);
+          setIsLoading(false);
+          return;
         }
-      }
 
-      if (token && storedUser) {
         // Verify token with backend in the background
         const response = await apiGetCurrentUser();
+
         if (response.success && response.data?.user) {
           // Update user data if backend returns newer data
           setUser(response.data.user);
@@ -149,6 +106,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         } else {
           // Only clear on authentication errors (401, 403)
           const status = (response as { status?: number }).status;
+
           if (status === 401 || status === 403) {
             // Token is invalid, clear everything
             localStorage.removeItem("access_token");
@@ -169,6 +127,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           localStorage.removeItem("access_token");
           localStorage.removeItem("refresh_token");
         }
+      } else if (!token && storedUser) {
+        // No token but has cached user data - clear the stale data
+        localStorage.removeItem("user_data");
+        setUser(null);
       }
 
       setIsLoading(false);
@@ -178,25 +140,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   const login = (userData: User) => {
-    console.log("🔐 Login called with user data:", userData);
     setUser(userData);
 
     // Store user data for persistence across reloads
     if (typeof window !== "undefined") {
-      const userDataString = JSON.stringify(userData);
-      localStorage.setItem("user_data", userDataString);
-      console.log("💾 Stored user_data in localStorage:", userDataString);
+      localStorage.setItem("user_data", JSON.stringify(userData));
     }
-
-    console.log(
-      "✅ User state updated, isAuthenticated should be:",
-      !!userData
-    );
   };
 
   const logout = async () => {
     await apiLogout();
-    localStorage.removeItem("user_data");
+
+    // Clear user data on client side only
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("user_data");
+    }
+
     setUser(null);
   };
 
@@ -204,7 +163,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     const response = await apiGetCurrentUser();
     if (response.success && response.data?.user) {
       setUser(response.data.user);
-      localStorage.setItem("user_data", JSON.stringify(response.data.user));
+
+      // Store user data on client side only
+      if (typeof window !== "undefined") {
+        localStorage.setItem("user_data", JSON.stringify(response.data.user));
+      }
     }
   };
 
