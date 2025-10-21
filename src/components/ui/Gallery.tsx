@@ -157,10 +157,6 @@ export const Gallery: React.FC<GalleryProps> = ({ className = "" }) => {
       return;
     }
 
-    if (!confirm(`Are you sure you want to delete "${photo.filename}"?`)) {
-      return;
-    }
-
     setDeletingPhotoId(photo.id);
 
     // Optimistic update

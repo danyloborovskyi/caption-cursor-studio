@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import { FileItem } from "@/lib/api";
 import { Button } from "./Button";
@@ -16,8 +16,23 @@ export const ImageCard: React.FC<ImageCardProps> = ({
   isDeleting,
   onDelete,
 }) => {
+  const [showConfirmation, setShowConfirmation] = useState(false);
+
+  const handleDeleteClick = () => {
+    setShowConfirmation(true);
+  };
+
+  const handleConfirmDelete = () => {
+    setShowConfirmation(false);
+    onDelete(photo);
+  };
+
+  const handleCancelDelete = () => {
+    setShowConfirmation(false);
+  };
+
   return (
-    <div className="glass glass-hover rounded-2xl overflow-hidden transition-all duration-300">
+    <div className="glass glass-hover rounded-2xl overflow-hidden transition-all duration-300 flex flex-col">
       {/* Image */}
       <div className="aspect-square relative bg-white/5">
         <Image
@@ -31,7 +46,7 @@ export const ImageCard: React.FC<ImageCardProps> = ({
       </div>
 
       {/* Card Content */}
-      <div className="p-6">
+      <div className="p-6 flex-1 flex flex-col">
         {/* Description */}
         {photo.description && (
           <p className="text-white/80 text-sm mb-3 line-clamp-2 font-light">
@@ -41,7 +56,7 @@ export const ImageCard: React.FC<ImageCardProps> = ({
 
         {/* Tags */}
         {photo.tags && photo.tags.length > 0 && (
-          <div className="mb-4">
+          <div className="mb-4 flex-1">
             <div className="flex flex-wrap gap-2">
               {photo.tags.slice(0, 5).map((tag, index) => (
                 <span
@@ -60,30 +75,92 @@ export const ImageCard: React.FC<ImageCardProps> = ({
           </div>
         )}
 
-        {/* Delete Button */}
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => onDelete(photo)}
-          disabled={isDeleting}
-          className="w-full text-red-300 hover:text-red-200 hover:bg-red-500/20 border-red-300/50 hover:border-red-300/70 disabled:opacity-50 transition-colors"
-        >
-          <svg
-            className="w-4 h-4 mr-2"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+        {/* Delete Button - Stuck to Bottom */}
+        <div className="mt-auto pt-4 border-t border-white/10">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleDeleteClick}
+            disabled={isDeleting}
+            className="w-full text-red-300 hover:text-red-200 hover:bg-red-500/20 border-red-300/50 hover:border-red-300/70 disabled:opacity-50 transition-colors"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-            />
-          </svg>
-          {isDeleting ? "Deleting..." : "Delete"}
-        </Button>
+            <svg
+              className="w-4 h-4 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+              />
+            </svg>
+            {isDeleting ? "Deleting..." : "Delete"}
+          </Button>
+        </div>
       </div>
+
+      {/* Custom Confirmation Modal */}
+      {showConfirmation && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="glass rounded-2xl p-6 max-w-md w-full border border-white/20 shadow-2xl animate-scale-in">
+            {/* Icon */}
+            <div className="flex justify-center mb-4">
+              <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center">
+                <svg
+                  className="w-8 h-8 text-red-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                  />
+                </svg>
+              </div>
+            </div>
+
+            {/* Title */}
+            <h3 className="text-xl font-semibold text-white text-center mb-2">
+              Delete Image?
+            </h3>
+
+            {/* Message */}
+            <p className="text-white/70 text-center mb-3 font-light">
+              Are you sure you want to delete
+            </p>
+            <p className="text-white font-medium text-center mb-6 truncate px-4">
+              &ldquo;{photo.filename}&rdquo;
+            </p>
+            <p className="text-white/60 text-sm text-center mb-6">
+              This action cannot be undone.
+            </p>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                onClick={handleCancelDelete}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                onClick={handleConfirmDelete}
+                className="flex-1 bg-red-500 hover:bg-red-600 border-red-500"
+              >
+                Delete
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
