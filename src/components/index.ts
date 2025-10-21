@@ -1,6 +1,7 @@
 // UI Components
 export { Button } from "./ui/Button";
 export { Header } from "./ui/Header";
+export { BulkUpload } from "./ui/BulkUpload";
 export { LoginForm } from "./ui/LoginForm";
 export { SignupForm } from "./ui/SignupForm";
 export { AuthModal } from "./ui/AuthModal";

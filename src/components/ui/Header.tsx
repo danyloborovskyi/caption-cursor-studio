@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Button } from "./Button";
 import { AuthModal } from "./AuthModal";
 import { useAuth } from "@/lib/contexts";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 interface HeaderProps {
   className?: string;
@@ -17,6 +17,7 @@ export const Header: React.FC<HeaderProps> = ({ className = "" }) => {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const pathname = usePathname();
 
   // Close user menu when clicking outside
   useEffect(() => {
@@ -92,7 +93,21 @@ export const Header: React.FC<HeaderProps> = ({ className = "" }) => {
                 </div>
               </button>
 
-              {/* Navigation Links removed - no additional pages */}
+              {/* Navigation Links (show when authenticated) */}
+              {isAuthenticated && (
+                <nav className="hidden md:flex items-center gap-1">
+                  <button
+                    onClick={() => router.push("/upload")}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      pathname === "/upload"
+                        ? "bg-white/20 text-white"
+                        : "text-white/70 hover:text-white hover:bg-white/10"
+                    }`}
+                  >
+                    Upload
+                  </button>
+                </nav>
+              )}
             </div>
 
             {/* Right Side: Auth Buttons or User Menu */}

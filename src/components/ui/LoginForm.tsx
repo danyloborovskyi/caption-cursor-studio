@@ -33,8 +33,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({
       if (response.success && response.data?.user) {
         setUser(response.data.user);
         onSuccess?.();
-        // Redirect to home page after successful login
-        router.push("/");
+        // Redirect to upload page after successful login
+        router.push("/upload");
       } else {
         setError(response.error || "Failed to login");
       }

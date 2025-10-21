@@ -460,35 +460,28 @@ export interface UploadResponse {
   success: boolean;
   message: string;
   data?: {
-    uploadId?: string;
-    totalFiles?: number;
-    progressUrl?: string;
-    successful_uploads?: number;
-    total_attempts?: number;
+    successfulUploads?: number;
+    totalAttempts?: number;
+    processingTimeSeconds?: number;
     results?: Array<{
       id: number;
       filename: string;
       size: number;
-      type: string;
-      path: string;
+      mimeType: string;
+      filePath: string;
       publicUrl: string;
       description: string;
       tags: string[];
       status: string;
       uploadedAt: string;
       analyzedAt: string;
+      hasAiAnalysis: boolean;
+      isImage: boolean;
       analysis: {
         success: boolean;
         error: null | string;
       };
     }>;
-    // Keep backward compatibility for single upload
-    filename?: string;
-    analysis?: {
-      caption: string;
-      confidence: number;
-      tags?: string[];
-    };
   };
   error?: string;
 }
@@ -546,4 +539,52 @@ export interface SearchResponse {
     prev_page?: number;
   };
   error?: string;
+}
+
+/**
+ * Upload multiple images (up to 10) and get AI-generated captions
+ */
+export async function bulkUploadAndAnalyzeImages(
+  files: File[]
+): Promise<UploadResponse> {
+  try {
+    if (files.length > 10) {
+      throw new Error("Maximum 10 files allowed for bulk upload");
+    }
+
+    if (files.length === 0) {
+      throw new Error("Please select at least one file");
+    }
+
+    const formData = new FormData();
+    files.forEach((file) => {
+      formData.append("images", file);
+    });
+
+    const token = localStorage.getItem("access_token");
+    const response = await fetch(
+      `${API_BASE_URL}/api/upload/bulk-upload-and-analyze`,
+      {
+        method: "POST",
+        headers: getAuthHeaders(token || undefined),
+        body: formData,
+        mode: "cors",
+      }
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`HTTP ${response.status}: ${errorText}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Bulk upload error:", error);
+    return {
+      success: false,
+      message: "Failed to upload images",
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
 }
