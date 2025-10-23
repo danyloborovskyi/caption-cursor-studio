@@ -426,13 +426,27 @@ export const Gallery: React.FC<GalleryProps> = ({ className = "" }) => {
               const page = currentPage <= 3 ? i + 1 : currentPage - 2 + i;
               if (page > totalPages) return null;
 
+              const isActive = currentPage === page;
+
               return (
                 <Button
                   key={page}
                   onClick={() => handlePageChange(page)}
-                  variant={currentPage === page ? "primary" : "outline"}
+                  variant={isActive ? "primary" : "outline"}
                   size="sm"
-                  className="min-w-[40px]"
+                  className={`min-w-[40px] transition-all duration-200 ${
+                    isActive
+                      ? "!bg-white !border-white shadow-lg font-extrabold"
+                      : "hover:bg-white/10"
+                  }`}
+                  style={
+                    isActive
+                      ? {
+                          color: "transparent",
+                          WebkitTextStroke: "1.5px rgba(128, 90, 213, 0.8)",
+                        }
+                      : undefined
+                  }
                 >
                   {page}
                 </Button>
