@@ -1,12 +1,12 @@
 "use client";
 
-import { Header, Gallery } from "@/components";
+import { Gallery } from "@/components";
 import { BulkUpload } from "@/components/ui/BulkUpload";
-import { AuthProvider, GalleryProvider, useAuth } from "@/lib/contexts";
+import { useAuth } from "@/lib/contexts";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
-function UploadPageContent() {
+export default function UploadPage() {
   const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
 
@@ -29,46 +29,32 @@ function UploadPageContent() {
   }
 
   return (
-    <div className="min-h-screen relative">
-      <Header />
+    <main className="max-w-7xl mx-auto px-4 py-16">
+      {/* Page Title */}
+      <div className="text-center mb-12">
+        <h1 className="text-4xl font-light text-white mb-4 tracking-wide">
+          Upload Your Images
+        </h1>
+        <p className="text-white/70 font-light text-lg">
+          Upload multiple images and get AI-powered captions and tags
+        </p>
+      </div>
 
-      <main className="max-w-7xl mx-auto px-4 py-16">
-        {/* Page Title */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-light text-white mb-4 tracking-wide">
-            Upload Your Images
-          </h1>
-          <p className="text-white/70 font-light text-lg">
-            Upload multiple images and get AI-powered captions and tags
-          </p>
+      {/* Upload Section */}
+      <section className="mb-16 max-w-5xl mx-auto">
+        <div className="glass rounded-2xl p-8">
+          <BulkUpload
+            onUploadSuccess={() => {
+              console.log("Upload completed successfully!");
+            }}
+          />
         </div>
+      </section>
 
-        {/* Upload Section */}
-        <section className="mb-16 max-w-5xl mx-auto">
-          <div className="glass rounded-2xl p-8">
-            <BulkUpload
-              onUploadSuccess={() => {
-                console.log("Upload completed successfully!");
-              }}
-            />
-          </div>
-        </section>
-
-        {/* Gallery Section */}
-        <section className="mb-16">
-          <Gallery />
-        </section>
-      </main>
-    </div>
-  );
-}
-
-export default function UploadPage() {
-  return (
-    <AuthProvider>
-      <GalleryProvider>
-        <UploadPageContent />
-      </GalleryProvider>
-    </AuthProvider>
+      {/* Gallery Section */}
+      <section className="mb-16">
+        <Gallery />
+      </section>
+    </main>
   );
 }

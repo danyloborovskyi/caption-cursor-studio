@@ -1,9 +1,9 @@
 "use client";
 
-import { Header, LandingPage } from "@/components";
-import { GalleryProvider, AuthProvider, useAuth } from "@/lib/contexts";
+import { LandingPage } from "@/components";
+import { useAuth } from "@/lib/contexts";
 
-function HomeContent() {
+export default function Home() {
   const { isLoading } = useAuth();
 
   if (isLoading) {
@@ -14,23 +14,5 @@ function HomeContent() {
     );
   }
 
-  return (
-    <div className="min-h-screen relative">
-      {/* Header */}
-      <Header />
-
-      {/* Landing Page with Hero, Auth, and How It Works */}
-      <LandingPage />
-    </div>
-  );
-}
-
-export default function Home() {
-  return (
-    <AuthProvider>
-      <GalleryProvider>
-        <HomeContent />
-      </GalleryProvider>
-    </AuthProvider>
-  );
+  return <LandingPage />;
 }

@@ -1,6 +1,9 @@
-import type { Metadata } from "next";
+"use client";
+
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { Header } from "@/components";
+import { AuthProvider, GalleryProvider } from "@/lib/contexts";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -12,11 +15,6 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "Caption Cursor Studio",
-  description: "A Next.js TypeScript project built with Cursor",
-};
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -27,7 +25,14 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <AuthProvider>
+          <GalleryProvider>
+            <div className="min-h-screen relative">
+              <Header />
+              {children}
+            </div>
+          </GalleryProvider>
+        </AuthProvider>
       </body>
     </html>
   );
