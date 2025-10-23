@@ -607,7 +607,7 @@ export async function bulkUploadAndAnalyzeImages(
  */
 export async function getFiles(
   page = 1,
-  limit = 20,
+  limit = 12,
   sortBy = "uploaded_at",
   sortOrder: "asc" | "desc" = "desc",
   status = "all"
@@ -615,21 +615,29 @@ export async function getFiles(
   try {
     const token = localStorage.getItem("access_token");
 
-    // Try simple request first (like Postman) - without query params to match working Postman request
-    const url = `${API_BASE_URL}/api/files`;
+    // Build URL with query parameters - backend expects per_page, not limit
+    const params = new URLSearchParams({
+      page: page.toString(),
+      per_page: limit.toString(),
+    });
+
+    const url = `${API_BASE_URL}/api/files?${params.toString()}`;
 
     console.log(`Fetching files from: ${url}`);
     console.log(
       `Authorization token:`,
       token ? `${token.substring(0, 20)}...` : "NO TOKEN"
     );
-    console.log(`Parameters (not sent yet):`, {
+    console.log(`Parameters:`, {
       page,
-      limit,
+      per_page: limit,
       sortBy,
       sortOrder,
       status,
     });
+    console.log(
+      `\nCURL command:\ncurl -X GET '${url}' -H 'Authorization: Bearer ${token}'`
+    );
 
     const response = await fetch(url, {
       method: "GET",
@@ -770,7 +778,7 @@ export async function searchFiles(
     const params = new URLSearchParams({
       q: query,
       page: page.toString(),
-      limit: limit.toString(),
+      per_page: limit.toString(),
     });
 
     console.log(

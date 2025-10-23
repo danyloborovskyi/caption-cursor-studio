@@ -44,9 +44,17 @@ export const Gallery: React.FC<GalleryProps> = ({ className = "" }) => {
 
         console.log("Gallery: API response:", result);
         console.log("Gallery: Photos data:", result.data);
+        console.log("Gallery: Photos count:", result.data?.length);
 
         if (result.success && result.data) {
-          setPhotos(result.data);
+          // Ensure we only display 12 items max
+          const limitedPhotos = result.data.slice(0, 12);
+          setPhotos(limitedPhotos);
+          console.log(
+            "Gallery: Displaying photos count:",
+            limitedPhotos.length
+          );
+
           if (result.pagination) {
             setCurrentPage(result.pagination.current_page);
             setTotalPages(result.pagination.total_pages);
@@ -99,7 +107,9 @@ export const Gallery: React.FC<GalleryProps> = ({ className = "" }) => {
       const result = await searchFiles(query, 1, 12);
 
       if (result.success) {
-        setPhotos(result.data);
+        // Ensure we only display 12 items max
+        const limitedPhotos = result.data.slice(0, 12);
+        setPhotos(limitedPhotos);
         setCurrentPage(result.pagination?.current_page || 1);
         setTotalPages(result.pagination?.total_pages || 1);
       } else {
@@ -129,7 +139,9 @@ export const Gallery: React.FC<GalleryProps> = ({ className = "" }) => {
       const result = await searchFiles(searchQuery, newPage, 12);
 
       if (result.success) {
-        setPhotos(result.data);
+        // Ensure we only display 12 items max
+        const limitedPhotos = result.data.slice(0, 12);
+        setPhotos(limitedPhotos);
         setCurrentPage(result.pagination?.current_page || newPage);
         setTotalPages(result.pagination?.total_pages || 1);
       }
