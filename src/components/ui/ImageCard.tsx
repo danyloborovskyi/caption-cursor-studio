@@ -82,7 +82,7 @@ export const ImageCard: React.FC<ImageCardProps> = ({
             size="sm"
             onClick={handleDeleteClick}
             disabled={isDeleting || showConfirmation}
-            className="w-full text-red-300 hover:text-red-200 hover:bg-red-500/20 border-red-300/50 hover:border-red-300/70 disabled:opacity-50 transition-colors"
+            className="w-full text-red-300 hover:!text-red-600 hover:!bg-white border-red-300/50 hover:!border-white disabled:opacity-50 transition-colors"
           >
             <svg
               className="w-4 h-4 mr-2"
