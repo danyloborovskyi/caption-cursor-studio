@@ -228,12 +228,48 @@ export const Gallery: React.FC<GalleryProps> = ({ className = "" }) => {
     }
   };
 
-  const handlePerPageChange = (newPerPage: number) => {
+  const handlePerPageChange = async (newPerPage: number) => {
     setPerPage(newPerPage);
     setCurrentPage(1);
     // Save to localStorage
     localStorage.setItem("gallery_per_page", newPerPage.toString());
-    // fetchPhotos will be called automatically due to perPage dependency
+
+    // Manually trigger fetch with new per_page value
+    if (isSearchMode && searchQuery) {
+      // If in search mode, re-run the search with new per_page
+      setIsSearching(true);
+      try {
+        const result = await searchFiles(searchQuery, 1, newPerPage);
+        if (result.success) {
+          const limitedPhotos = result.data.slice(0, newPerPage);
+          setPhotos(limitedPhotos);
+          setCurrentPage(result.pagination?.current_page || 1);
+          setTotalPages(result.pagination?.total_pages || 1);
+        }
+      } catch (err) {
+        console.error("Search error on per page change:", err);
+      } finally {
+        setIsSearching(false);
+      }
+    } else {
+      // Otherwise, fetch regular photos with new per_page
+      setIsLoading(true);
+      try {
+        const result = await getFiles(1, newPerPage);
+        if (result.success && result.data) {
+          const limitedPhotos = result.data.slice(0, newPerPage);
+          setPhotos(limitedPhotos);
+          if (result.pagination) {
+            setCurrentPage(result.pagination.current_page);
+            setTotalPages(result.pagination.total_pages);
+          }
+        }
+      } catch (err) {
+        console.error("Fetch error on per page change:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
   };
 
   const handleDelete = async (photo: FileItem) => {
