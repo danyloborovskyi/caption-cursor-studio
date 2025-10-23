@@ -436,19 +436,30 @@ export const Gallery: React.FC<GalleryProps> = ({ className = "" }) => {
                   size="sm"
                   className={`min-w-[40px] transition-all duration-200 ${
                     isActive
-                      ? "!bg-white !border-white shadow-lg font-extrabold"
+                      ? "!bg-white !border-white shadow-lg font-extrabold [&>*]:animate-gradient-text"
                       : "hover:bg-white/10"
                   }`}
-                  style={
-                    isActive
-                      ? {
-                          color: "transparent",
-                          WebkitTextStroke: "1.5px rgba(128, 90, 213, 0.8)",
-                        }
-                      : undefined
-                  }
                 >
-                  {page}
+                  {isActive ? (
+                    <span
+                      className="font-extrabold"
+                      style={{
+                        background:
+                          "linear-gradient(135deg, rgba(102, 126, 234, 0.8) 0%, rgba(118, 75, 162, 0.8) 25%, rgba(255, 154, 158, 0.8) 50%, rgba(6, 94, 56, 0.8) 75%, rgba(212, 252, 121, 0.8) 100%)",
+                        backgroundSize: "400% 400%",
+                        backgroundPosition: "0% 50%",
+                        animation: "gradientShift 15s ease infinite 0s",
+                        WebkitBackgroundClip: "text",
+                        backgroundClip: "text",
+                        WebkitTextFillColor: "transparent",
+                        color: "transparent",
+                      }}
+                    >
+                      {page}
+                    </span>
+                  ) : (
+                    page
+                  )}
                 </Button>
               );
             })}
