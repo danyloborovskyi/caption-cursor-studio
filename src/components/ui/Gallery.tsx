@@ -204,10 +204,22 @@ export const Gallery: React.FC<GalleryProps> = ({ className = "" }) => {
         console.log("Photo deleted successfully");
         // Refetch to ensure sync with backend
         const remainingPhotos = originalPhotos.filter((p) => p.id !== photo.id);
-        if (remainingPhotos.length === 0 && currentPage > 1) {
-          await fetchPhotos(currentPage - 1, true);
+
+        if (isSearchMode) {
+          // If in search mode, re-run the search
+          if (remainingPhotos.length === 0 && currentPage > 1) {
+            setCurrentPage(currentPage - 1);
+            await handleSearchPageChange(currentPage - 1);
+          } else {
+            await handleSearch(searchQuery);
+          }
         } else {
-          await fetchPhotos(currentPage, false);
+          // Regular gallery mode
+          if (remainingPhotos.length === 0 && currentPage > 1) {
+            await fetchPhotos(currentPage - 1, true);
+          } else {
+            await fetchPhotos(currentPage, false);
+          }
         }
       } else {
         // Revert on error
