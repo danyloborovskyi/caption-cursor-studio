@@ -29,10 +29,20 @@ export const Gallery: React.FC<GalleryProps> = ({ className = "" }) => {
     return 12;
   });
 
-  // Search state
-  const [searchQuery, setSearchQuery] = useState("");
+  // Search state - Load from localStorage
+  const [searchQuery, setSearchQuery] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("gallery_search_query") || "";
+    }
+    return "";
+  });
   const [isSearching, setIsSearching] = useState(false);
-  const [isSearchMode, setIsSearchMode] = useState(false);
+  const [isSearchMode, setIsSearchMode] = useState(() => {
+    if (typeof window !== "undefined") {
+      return !!localStorage.getItem("gallery_search_query");
+    }
+    return false;
+  });
 
   const fetchPhotos = useCallback(
     async (page = 1, showLoading = true) => {
@@ -91,12 +101,44 @@ export const Gallery: React.FC<GalleryProps> = ({ className = "" }) => {
     [isAuthenticated, perPage]
   );
 
-  // Initial load
+  // Initial load - check for saved search or load regular gallery
   useEffect(() => {
     if (isAuthenticated) {
-      fetchPhotos(1);
+      const savedQuery = localStorage.getItem("gallery_search_query");
+      if (savedQuery && savedQuery.trim()) {
+        // If there's a saved search, perform it
+        setIsLoading(true);
+        setIsSearching(true);
+        setIsSearchMode(true);
+        setError(null);
+
+        searchFiles(savedQuery, 1, perPage)
+          .then((result) => {
+            if (result.success) {
+              const limitedPhotos = result.data.slice(0, perPage);
+              setPhotos(limitedPhotos);
+              setCurrentPage(result.pagination?.current_page || 1);
+              setTotalPages(result.pagination?.total_pages || 1);
+            } else {
+              setError(result.error || "Search failed");
+              setPhotos([]);
+            }
+          })
+          .catch((err) => {
+            setError("An error occurred while searching");
+            console.error("Search error:", err);
+          })
+          .finally(() => {
+            setIsSearching(false);
+            setIsLoading(false);
+          });
+      } else {
+        // Otherwise, load regular gallery
+        fetchPhotos(1);
+      }
     }
-  }, [isAuthenticated, fetchPhotos]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated]);
 
   // Refresh when trigger changes - reset to page 1 to show new uploads
   useEffect(() => {
@@ -105,6 +147,8 @@ export const Gallery: React.FC<GalleryProps> = ({ className = "" }) => {
       setIsSearchMode(false);
       setSearchQuery("");
       setCurrentPage(1);
+      // Clear saved search from localStorage
+      localStorage.removeItem("gallery_search_query");
       fetchPhotos(1, false);
     }
   }, [refreshTrigger, isAuthenticated, fetchPhotos]);
@@ -116,6 +160,9 @@ export const Gallery: React.FC<GalleryProps> = ({ className = "" }) => {
     setIsSearchMode(true);
     setSearchQuery(query);
     setError(null);
+
+    // Save search query to localStorage
+    localStorage.setItem("gallery_search_query", query);
 
     try {
       const result = await searchFiles(query, 1, perPage);
@@ -142,6 +189,8 @@ export const Gallery: React.FC<GalleryProps> = ({ className = "" }) => {
     setSearchQuery("");
     setIsSearchMode(false);
     setCurrentPage(1);
+    // Clear saved search from localStorage
+    localStorage.removeItem("gallery_search_query");
     fetchPhotos(1, true);
   };
 
@@ -360,6 +409,7 @@ export const Gallery: React.FC<GalleryProps> = ({ className = "" }) => {
             <SearchBar
               onSearch={handleSearch}
               onClear={handleClearSearch}
+              value={searchQuery}
               placeholder="Search by description, tags, or filename..."
               isLoading={isSearching}
             />

@@ -6,6 +6,7 @@ import { Button } from "./Button";
 interface SearchBarProps {
   onSearch: (query: string) => void;
   onClear: () => void;
+  value?: string;
   placeholder?: string;
   isLoading?: boolean;
   className?: string;
@@ -14,11 +15,17 @@ interface SearchBarProps {
 export const SearchBar: React.FC<SearchBarProps> = ({
   onSearch,
   onClear,
+  value = "",
   placeholder = "Search images...",
   isLoading = false,
   className = "",
 }) => {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(value);
+
+  // Update internal state when value prop changes
+  React.useEffect(() => {
+    setSearchQuery(value);
+  }, [value]);
 
   const handleSubmit = useCallback(
     (e: React.FormEvent) => {
