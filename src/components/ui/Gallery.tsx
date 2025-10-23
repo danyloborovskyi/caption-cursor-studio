@@ -20,7 +20,14 @@ export const Gallery: React.FC<GalleryProps> = ({ className = "" }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [deletingPhotoId, setDeletingPhotoId] = useState<number | null>(null);
-  const [perPage, setPerPage] = useState(12);
+  const [perPage, setPerPage] = useState(() => {
+    // Load from localStorage or default to 12
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("gallery_per_page");
+      return saved ? Number(saved) : 12;
+    }
+    return 12;
+  });
 
   // Search state
   const [searchQuery, setSearchQuery] = useState("");
@@ -172,6 +179,8 @@ export const Gallery: React.FC<GalleryProps> = ({ className = "" }) => {
   const handlePerPageChange = (newPerPage: number) => {
     setPerPage(newPerPage);
     setCurrentPage(1);
+    // Save to localStorage
+    localStorage.setItem("gallery_per_page", newPerPage.toString());
     // fetchPhotos will be called automatically due to perPage dependency
   };
 
