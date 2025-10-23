@@ -20,6 +20,7 @@ export const Gallery: React.FC<GalleryProps> = ({ className = "" }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [deletingPhotoId, setDeletingPhotoId] = useState<number | null>(null);
+  const [perPage, setPerPage] = useState(12);
 
   // Search state
   const [searchQuery, setSearchQuery] = useState("");
@@ -40,11 +41,11 @@ export const Gallery: React.FC<GalleryProps> = ({ className = "" }) => {
         }
         setError(null);
 
-        const result = await getFiles(page, 12);
+        const result = await getFiles(page, perPage);
 
         if (result.success && result.data) {
-          // Ensure we only display 12 items max
-          const limitedPhotos = result.data.slice(0, 12);
+          // Limit to perPage items
+          const limitedPhotos = result.data.slice(0, perPage);
           console.log(
             "🖼️ Gallery: Displaying",
             limitedPhotos.length,
@@ -80,7 +81,7 @@ export const Gallery: React.FC<GalleryProps> = ({ className = "" }) => {
         }
       }
     },
-    [isAuthenticated]
+    [isAuthenticated, perPage]
   );
 
   // Initial load
@@ -110,11 +111,11 @@ export const Gallery: React.FC<GalleryProps> = ({ className = "" }) => {
     setError(null);
 
     try {
-      const result = await searchFiles(query, 1, 12);
+      const result = await searchFiles(query, 1, perPage);
 
       if (result.success) {
-        // Ensure we only display 12 items max
-        const limitedPhotos = result.data.slice(0, 12);
+        // Limit to perPage items
+        const limitedPhotos = result.data.slice(0, perPage);
         setPhotos(limitedPhotos);
         setCurrentPage(result.pagination?.current_page || 1);
         setTotalPages(result.pagination?.total_pages || 1);
@@ -142,11 +143,11 @@ export const Gallery: React.FC<GalleryProps> = ({ className = "" }) => {
 
     setIsSearching(true);
     try {
-      const result = await searchFiles(searchQuery, newPage, 12);
+      const result = await searchFiles(searchQuery, newPage, perPage);
 
       if (result.success) {
-        // Ensure we only display 12 items max
-        const limitedPhotos = result.data.slice(0, 12);
+        // Limit to perPage items
+        const limitedPhotos = result.data.slice(0, perPage);
         setPhotos(limitedPhotos);
         setCurrentPage(result.pagination?.current_page || newPage);
         setTotalPages(result.pagination?.total_pages || 1);
@@ -166,6 +167,12 @@ export const Gallery: React.FC<GalleryProps> = ({ className = "" }) => {
         fetchPhotos(newPage);
       }
     }
+  };
+
+  const handlePerPageChange = (newPerPage: number) => {
+    setPerPage(newPerPage);
+    setCurrentPage(1);
+    // fetchPhotos will be called automatically due to perPage dependency
   };
 
   const handleDelete = async (photo: FileItem) => {
@@ -326,13 +333,46 @@ export const Gallery: React.FC<GalleryProps> = ({ className = "" }) => {
           </p>
         </div>
 
-        {/* Search Bar */}
-        <SearchBar
-          onSearch={handleSearch}
-          onClear={handleClearSearch}
-          placeholder="Search by description, tags, or filename..."
-          isLoading={isSearching}
-        />
+        {/* Search Bar and Per Page Selector */}
+        <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
+          <div className="flex-1">
+            <SearchBar
+              onSearch={handleSearch}
+              onClear={handleClearSearch}
+              placeholder="Search by description, tags, or filename..."
+              isLoading={isSearching}
+            />
+          </div>
+
+          {/* Items Per Page Selector */}
+          <div className="flex items-center gap-2 glass rounded-xl px-4 py-2 border border-white/20">
+            <label
+              htmlFor="per-page-select"
+              className="text-white/70 text-sm font-light whitespace-nowrap"
+            >
+              Items per page:
+            </label>
+            <select
+              id="per-page-select"
+              value={perPage}
+              onChange={(e) => handlePerPageChange(Number(e.target.value))}
+              className="bg-white/10 text-white rounded-lg px-3 py-1.5 text-sm font-light border border-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all cursor-pointer hover:bg-white/20"
+            >
+              <option value={12} className="bg-gray-800">
+                12
+              </option>
+              <option value={24} className="bg-gray-800">
+                24
+              </option>
+              <option value={48} className="bg-gray-800">
+                48
+              </option>
+              <option value={100} className="bg-gray-800">
+                100
+              </option>
+            </select>
+          </div>
+        </div>
       </div>
 
       {/* Grid of Image Cards */}
