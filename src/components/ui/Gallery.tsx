@@ -447,7 +447,7 @@ export const Gallery: React.FC<GalleryProps> = ({ className = "" }) => {
                         background:
                           "linear-gradient(135deg, rgba(102, 126, 234, 0.8) 0%, rgba(118, 75, 162, 0.8) 25%, rgba(255, 154, 158, 0.8) 50%, rgba(6, 94, 56, 0.8) 75%, rgba(212, 252, 121, 0.8) 100%)",
                         backgroundSize: "400% 400%",
-                        backgroundPosition: "0% 50%",
+                        backgroundAttachment: "fixed",
                         animation: "gradientShift 15s ease infinite 0s",
                         WebkitBackgroundClip: "text",
                         backgroundClip: "text",
