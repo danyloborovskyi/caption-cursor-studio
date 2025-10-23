@@ -1,5 +1,4 @@
-const API_BASE_URL = "https://caption-studio-back-auth.onrender.com";
-
+const API_BASE_URL = "https://caption-studio-back.onrender.com";
 // =====================
 // Auth Types
 // =====================
@@ -623,21 +622,11 @@ export async function getFiles(
 
     const url = `${API_BASE_URL}/api/files?${params.toString()}`;
 
-    console.log(`Fetching files from: ${url}`);
-    console.log(
-      `Authorization token:`,
-      token ? `${token.substring(0, 20)}...` : "NO TOKEN"
-    );
-    console.log(`Parameters:`, {
-      page,
-      per_page: limit,
-      sortBy,
-      sortOrder,
-      status,
-    });
-    console.log(
-      `\nCURL command:\ncurl -X GET '${url}' -H 'Authorization: Bearer ${token}'`
-    );
+    console.log("===============================================");
+    console.log("🚀 FETCHING FILES - URL:", url);
+    console.log("📄 Query params:", params.toString());
+    console.log("📊 Expected: per_page=12, page=" + page);
+    console.log("===============================================");
 
     const response = await fetch(url, {
       method: "GET",
@@ -653,17 +642,16 @@ export async function getFiles(
 
     const data = await response.json();
 
-    // Detailed logging for debugging
-    console.log("=== getFiles API Response Details ===");
-    console.log("Success:", data.success);
-    console.log("Data array:", data.data);
-    console.log("Data length:", data.data?.length);
-    console.log("Data is array?:", Array.isArray(data.data));
-    console.log("First item:", data.data?.[0]);
-    console.log("Pagination:", data.pagination);
-    console.log("Summary:", data.summary);
-    console.log("Full response:", JSON.stringify(data, null, 2));
-    console.log("=====================================");
+    console.log("===============================================");
+    console.log("✅ API RESPONSE:");
+    console.log("📦 Items received:", data.data?.length);
+    console.log("📄 Pagination:", {
+      current_page: data.pagination?.current_page,
+      per_page: data.pagination?.per_page,
+      total_items: data.pagination?.total_items,
+      total_pages: data.pagination?.total_pages,
+    });
+    console.log("===============================================");
 
     return data;
   } catch (error) {

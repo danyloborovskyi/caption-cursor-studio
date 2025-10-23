@@ -42,23 +42,29 @@ export const Gallery: React.FC<GalleryProps> = ({ className = "" }) => {
 
         const result = await getFiles(page, 12);
 
-        console.log("Gallery: API response:", result);
-        console.log("Gallery: Photos data:", result.data);
-        console.log("Gallery: Photos count:", result.data?.length);
-
         if (result.success && result.data) {
           // Ensure we only display 12 items max
           const limitedPhotos = result.data.slice(0, 12);
-          setPhotos(limitedPhotos);
           console.log(
-            "Gallery: Displaying photos count:",
-            limitedPhotos.length
+            "🖼️ Gallery: Displaying",
+            limitedPhotos.length,
+            "of",
+            result.data?.length,
+            "items"
           );
+          setPhotos(limitedPhotos);
 
           if (result.pagination) {
+            console.log(
+              "📊 Gallery: Setting totalPages to",
+              result.pagination.total_pages
+            );
             setCurrentPage(result.pagination.current_page);
             setTotalPages(result.pagination.total_pages);
           } else {
+            console.log(
+              "⚠️ Gallery: No pagination info, setting totalPages to 1"
+            );
             setCurrentPage(page);
             setTotalPages(1);
           }
