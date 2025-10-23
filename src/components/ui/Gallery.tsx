@@ -16,6 +16,7 @@ export const Gallery: React.FC<GalleryProps> = ({ className = "" }) => {
   const { refreshTrigger } = useGallery();
   const [photos, setPhotos] = useState<FileItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -96,6 +97,7 @@ export const Gallery: React.FC<GalleryProps> = ({ className = "" }) => {
         if (showLoading) {
           setIsLoading(false);
         }
+        setIsInitialLoading(false);
       }
     },
     [isAuthenticated, perPage]
@@ -131,6 +133,7 @@ export const Gallery: React.FC<GalleryProps> = ({ className = "" }) => {
           .finally(() => {
             setIsSearching(false);
             setIsLoading(false);
+            setIsInitialLoading(false);
           });
       } else {
         // Otherwise, load regular gallery
@@ -191,7 +194,7 @@ export const Gallery: React.FC<GalleryProps> = ({ className = "" }) => {
     setCurrentPage(1);
     // Clear saved search from localStorage
     localStorage.removeItem("gallery_search_query");
-    fetchPhotos(1, true);
+    fetchPhotos(1, true); // Show loading overlay
   };
 
   const handleSearchPageChange = async (newPage: number) => {
@@ -285,7 +288,7 @@ export const Gallery: React.FC<GalleryProps> = ({ className = "" }) => {
     }
   };
 
-  if (isLoading) {
+  if (isInitialLoading) {
     return (
       <div className={`w-full ${className}`}>
         <div className="flex items-center justify-center p-12">
@@ -333,9 +336,58 @@ export const Gallery: React.FC<GalleryProps> = ({ className = "" }) => {
     );
   }
 
+  // Empty state - but still show SearchBar if in search mode
   if (photos.length === 0) {
     return (
       <div className={`w-full ${className}`}>
+        {/* Show search bar if we're in search mode so user can clear it */}
+        {isSearchMode && (
+          <div className="mb-8">
+            <div className="text-center mb-6">
+              <h2 className="text-3xl font-light text-white mb-2 tracking-wide">
+                Your Gallery
+              </h2>
+              <p className="text-white/60 font-light">
+                No results found for &ldquo;{searchQuery}&rdquo;
+              </p>
+            </div>
+
+            {/* Search Bar and Per Page Selector */}
+            <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
+              <div className="flex-1">
+                <SearchBar
+                  onSearch={handleSearch}
+                  onClear={handleClearSearch}
+                  value={searchQuery}
+                  placeholder="Search by description, tags, or filename..."
+                  isLoading={isSearching}
+                />
+              </div>
+
+              {/* Items Per Page Selector */}
+              <div className="flex items-center gap-2 glass rounded-xl px-4 py-2 border border-white/20">
+                <label
+                  htmlFor="per-page-select"
+                  className="text-white/70 text-sm font-light whitespace-nowrap"
+                >
+                  Items per page:
+                </label>
+                <select
+                  id="per-page-select"
+                  value={perPage}
+                  onChange={(e) => handlePerPageChange(Number(e.target.value))}
+                  className="bg-white/10 text-white rounded-lg px-3 py-1.5 text-sm font-light border border-white/20 focus:outline-none focus:ring-2 focus:ring-blue-500/50 cursor-pointer hover:bg-white/20 transition-colors"
+                >
+                  <option value="12">12</option>
+                  <option value="24">24</option>
+                  <option value="48">48</option>
+                  <option value="100">100</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="text-center p-12 glass rounded-2xl border-2 border-dashed border-white/20">
           <div className="mx-auto w-20 h-20 text-white/30 mb-6">
             <svg
@@ -353,28 +405,43 @@ export const Gallery: React.FC<GalleryProps> = ({ className = "" }) => {
             </svg>
           </div>
           <h3 className="text-3xl font-light text-white mb-4">
-            Your Gallery is Empty
+            {isSearchMode ? "No Results Found" : "Your Gallery is Empty"}
           </h3>
           <p className="text-white/70 font-light text-lg mb-6">
-            Upload your first images using the form above to get AI-powered
-            captions and tags!
+            {isSearchMode ? (
+              <>
+                No images match your search. Try a different search term or
+                clear the search to see all images.
+              </>
+            ) : (
+              <>
+                Upload your first images using the form above to get AI-powered
+                captions and tags!
+              </>
+            )}
           </p>
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500/20 text-blue-300 rounded-lg text-sm border border-blue-400/30">
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M5 10l7-7m0 0l7 7m-7-7v18"
-              />
-            </svg>
-            Scroll up to upload images
-          </div>
+          {isSearchMode ? (
+            <Button onClick={handleClearSearch} variant="primary" size="sm">
+              Clear Search
+            </Button>
+          ) : (
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500/20 text-blue-300 rounded-lg text-sm border border-blue-400/30">
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 10l7-7m0 0l7 7m-7-7v18"
+                />
+              </svg>
+              Scroll up to upload images
+            </div>
+          )}
         </div>
       </div>
     );
@@ -447,15 +514,27 @@ export const Gallery: React.FC<GalleryProps> = ({ className = "" }) => {
       </div>
 
       {/* Grid of Image Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        {photos.map((photo) => (
-          <ImageCard
-            key={photo.id}
-            photo={photo}
-            isDeleting={deletingPhotoId === photo.id}
-            onDelete={handleDelete}
-          />
-        ))}
+      <div className="relative">
+        {/* Loading overlay for subsequent loads */}
+        {isLoading && !isInitialLoading && (
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-10 rounded-2xl">
+            <div className="flex items-center space-x-3 glass p-4 rounded-xl">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+              <p className="text-white/90 font-light">Updating...</p>
+            </div>
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          {photos.map((photo) => (
+            <ImageCard
+              key={photo.id}
+              photo={photo}
+              isDeleting={deletingPhotoId === photo.id}
+              onDelete={handleDelete}
+            />
+          ))}
+        </div>
       </div>
 
       {/* Pagination */}
