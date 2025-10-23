@@ -599,42 +599,83 @@ export const Gallery: React.FC<GalleryProps> = ({ className = "" }) => {
           </Button>
 
           <div className="flex items-center space-x-1">
-            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-              const page = currentPage <= 3 ? i + 1 : currentPage - 2 + i;
-              if (page > totalPages) return null;
+            {(() => {
+              const pages = [];
+              const showEllipsisStart = currentPage > 4;
+              const showEllipsisEnd = currentPage < totalPages - 3;
 
-              const isActive = currentPage === page;
+              // Always show first page
+              pages.push(1);
 
-              return (
-                <Button
-                  key={page}
-                  onClick={() => handlePageChange(page)}
-                  variant={isActive ? "primary" : "outline"}
-                  size="sm"
-                  className={`min-w-[40px] transition-all duration-200 ${
-                    isActive
-                      ? "!bg-white !border-white shadow-lg font-extrabold [&>*]:animate-gradient-text"
-                      : "hover:bg-white/10"
-                  }`}
-                >
-                  {isActive ? (
-                    <span
-                      className="font-extrabold keyhole-text"
-                      style={{
-                        WebkitBackgroundClip: "text",
-                        backgroundClip: "text",
-                        WebkitTextFillColor: "transparent",
-                        color: "transparent",
-                      }}
-                    >
-                      {page}
+              // Show ellipsis after first page if needed
+              if (showEllipsisStart) {
+                pages.push("ellipsis-start");
+              }
+
+              // Show pages around current page (current ± 2)
+              for (
+                let i = Math.max(2, currentPage - 2);
+                i <= Math.min(totalPages - 1, currentPage + 2);
+                i++
+              ) {
+                if (i !== 1 && i !== totalPages) {
+                  pages.push(i);
+                }
+              }
+
+              // Show ellipsis before last page if needed
+              if (showEllipsisEnd) {
+                pages.push("ellipsis-end");
+              }
+
+              // Always show last page (if more than 1 page)
+              if (totalPages > 1) {
+                pages.push(totalPages);
+              }
+
+              return pages.map((page) => {
+                if (typeof page === "string") {
+                  // Render ellipsis
+                  return (
+                    <span key={page} className="px-2 text-white/50 font-light">
+                      ...
                     </span>
-                  ) : (
-                    page
-                  )}
-                </Button>
-              );
-            })}
+                  );
+                }
+
+                const isActive = currentPage === page;
+
+                return (
+                  <Button
+                    key={page}
+                    onClick={() => handlePageChange(page)}
+                    variant={isActive ? "primary" : "outline"}
+                    size="sm"
+                    className={`min-w-[40px] transition-all duration-200 ${
+                      isActive
+                        ? "!bg-white !border-white shadow-lg font-extrabold [&>*]:animate-gradient-text"
+                        : "hover:bg-white/10"
+                    }`}
+                  >
+                    {isActive ? (
+                      <span
+                        className="font-extrabold keyhole-text"
+                        style={{
+                          WebkitBackgroundClip: "text",
+                          backgroundClip: "text",
+                          WebkitTextFillColor: "transparent",
+                          color: "transparent",
+                        }}
+                      >
+                        {page}
+                      </span>
+                    ) : (
+                      page
+                    )}
+                  </Button>
+                );
+              });
+            })()}
           </div>
 
           <Button
