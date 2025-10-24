@@ -108,7 +108,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
             <button
               type="button"
               onClick={onSwitchToSignup}
-              className="text-blue-400 hover:text-blue-300 font-medium"
+              className="text-blue-400 hover:text-blue-300 font-medium cursor-pointer"
             >
               Sign up
             </button>

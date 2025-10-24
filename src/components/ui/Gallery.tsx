@@ -299,7 +299,7 @@ export const Gallery: React.FC<GalleryProps> = ({ className = "" }) => {
             setCurrentPage(currentPage - 1);
             await handleSearchPageChange(currentPage - 1);
           } else {
-            await handleSearch(searchQuery);
+            await handleSearchPageChange(currentPage);
           }
         } else {
           // Regular gallery mode
@@ -568,6 +568,7 @@ export const Gallery: React.FC<GalleryProps> = ({ className = "" }) => {
               photo={photo}
               isDeleting={deletingPhotoId === photo.id}
               onDelete={handleDelete}
+              searchQuery={isSearchMode ? searchQuery : ""}
             />
           ))}
         </div>

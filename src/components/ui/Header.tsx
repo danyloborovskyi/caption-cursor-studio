@@ -63,7 +63,7 @@ export const Header: React.FC<HeaderProps> = ({ className = "" }) => {
             <div className="flex items-center space-x-8">
               <button
                 onClick={() => router.push("/")}
-                className="flex items-center space-x-3 hover:opacity-80 transition-opacity"
+                className="flex items-center space-x-3 hover:opacity-80 transition-opacity cursor-pointer"
               >
                 {/* Logo/Icon */}
                 <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm">
@@ -98,7 +98,7 @@ export const Header: React.FC<HeaderProps> = ({ className = "" }) => {
                 <nav className="hidden md:flex items-center gap-1">
                   <button
                     onClick={() => router.push("/upload")}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
                       pathname === "/upload"
                         ? "bg-white/20 text-white"
                         : "text-white/70 hover:text-white hover:bg-white/10"
@@ -135,7 +135,7 @@ export const Header: React.FC<HeaderProps> = ({ className = "" }) => {
                 <div className="relative" ref={userMenuRef}>
                   <button
                     onClick={() => setShowUserMenu(!showUserMenu)}
-                    className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg transition-colors cursor-pointer"
                   >
                     <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">
                       <svg
@@ -185,7 +185,7 @@ export const Header: React.FC<HeaderProps> = ({ className = "" }) => {
                       </div>
                       <button
                         onClick={handleLogout}
-                        className="w-full px-4 py-2 text-left text-sm text-white hover:bg-white/10 transition-colors flex items-center gap-2"
+                        className="w-full px-4 py-2 text-left text-sm text-white hover:bg-white/10 transition-colors flex items-center gap-2 cursor-pointer"
                       >
                         <svg
                           className="w-4 h-4"

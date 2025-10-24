@@ -9,12 +9,14 @@ interface ImageCardProps {
   photo: FileItem;
   isDeleting: boolean;
   onDelete: (photo: FileItem) => void;
+  searchQuery?: string;
 }
 
 export const ImageCard: React.FC<ImageCardProps> = ({
   photo,
   isDeleting,
   onDelete,
+  searchQuery = "",
 }) => {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -43,6 +45,11 @@ export const ImageCard: React.FC<ImageCardProps> = ({
     } catch (err) {
       console.error("Failed to copy tags:", err);
     }
+  };
+
+  const isTagHighlighted = (tag: string) => {
+    if (!searchQuery || !searchQuery.trim()) return false;
+    return tag.toLowerCase().includes(searchQuery.toLowerCase());
   };
 
   return (
@@ -75,7 +82,7 @@ export const ImageCard: React.FC<ImageCardProps> = ({
               <span className="text-xs text-white/50 font-light">Tags:</span>
               <button
                 onClick={handleCopyTags}
-                className="text-xs text-blue-300 hover:text-blue-200 transition-colors flex items-center gap-1"
+                className="text-xs text-blue-300 hover:text-blue-200 transition-colors flex items-center gap-1 cursor-pointer"
                 title="Copy all tags"
               >
                 {copied ? (
@@ -116,14 +123,21 @@ export const ImageCard: React.FC<ImageCardProps> = ({
               </button>
             </div>
             <div className="flex flex-wrap gap-2">
-              {photo.tags.slice(0, 5).map((tag, index) => (
-                <span
-                  key={index}
-                  className="px-3 py-1 text-xs bg-blue-500/20 text-blue-200 rounded-full font-light border border-blue-400/30"
-                >
-                  {tag}
-                </span>
-              ))}
+              {photo.tags.slice(0, 5).map((tag, index) => {
+                const isHighlighted = isTagHighlighted(tag);
+                return (
+                  <span
+                    key={index}
+                    className={`px-3 py-1 text-xs rounded-full font-light transition-all ${
+                      isHighlighted
+                        ? "bg-yellow-500/30 text-yellow-200 border-2 border-yellow-400/60 shadow-lg shadow-yellow-500/20 font-medium"
+                        : "bg-blue-500/20 text-blue-200 border border-blue-400/30"
+                    }`}
+                  >
+                    {tag}
+                  </span>
+                );
+              })}
               {photo.tags.length > 5 && (
                 <span className="px-3 py-1 text-xs bg-white/10 text-white/60 rounded-full font-light border border-white/20">
                   +{photo.tags.length - 5} more

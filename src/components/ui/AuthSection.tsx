@@ -22,7 +22,7 @@ export const AuthSection: React.FC = () => {
           <div className="flex border-b border-white/10">
             <button
               onClick={() => setActiveTab("login")}
-              className={`flex-1 py-4 px-6 text-center font-medium transition-all ${
+              className={`flex-1 py-4 px-6 text-center font-medium transition-all cursor-pointer ${
                 activeTab === "login"
                   ? "text-white bg-white/10 border-b-2 border-blue-500"
                   : "text-white/60 hover:text-white hover:bg-white/5"
@@ -32,7 +32,7 @@ export const AuthSection: React.FC = () => {
             </button>
             <button
               onClick={() => setActiveTab("signup")}
-              className={`flex-1 py-4 px-6 text-center font-medium transition-all ${
+              className={`flex-1 py-4 px-6 text-center font-medium transition-all cursor-pointer ${
                 activeTab === "signup"
                   ? "text-white bg-white/10 border-b-2 border-blue-500"
                   : "text-white/60 hover:text-white hover:bg-white/5"

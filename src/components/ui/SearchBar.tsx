@@ -78,7 +78,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
             <button
               type="button"
               onClick={handleClear}
-              className="p-1.5 text-white/50 hover:text-white/80 transition-colors"
+              className="p-1.5 text-white/50 hover:text-white/80 transition-colors cursor-pointer"
               title="Clear search"
             >
               <svg

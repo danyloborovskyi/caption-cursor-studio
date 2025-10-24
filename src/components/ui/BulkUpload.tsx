@@ -26,6 +26,7 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({
   onUploadSuccess,
 }) => {
   const { refreshGallery } = useGallery();
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [selectedFiles, setSelectedFiles] = useState<SelectedFile[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -126,6 +127,10 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({
     setSuccessMessage(null);
     setIsWaitingForAnalysis(false);
     setAnalysisComplete(false);
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   }, [selectedFiles]);
 
   const uploadFiles = async () => {
@@ -250,7 +255,7 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({
           <button
             type="button"
             onClick={() => setTagStyle("neutral")}
-            className={`flex-1 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
+            className={`flex-1 px-4 py-3 rounded-lg text-sm font-medium transition-all cursor-pointer ${
               tagStyle === "neutral"
                 ? "bg-blue-500 text-white shadow-lg shadow-blue-500/30"
                 : "glass text-white/70 hover:text-white"
@@ -264,7 +269,7 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({
           <button
             type="button"
             onClick={() => setTagStyle("playful")}
-            className={`flex-1 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
+            className={`flex-1 px-4 py-3 rounded-lg text-sm font-medium transition-all cursor-pointer ${
               tagStyle === "playful"
                 ? "bg-blue-500 text-white shadow-lg shadow-blue-500/30"
                 : "glass text-white/70 hover:text-white"
@@ -278,7 +283,7 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({
           <button
             type="button"
             onClick={() => setTagStyle("seo")}
-            className={`flex-1 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
+            className={`flex-1 px-4 py-3 rounded-lg text-sm font-medium transition-all cursor-pointer ${
               tagStyle === "seo"
                 ? "bg-blue-500 text-white shadow-lg shadow-blue-500/30"
                 : "glass text-white/70 hover:text-white"
@@ -304,6 +309,7 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({
         onDragLeave={handleDragLeave}
       >
         <input
+          ref={fileInputRef}
           type="file"
           accept="image/*"
           multiple
@@ -430,7 +436,7 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({
                 {!isLoading && !isWaitingForAnalysis && (
                   <button
                     onClick={() => removeFile(fileObj.id)}
-                    className="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-600 transition-colors"
+                    className="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-600 transition-colors cursor-pointer"
                   >
                     ×
                   </button>

@@ -58,7 +58,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-10 text-white/60 hover:text-white transition-colors"
+          className="absolute top-4 right-4 z-10 text-white/60 hover:text-white transition-colors cursor-pointer"
           aria-label="Close modal"
         >
           <svg
@@ -80,7 +80,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         <div className="flex border-b border-white/10">
           <button
             onClick={() => setMode("login")}
-            className={`flex-1 py-4 px-6 text-center font-medium transition-all ${
+            className={`flex-1 py-4 px-6 text-center font-medium transition-all cursor-pointer ${
               mode === "login"
                 ? "text-white bg-white/10 border-b-2 border-blue-500"
                 : "text-white/60 hover:text-white hover:bg-white/5"
@@ -90,7 +90,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           </button>
           <button
             onClick={() => setMode("signup")}
-            className={`flex-1 py-4 px-6 text-center font-medium transition-all ${
+            className={`flex-1 py-4 px-6 text-center font-medium transition-all cursor-pointer ${
               mode === "signup"
                 ? "text-white bg-white/10 border-b-2 border-blue-500"
                 : "text-white/60 hover:text-white hover:bg-white/5"
