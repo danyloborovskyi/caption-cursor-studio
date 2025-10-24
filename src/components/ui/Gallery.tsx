@@ -20,6 +20,7 @@ export const Gallery: React.FC<GalleryProps> = ({ className = "" }) => {
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
   const [deletingPhotoId, setDeletingPhotoId] = useState<number | null>(null);
   const [perPage, setPerPage] = useState(() => {
     // Load from localStorage or default to 12
@@ -80,12 +81,14 @@ export const Gallery: React.FC<GalleryProps> = ({ className = "" }) => {
             );
             setCurrentPage(result.pagination.current_page);
             setTotalPages(result.pagination.total_pages);
+            setTotalItems(result.pagination.total_items || 0);
           } else {
             console.log(
               "⚠️ Gallery: No pagination info, setting totalPages to 1"
             );
             setCurrentPage(page);
             setTotalPages(1);
+            setTotalItems(0);
           }
         } else {
           setError(result.error || "Failed to load photos");
@@ -121,6 +124,7 @@ export const Gallery: React.FC<GalleryProps> = ({ className = "" }) => {
               setPhotos(limitedPhotos);
               setCurrentPage(result.pagination?.current_page || 1);
               setTotalPages(result.pagination?.total_pages || 1);
+              setTotalItems(result.pagination?.total_items || 0);
             } else {
               setError(result.error || "Search failed");
               setPhotos([]);
@@ -176,6 +180,7 @@ export const Gallery: React.FC<GalleryProps> = ({ className = "" }) => {
         setPhotos(limitedPhotos);
         setCurrentPage(result.pagination?.current_page || 1);
         setTotalPages(result.pagination?.total_pages || 1);
+        setTotalItems(result.pagination?.total_items || 0);
       } else {
         setError(result.error || "Search failed");
         setPhotos([]);
@@ -210,6 +215,7 @@ export const Gallery: React.FC<GalleryProps> = ({ className = "" }) => {
         setPhotos(limitedPhotos);
         setCurrentPage(result.pagination?.current_page || newPage);
         setTotalPages(result.pagination?.total_pages || 1);
+        setTotalItems(result.pagination?.total_items || 0);
       }
     } catch (err) {
       console.error("Search pagination error:", err);
@@ -245,6 +251,7 @@ export const Gallery: React.FC<GalleryProps> = ({ className = "" }) => {
           setPhotos(limitedPhotos);
           setCurrentPage(result.pagination?.current_page || 1);
           setTotalPages(result.pagination?.total_pages || 1);
+          setTotalItems(result.pagination?.total_items || 0);
         }
       } catch (err) {
         console.error("Search error on per page change:", err);
@@ -262,6 +269,7 @@ export const Gallery: React.FC<GalleryProps> = ({ className = "" }) => {
           if (result.pagination) {
             setCurrentPage(result.pagination.current_page);
             setTotalPages(result.pagination.total_pages);
+            setTotalItems(result.pagination.total_items || 0);
           }
         }
       } catch (err) {
@@ -494,12 +502,12 @@ export const Gallery: React.FC<GalleryProps> = ({ className = "" }) => {
           <p className="text-white/60 font-light">
             {isSearchMode && searchQuery ? (
               <>
-                Found {photos.length} result{photos.length !== 1 ? "s" : ""} for
+                Found {totalItems} result{totalItems !== 1 ? "s" : ""} for
                 &ldquo;{searchQuery}&rdquo;
               </>
             ) : (
               <>
-                {photos.length} image{photos.length !== 1 ? "s" : ""} with
+                {totalItems} image{totalItems !== 1 ? "s" : ""} with
                 AI-generated tags
               </>
             )}
