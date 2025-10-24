@@ -106,6 +106,16 @@ export const Header: React.FC<HeaderProps> = ({ className = "" }) => {
                   >
                     Upload
                   </button>
+                  <button
+                    onClick={() => router.push("/gallery")}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
+                      pathname === "/gallery"
+                        ? "bg-white/20 text-white"
+                        : "text-white/70 hover:text-white hover:bg-white/10"
+                    }`}
+                  >
+                    Gallery
+                  </button>
                 </nav>
               )}
             </div>
