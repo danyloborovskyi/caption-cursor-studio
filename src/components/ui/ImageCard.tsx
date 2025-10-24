@@ -19,7 +19,9 @@ export const ImageCard: React.FC<ImageCardProps> = ({
   searchQuery = "",
 }) => {
   const [showConfirmation, setShowConfirmation] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [copiedTags, setCopiedTags] = useState(false);
+  const [copiedDescription, setCopiedDescription] = useState(false);
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
   const handleDeleteClick = () => {
     setShowConfirmation(true);
@@ -40,16 +42,53 @@ export const ImageCard: React.FC<ImageCardProps> = ({
     const tagsText = photo.tags.join(", ");
     try {
       await navigator.clipboard.writeText(tagsText);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      setCopiedTags(true);
+      setTimeout(() => setCopiedTags(false), 2000);
     } catch (err) {
       console.error("Failed to copy tags:", err);
+    }
+  };
+
+  const handleCopyDescription = async () => {
+    if (!photo.description) return;
+
+    try {
+      await navigator.clipboard.writeText(photo.description);
+      setCopiedDescription(true);
+      setTimeout(() => setCopiedDescription(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy description:", err);
     }
   };
 
   const isTagHighlighted = (tag: string) => {
     if (!searchQuery || !searchQuery.trim()) return false;
     return tag.toLowerCase().includes(searchQuery.toLowerCase());
+  };
+
+  const highlightText = (text: string) => {
+    if (!searchQuery || !searchQuery.trim()) return text;
+
+    const query = searchQuery.trim();
+    const regex = new RegExp(`(${query})`, "gi");
+    const parts = text.split(regex);
+
+    return (
+      <>
+        {parts.map((part, index) =>
+          regex.test(part) ? (
+            <mark
+              key={index}
+              className="bg-yellow-500/40 text-yellow-100 font-medium px-0.5 rounded"
+            >
+              {part}
+            </mark>
+          ) : (
+            <span key={index}>{part}</span>
+          )
+        )}
+      </>
+    );
   };
 
   return (
@@ -70,9 +109,73 @@ export const ImageCard: React.FC<ImageCardProps> = ({
       <div className="p-6 flex-1 flex flex-col">
         {/* Description */}
         {photo.description && (
-          <p className="text-white/80 text-sm mb-3 line-clamp-2 font-light">
-            {photo.description}
-          </p>
+          <div className="mb-3">
+            <div className="flex items-start justify-between gap-2 mb-1">
+              <span className="text-xs text-white/50 font-light">
+                Description:
+              </span>
+              <button
+                onClick={handleCopyDescription}
+                className="text-xs text-blue-300 hover:text-blue-200 transition-colors flex items-center gap-1 cursor-pointer"
+                title="Copy description"
+              >
+                {copiedDescription ? (
+                  <>
+                    <svg
+                      className="w-3 h-3"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                    <span className="text-green-300">Copied!</span>
+                  </>
+                ) : (
+                  <>
+                    <svg
+                      className="w-3 h-3"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                      />
+                    </svg>
+                    <span>Copy</span>
+                  </>
+                )}
+              </button>
+            </div>
+            <div className="relative">
+              <p
+                className={`text-white/80 text-sm font-light transition-all ${
+                  isDescriptionExpanded ? "" : "line-clamp-2"
+                }`}
+              >
+                {highlightText(photo.description)}
+              </p>
+              {photo.description.length > 100 && (
+                <button
+                  onClick={() =>
+                    setIsDescriptionExpanded(!isDescriptionExpanded)
+                  }
+                  className="text-xs text-blue-300 hover:text-blue-200 transition-colors mt-1 cursor-pointer font-light"
+                >
+                  {isDescriptionExpanded ? "Show less" : "Show more"}
+                </button>
+              )}
+            </div>
+          </div>
         )}
 
         {/* Tags */}
@@ -85,7 +188,7 @@ export const ImageCard: React.FC<ImageCardProps> = ({
                 className="text-xs text-blue-300 hover:text-blue-200 transition-colors flex items-center gap-1 cursor-pointer"
                 title="Copy all tags"
               >
-                {copied ? (
+                {copiedTags ? (
                   <>
                     <svg
                       className="w-3 h-3"
