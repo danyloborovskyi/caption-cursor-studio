@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { getFiles, deleteFile, searchFiles, FileItem } from "@/lib/api";
 import { useGallery, useAuth } from "@/lib/contexts";
 import { Button } from "./Button";
-import { ImageCard } from "./ImageCard";
+import { MyImageCard } from "./MyImageCard";
 import { SearchBar } from "./SearchBar";
 
 interface MyGalleryProps {
@@ -332,6 +332,13 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
     }
   };
 
+  const handleUpdate = (updatedPhoto: FileItem) => {
+    // Update the photo in the current photos array
+    setPhotos((prev) =>
+      prev.map((p) => (p.id === updatedPhoto.id ? updatedPhoto : p))
+    );
+  };
+
   if (isInitialLoading) {
     return (
       <div className={`w-full ${className}`}>
@@ -571,11 +578,12 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           {photos.map((photo) => (
-            <ImageCard
+            <MyImageCard
               key={photo.id}
               photo={photo}
               isDeleting={deletingPhotoId === photo.id}
               onDelete={handleDelete}
+              onUpdate={handleUpdate}
               searchQuery={isSearchMode ? searchQuery : ""}
             />
           ))}

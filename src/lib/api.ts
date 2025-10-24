@@ -535,6 +535,18 @@ export interface DeleteResponse {
   error?: string;
 }
 
+export interface UpdateFileRequest {
+  description?: string;
+  tags?: string[];
+}
+
+export interface UpdateFileResponse {
+  success: boolean;
+  message: string;
+  data?: FileItem;
+  error?: string;
+}
+
 export interface SearchResponse {
   success: boolean;
   data: FileItem[];
@@ -743,6 +755,48 @@ export async function deleteFile(fileId: number): Promise<DeleteResponse> {
     return {
       success: false,
       message: "Failed to delete file",
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
+/**
+ * Update file metadata (description and/or tags)
+ */
+export async function updateFile(
+  fileId: number,
+  updates: UpdateFileRequest
+): Promise<UpdateFileResponse> {
+  try {
+    const token = localStorage.getItem("access_token");
+
+    if (!token) {
+      throw new Error("Authentication required");
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/files/${fileId}`, {
+      method: "PATCH",
+      headers: {
+        ...getAuthHeaders(token),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(updates),
+      mode: "cors",
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Update Error: ${response.status} - ${errorText}`);
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error updating file:", error);
+    return {
+      success: false,
+      message: "Failed to update file",
       error: error instanceof Error ? error.message : "Unknown error",
     };
   }
