@@ -27,6 +27,15 @@ export const SearchBar: React.FC<SearchBarProps> = ({
     setSearchQuery(value);
   }, [value]);
 
+  // Auto-clear when user manually deletes all text
+  React.useEffect(() => {
+    // If the search query becomes empty and the parent value is not empty,
+    // it means user manually cleared it, so trigger onClear
+    if (searchQuery === "" && value !== "") {
+      onClear();
+    }
+  }, [searchQuery, value, onClear]);
+
   const handleSubmit = useCallback(
     (e: React.FormEvent) => {
       e.preventDefault();

@@ -1,6 +1,6 @@
 "use client";
 
-import { Gallery } from "@/components";
+import { MyGallery } from "@/components";
 import { useAuth } from "@/lib/contexts";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -29,19 +29,9 @@ export default function GalleryPage() {
 
   return (
     <main className="max-w-7xl mx-auto px-4 py-16">
-      {/* Page Title */}
-      <div className="text-center mb-12">
-        <h1 className="text-4xl font-light text-white mb-4 tracking-wide">
-          Your Image Gallery
-        </h1>
-        <p className="text-white/70 font-light text-lg">
-          Browse, search, and manage your AI-analyzed images
-        </p>
-      </div>
-
       {/* Gallery Section */}
       <section className="mb-16">
-        <Gallery />
+        <MyGallery />
       </section>
     </main>
   );
