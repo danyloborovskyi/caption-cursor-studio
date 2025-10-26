@@ -811,7 +811,8 @@ export async function searchFiles(
   query: string,
   page = 1,
   limit = 12,
-  sortOrder: "asc" | "desc" = "desc"
+  sortOrder: "asc" | "desc" = "desc",
+  sortBy = "uploaded_at"
 ): Promise<SearchResponse> {
   try {
     const token = localStorage.getItem("access_token");
@@ -825,10 +826,11 @@ export async function searchFiles(
       page: page.toString(),
       per_page: limit.toString(),
       sortOrder: sortOrder,
+      sortBy: sortBy,
     });
 
     console.log(
-      `Searching files: ${API_BASE_URL}/api/files/search?${params.toString()}`
+      `🔍 API: Searching files with sortBy=${sortBy}, sortOrder=${sortOrder}: ${API_BASE_URL}/api/files/search?${params.toString()}`
     );
 
     const response = await fetch(
