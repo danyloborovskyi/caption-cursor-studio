@@ -172,3 +172,11 @@ body::before {
 .animate-scale-in {
   animation: scaleIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
+.animate-fadeIn {
+  animation: fadeIn 0.2s ease-out;
+}
+
+.animate-scaleIn {
+  animation: scaleIn 0.2s ease-out;
+}

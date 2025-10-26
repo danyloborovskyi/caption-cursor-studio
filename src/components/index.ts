@@ -8,6 +8,7 @@ export { ImageCard } from "./ui/ImageCard";
 export { MyImageCard } from "./ui/MyImageCard";
 export { SearchBar } from "./ui/SearchBar";
 export { CustomSelect } from "./ui/CustomSelect";
+export { ConfirmationModal } from "./ui/ConfirmationModal";
 export { LoginForm } from "./ui/LoginForm";
 export { SignupForm } from "./ui/SignupForm";
 export { AuthModal } from "./ui/AuthModal";

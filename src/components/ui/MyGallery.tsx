@@ -14,6 +14,7 @@ import { Button } from "./Button";
 import { MyImageCard } from "./MyImageCard";
 import { SearchBar } from "./SearchBar";
 import { CustomSelect } from "./CustomSelect";
+import { ConfirmationModal } from "./ConfirmationModal";
 
 interface MyGalleryProps {
   className?: string;
@@ -83,6 +84,11 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
     []
   );
   const [isBulkRegenerating, setIsBulkRegenerating] = useState(false);
+
+  // Confirmation modals
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
+  const [showBulkRegenerateConfirm, setShowBulkRegenerateConfirm] =
+    useState(false);
 
   const fetchPhotos = useCallback(
     async (page = 1, showLoading = true) => {
@@ -493,13 +499,11 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
 
   const handleBulkDelete = async () => {
     if (selectedIds.length === 0) return;
+    setShowBulkDeleteConfirm(true);
+  };
 
-    const confirmMessage = `Are you sure you want to delete ${
-      selectedIds.length
-    } selected image${selectedIds.length > 1 ? "s" : ""}?`;
-
-    if (!window.confirm(confirmMessage)) return;
-
+  const handleConfirmBulkDelete = async () => {
+    setShowBulkDeleteConfirm(false);
     setIsBulkDeleting(true);
 
     try {
@@ -526,6 +530,10 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
     } finally {
       setIsBulkDeleting(false);
     }
+  };
+
+  const handleCancelBulkDelete = () => {
+    setShowBulkDeleteConfirm(false);
   };
 
   // Bulk Regenerate Handlers
@@ -559,18 +567,15 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
     if (regenerateSelectedIds.length === 0) return;
 
     if (regenerateSelectedIds.length > 20) {
-      alert("You can only regenerate up to 20 files at a time");
+      setError("You can only regenerate up to 20 files at a time");
       return;
     }
 
-    const confirmMessage = `Are you sure you want to regenerate AI analysis for ${
-      regenerateSelectedIds.length
-    } selected image${
-      regenerateSelectedIds.length > 1 ? "s" : ""
-    }? This will overwrite existing descriptions and tags.`;
+    setShowBulkRegenerateConfirm(true);
+  };
 
-    if (!window.confirm(confirmMessage)) return;
-
+  const handleConfirmBulkRegenerate = async () => {
+    setShowBulkRegenerateConfirm(false);
     setIsBulkRegenerating(true);
 
     try {
@@ -615,6 +620,10 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
     } finally {
       setIsBulkRegenerating(false);
     }
+  };
+
+  const handleCancelBulkRegenerate = () => {
+    setShowBulkRegenerateConfirm(false);
   };
 
   if (isInitialLoading) {
@@ -1186,6 +1195,42 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
           </Button>
         </div>
       )}
+
+      {/* Bulk Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showBulkDeleteConfirm}
+        title="Delete Selected Images?"
+        message={`Are you sure you want to delete ${selectedIds.length} image${
+          selectedIds.length > 1 ? "s" : ""
+        }? This action cannot be undone.`}
+        confirmText={`Delete ${selectedIds.length} image${
+          selectedIds.length > 1 ? "s" : ""
+        }`}
+        cancelText="Cancel"
+        onConfirm={handleConfirmBulkDelete}
+        onCancel={handleCancelBulkDelete}
+        variant="danger"
+        isLoading={isBulkDeleting}
+      />
+
+      {/* Bulk Regenerate Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showBulkRegenerateConfirm}
+        title="Regenerate AI Analysis?"
+        message={`Are you sure you want to regenerate AI analysis for ${
+          regenerateSelectedIds.length
+        } image${
+          regenerateSelectedIds.length > 1 ? "s" : ""
+        }? This will overwrite existing descriptions and tags. This action cannot be undone.`}
+        confirmText={`Regenerate ${regenerateSelectedIds.length} image${
+          regenerateSelectedIds.length > 1 ? "s" : ""
+        }`}
+        cancelText="Cancel"
+        onConfirm={handleConfirmBulkRegenerate}
+        onCancel={handleCancelBulkRegenerate}
+        variant="warning"
+        isLoading={isBulkRegenerating}
+      />
     </div>
   );
 };

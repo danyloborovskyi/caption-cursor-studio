@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { FileItem, updateFile, regenerateFile } from "@/lib/api";
 import { Button } from "./Button";
+import { ConfirmationModal } from "./ConfirmationModal";
 
 interface MyImageCardProps {
   photo: FileItem;
@@ -57,6 +58,7 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [regenerateError, setRegenerateError] = useState<string | null>(null);
   const [regenerateSuccess, setRegenerateSuccess] = useState(false);
+  const [showRegenerateConfirm, setShowRegenerateConfirm] = useState(false);
 
   // Check if tags overflow
   useEffect(() => {
@@ -91,17 +93,14 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
     setShowConfirmation(false);
   };
 
-  const handleRegenerateClick = async () => {
+  const handleRegenerateClick = () => {
+    setShowRegenerateConfirm(true);
+  };
+
+  const handleConfirmRegenerate = async () => {
     if (isRegenerating) return;
 
-    if (
-      !window.confirm(
-        "Are you sure you want to regenerate AI analysis? This will overwrite the current description and tags."
-      )
-    ) {
-      return;
-    }
-
+    setShowRegenerateConfirm(false);
     setIsRegenerating(true);
     setRegenerateError(null);
     setRegenerateSuccess(false);
@@ -132,6 +131,10 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
     } finally {
       setIsRegenerating(false);
     }
+  };
+
+  const handleCancelRegenerate = () => {
+    setShowRegenerateConfirm(false);
   };
 
   const handleCopyTags = async () => {
@@ -653,54 +656,57 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
         )}
 
         {/* Action Buttons - Stuck to Bottom */}
-        <div className="mt-auto space-y-2">
-          {/* Regenerate Button */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleRegenerateClick}
-            disabled={isRegenerating || isDeleting || showConfirmation}
-            className="w-full text-blue-300 hover:!text-blue-600 hover:!bg-white border-blue-300/50 hover:!border-white disabled:opacity-50 transition-colors"
-          >
-            <svg
-              className="w-4 h-4 mr-2"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+        <div className="mt-auto">
+          {/* Regenerate and Delete in one row */}
+          <div className="flex gap-2">
+            {/* Regenerate Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRegenerateClick}
+              disabled={isRegenerating || isDeleting || showConfirmation}
+              className="flex-1 text-blue-300 hover:!text-blue-600 hover:!bg-white border-blue-300/50 hover:!border-white disabled:opacity-50 transition-colors"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-              />
-            </svg>
-            {isRegenerating ? "Regenerating..." : "Regenerate AI"}
-          </Button>
+              <svg
+                className="w-4 h-4 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                />
+              </svg>
+              {isRegenerating ? "Regenerating..." : "Regenerate"}
+            </Button>
 
-          {/* Delete Button */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleDeleteClick}
-            disabled={isDeleting || showConfirmation || isRegenerating}
-            className="w-full text-red-300 hover:!text-red-600 hover:!bg-white border-red-300/50 hover:!border-white disabled:opacity-50 transition-colors"
-          >
-            <svg
-              className="w-4 h-4 mr-2"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+            {/* Delete Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDeleteClick}
+              disabled={isDeleting || showConfirmation || isRegenerating}
+              className="flex-1 text-red-300 hover:!text-red-600 hover:!bg-white border-red-300/50 hover:!border-white disabled:opacity-50 transition-colors"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-              />
-            </svg>
-            {isDeleting ? "Deleting..." : "Delete"}
-          </Button>
+              <svg
+                className="w-4 h-4 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                />
+              </svg>
+              {isDeleting ? "Deleting..." : "Delete"}
+            </Button>
+          </div>
 
           {/* Dates under delete button */}
           <div className="flex items-center justify-center gap-4 mt-3 flex-wrap">
@@ -787,6 +793,19 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
           </div>
         </div>
       )}
+
+      {/* Regenerate Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showRegenerateConfirm}
+        title="Regenerate AI Analysis?"
+        message="This will overwrite the current description and tags with new AI-generated content. This action cannot be undone."
+        confirmText="Regenerate"
+        cancelText="Cancel"
+        onConfirm={handleConfirmRegenerate}
+        onCancel={handleCancelRegenerate}
+        variant="warning"
+        isLoading={isRegenerating}
+      />
     </div>
   );
 };
