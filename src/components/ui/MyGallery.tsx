@@ -31,6 +31,15 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
     return 12;
   });
 
+  // Sort order state - Load from localStorage
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("gallery_sort_order");
+      return (saved as "asc" | "desc") || "desc";
+    }
+    return "desc";
+  });
+
   // Search state - Load from localStorage
   const [searchQuery, setSearchQuery] = useState(() => {
     if (typeof window !== "undefined") {
@@ -60,7 +69,7 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
         }
         setError(null);
 
-        const result = await getFiles(page, perPage);
+        const result = await getFiles(page, perPage, "uploaded_at", sortOrder);
 
         if (result.success && result.data) {
           // Limit to perPage items
@@ -103,7 +112,7 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
         setIsInitialLoading(false);
       }
     },
-    [isAuthenticated, perPage]
+    [isAuthenticated, perPage, sortOrder]
   );
 
   // Initial load - check for saved search or load regular gallery
@@ -117,7 +126,7 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
         setIsSearchMode(true);
         setError(null);
 
-        searchFiles(savedQuery, 1, perPage)
+        searchFiles(savedQuery, 1, perPage, sortOrder)
           .then((result) => {
             if (result.success) {
               const limitedPhotos = result.data.slice(0, perPage);
@@ -172,7 +181,7 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
     localStorage.setItem("gallery_search_query", query);
 
     try {
-      const result = await searchFiles(query, 1, perPage);
+      const result = await searchFiles(query, 1, perPage, sortOrder);
 
       if (result.success) {
         // Limit to perPage items
@@ -207,7 +216,12 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
 
     setIsSearching(true);
     try {
-      const result = await searchFiles(searchQuery, newPage, perPage);
+      const result = await searchFiles(
+        searchQuery,
+        newPage,
+        perPage,
+        sortOrder
+      );
 
       if (result.success) {
         // Limit to perPage items
@@ -234,6 +248,52 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
     }
   };
 
+  const handleSortOrderChange = async (newSortOrder: "asc" | "desc") => {
+    setSortOrder(newSortOrder);
+    setCurrentPage(1);
+    // Save to localStorage
+    localStorage.setItem("gallery_sort_order", newSortOrder);
+
+    // Manually trigger fetch with new sort order
+    if (isSearchMode && searchQuery) {
+      // If in search mode, re-run the search with new sort order
+      setIsSearching(true);
+      try {
+        const result = await searchFiles(searchQuery, 1, perPage, newSortOrder);
+        if (result.success) {
+          const limitedPhotos = result.data.slice(0, perPage);
+          setPhotos(limitedPhotos);
+          setCurrentPage(result.pagination?.current_page || 1);
+          setTotalPages(result.pagination?.total_pages || 1);
+          setTotalItems(result.pagination?.total_items || 0);
+        }
+      } catch (err) {
+        console.error("Search with new sort order error:", err);
+      } finally {
+        setIsSearching(false);
+      }
+    } else {
+      // Otherwise, fetch regular photos with new sort order
+      setIsLoading(true);
+      try {
+        const result = await getFiles(1, perPage, "uploaded_at", newSortOrder);
+        if (result.success && result.data) {
+          const limitedPhotos = result.data.slice(0, perPage);
+          setPhotos(limitedPhotos);
+          if (result.pagination) {
+            setCurrentPage(result.pagination.current_page);
+            setTotalPages(result.pagination.total_pages);
+            setTotalItems(result.pagination.total_items || 0);
+          }
+        }
+      } catch (err) {
+        console.error("Fetch with new sort order error:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
+
   const handlePerPageChange = async (newPerPage: number) => {
     setPerPage(newPerPage);
     setCurrentPage(1);
@@ -245,7 +305,7 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
       // If in search mode, re-run the search with new per_page
       setIsSearching(true);
       try {
-        const result = await searchFiles(searchQuery, 1, newPerPage);
+        const result = await searchFiles(searchQuery, 1, newPerPage, sortOrder);
         if (result.success) {
           const limitedPhotos = result.data.slice(0, newPerPage);
           setPhotos(limitedPhotos);
@@ -262,7 +322,7 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
       // Otherwise, fetch regular photos with new per_page
       setIsLoading(true);
       try {
-        const result = await getFiles(1, newPerPage);
+        const result = await getFiles(1, newPerPage, "uploaded_at", sortOrder);
         if (result.success && result.data) {
           const limitedPhotos = result.data.slice(0, newPerPage);
           setPhotos(limitedPhotos);
@@ -403,7 +463,7 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
               </p>
             </div>
 
-            {/* Search Bar and Per Page Selector */}
+            {/* Search Bar and Controls */}
             <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
               <div className="flex-1">
                 <SearchBar
@@ -415,16 +475,41 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
                 />
               </div>
 
+              {/* Sort Order Selector */}
+              <div className="flex items-center gap-2 glass rounded-xl px-4 py-2 border border-white/20">
+                <label
+                  htmlFor="sort-order-select-empty"
+                  className="text-white/70 text-sm font-light whitespace-nowrap"
+                >
+                  Sort:
+                </label>
+                <select
+                  id="sort-order-select-empty"
+                  value={sortOrder}
+                  onChange={(e) =>
+                    handleSortOrderChange(e.target.value as "asc" | "desc")
+                  }
+                  className="bg-white/10 text-white rounded-lg px-3 py-1.5 text-sm font-light border border-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all cursor-pointer hover:bg-white/20"
+                >
+                  <option value="desc" className="bg-gray-800">
+                    Newest First
+                  </option>
+                  <option value="asc" className="bg-gray-800">
+                    Oldest First
+                  </option>
+                </select>
+              </div>
+
               {/* Items Per Page Selector */}
               <div className="flex items-center gap-2 glass rounded-xl px-4 py-2 border border-white/20">
                 <label
-                  htmlFor="per-page-select"
+                  htmlFor="per-page-select-empty"
                   className="text-white/70 text-sm font-light whitespace-nowrap"
                 >
                   Items per page:
                 </label>
                 <select
-                  id="per-page-select"
+                  id="per-page-select-empty"
                   value={perPage}
                   onChange={(e) => handlePerPageChange(Number(e.target.value))}
                   className="bg-white/10 text-white rounded-lg px-3 py-1.5 text-sm font-light border border-white/20 focus:outline-none focus:ring-2 focus:ring-blue-500/50 cursor-pointer hover:bg-white/20 transition-colors"
@@ -521,7 +606,7 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
           </p>
         </div>
 
-        {/* Search Bar and Per Page Selector */}
+        {/* Search Bar and Controls */}
         <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
           <div className="flex-1">
             <SearchBar
@@ -531,6 +616,31 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
               placeholder="Search by description, tags, or filename..."
               isLoading={isSearching}
             />
+          </div>
+
+          {/* Sort Order Selector */}
+          <div className="flex items-center gap-2 glass rounded-xl px-4 py-2 border border-white/20">
+            <label
+              htmlFor="sort-order-select"
+              className="text-white/70 text-sm font-light whitespace-nowrap"
+            >
+              Sort:
+            </label>
+            <select
+              id="sort-order-select"
+              value={sortOrder}
+              onChange={(e) =>
+                handleSortOrderChange(e.target.value as "asc" | "desc")
+              }
+              className="bg-white/10 text-white rounded-lg px-3 py-1.5 text-sm font-light border border-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all cursor-pointer hover:bg-white/20"
+            >
+              <option value="desc" className="bg-gray-800">
+                Newest First
+              </option>
+              <option value="asc" className="bg-gray-800">
+                Oldest First
+              </option>
+            </select>
           </div>
 
           {/* Items Per Page Selector */}

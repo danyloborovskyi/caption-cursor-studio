@@ -538,6 +538,7 @@ export interface DeleteResponse {
 export interface UpdateFileRequest {
   description?: string;
   tags?: string[];
+  filename?: string;
 }
 
 export interface UpdateFileResponse {
@@ -630,6 +631,7 @@ export async function getFiles(
     const params = new URLSearchParams({
       page: page.toString(),
       per_page: limit.toString(),
+      sortOrder: sortOrder,
     });
 
     const url = `${API_BASE_URL}/api/files?${params.toString()}`;
@@ -808,7 +810,8 @@ export async function updateFile(
 export async function searchFiles(
   query: string,
   page = 1,
-  limit = 12
+  limit = 12,
+  sortOrder: "asc" | "desc" = "desc"
 ): Promise<SearchResponse> {
   try {
     const token = localStorage.getItem("access_token");
@@ -821,6 +824,7 @@ export async function searchFiles(
       q: query,
       page: page.toString(),
       per_page: limit.toString(),
+      sortOrder: sortOrder,
     });
 
     console.log(

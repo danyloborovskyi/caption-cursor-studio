@@ -31,10 +31,12 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
   // Edit states
   const [isEditingDescription, setIsEditingDescription] = useState(false);
   const [isEditingTags, setIsEditingTags] = useState(false);
+  const [isEditingFilename, setIsEditingFilename] = useState(false);
   const [editedDescription, setEditedDescription] = useState(
     photo.description || ""
   );
   const [editedTags, setEditedTags] = useState((photo.tags || []).join(", "));
+  const [editedFilename, setEditedFilename] = useState(photo.filename || "");
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -109,11 +111,19 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
     setSaveError(null);
   };
 
+  const handleEditFilename = () => {
+    setEditedFilename(photo.filename || "");
+    setIsEditingFilename(true);
+    setSaveError(null);
+  };
+
   const handleCancelEdit = () => {
     setIsEditingDescription(false);
     setIsEditingTags(false);
+    setIsEditingFilename(false);
     setEditedDescription(photo.description || "");
     setEditedTags((photo.tags || []).join(", "));
+    setEditedFilename(photo.filename || "");
     setSaveError(null);
   };
 
@@ -123,7 +133,11 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
     setSaveSuccess(false);
 
     try {
-      const updates: { description?: string; tags?: string[] } = {};
+      const updates: {
+        description?: string;
+        tags?: string[];
+        filename?: string;
+      } = {};
 
       if (isEditingDescription) {
         updates.description = editedDescription.trim();
@@ -138,12 +152,17 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
         updates.tags = tagsArray;
       }
 
+      if (isEditingFilename) {
+        updates.filename = editedFilename.trim();
+      }
+
       const result = await updateFile(photo.id, updates);
 
       if (result.success && result.data) {
         setSaveSuccess(true);
         setIsEditingDescription(false);
         setIsEditingTags(false);
+        setIsEditingFilename(false);
 
         // Call onUpdate callback if provided
         if (onUpdate && result.data) {
@@ -208,6 +227,51 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
 
       {/* Card Content */}
       <div className="p-6 flex-1 flex flex-col">
+        {/* Filename */}
+        <div className="mb-3 pb-3 border-b border-white/10">
+          <div className="flex items-start justify-between gap-2 mb-1">
+            <span className="text-xs text-white/50 font-light">File:</span>
+            {!isEditingFilename && (
+              <button
+                onClick={handleEditFilename}
+                className="text-xs text-green-300 hover:text-green-200 transition-colors flex items-center gap-1 cursor-pointer"
+                title="Edit filename"
+              >
+                <svg
+                  className="w-3 h-3"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                  />
+                </svg>
+                <span>Edit</span>
+              </button>
+            )}
+          </div>
+          {isEditingFilename ? (
+            <input
+              type="text"
+              value={editedFilename}
+              onChange={(e) => setEditedFilename(e.target.value)}
+              className="w-full px-3 py-2 bg-white/10 border border-white/30 rounded-lg text-white text-sm font-light focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+              placeholder="Enter filename..."
+            />
+          ) : (
+            <p
+              className="text-white/90 text-sm font-medium truncate"
+              title={photo.filename}
+            >
+              {photo.filename}
+            </p>
+          )}
+        </div>
+
         {/* Description */}
         {photo.description && (
           <div className="mb-3">
@@ -422,36 +486,57 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
                     );
                   })}
                 </div>
-                {(hasTagsOverflow || isTagsExpanded) && (
-                  <button
-                    onClick={() => setIsTagsExpanded(!isTagsExpanded)}
-                    className="text-xs text-blue-300 hover:text-blue-200 transition-colors mt-2 cursor-pointer font-light flex items-center gap-1"
-                  >
-                    <span>{isTagsExpanded ? "Show less" : "Show more"}</span>
-                    <svg
-                      className={`w-3 h-3 transition-transform duration-200 ${
-                        isTagsExpanded ? "rotate-180" : ""
-                      }`}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 9l-7 7-7-7"
-                      />
-                    </svg>
-                  </button>
-                )}
+                {/* Show more/less button and creation date on same line */}
+                <div className="flex items-center justify-between mt-2">
+                  <div className="flex-1">
+                    {(hasTagsOverflow || isTagsExpanded) && (
+                      <button
+                        onClick={() => setIsTagsExpanded(!isTagsExpanded)}
+                        className="text-xs text-blue-300 hover:text-blue-200 transition-colors cursor-pointer font-light flex items-center gap-1"
+                      >
+                        <span>
+                          {isTagsExpanded ? "Show less" : "Show more"}
+                        </span>
+                        <svg
+                          className={`w-3 h-3 transition-transform duration-200 ${
+                            isTagsExpanded ? "rotate-180" : ""
+                          }`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 9l-7 7-7-7"
+                          />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
+                  {photo.uploaded_at && (
+                    <div className="text-right">
+                      <p className="text-white/50 text-xs font-light">
+                        {new Date(photo.uploaded_at).toLocaleDateString(
+                          "en-US",
+                          {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          }
+                        )}
+                      </p>
+                    </div>
+                  )}
+                </div>
               </>
             )}
           </div>
         )}
 
         {/* Save/Cancel Buttons - Show when editing */}
-        {(isEditingDescription || isEditingTags) && (
+        {(isEditingDescription || isEditingTags || isEditingFilename) && (
           <div className="flex gap-2 mb-3">
             <Button
               variant="outline"
