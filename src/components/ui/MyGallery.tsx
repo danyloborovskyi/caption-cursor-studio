@@ -809,7 +809,7 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
     <div className={`w-full ${className}`}>
       {/* Header */}
       <div className="mb-8">
-        <div className="text-center mb-6">
+        <div className="text-center mb-8">
           <h2 className="text-3xl font-light text-white mb-2 tracking-wide">
             Your Gallery
           </h2>
@@ -828,18 +828,8 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
           </p>
         </div>
 
-        {/* Search Bar and Controls */}
-        <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
-          <div className="flex-1">
-            <SearchBar
-              onSearch={handleSearch}
-              onClear={handleClearSearch}
-              value={searchQuery}
-              placeholder="Search by description, tags, or filename..."
-              isLoading={isSearching}
-            />
-          </div>
-
+        {/* Filters Row */}
+        <div className="flex flex-wrap gap-4 items-center justify-center mb-6">
           {/* Sort By Selector */}
           <CustomSelect
             id="sort-by-select"
@@ -882,7 +872,7 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
           {/* Bulk Regenerate Button */}
           <button
             onClick={handleToggleBulkRegenerate}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all cursor-pointer ${
+            className={`flex items-center gap-2 px-4 rounded-xl border transition-all cursor-pointer h-[52px] ${
               isBulkRegenerateMode
                 ? "bg-blue-500/20 border-blue-500/50 text-blue-300"
                 : "glass border-white/20 text-white/70 hover:border-white/40 hover:text-white"
@@ -902,6 +892,9 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
                 d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
               />
             </svg>
+            <span className="whitespace-nowrap text-sm font-light">
+              Bulk Regenerate
+            </span>
             {isBulkRegenerateMode && regenerateSelectedIds.length > 0 && (
               <span className="font-medium">
                 ({regenerateSelectedIds.length})
@@ -912,7 +905,7 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
           {/* Bulk Delete Button */}
           <button
             onClick={handleToggleBulkDelete}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all cursor-pointer ${
+            className={`flex items-center gap-2 px-4 rounded-xl border transition-all cursor-pointer h-[52px] ${
               isBulkDeleteMode
                 ? "bg-red-500/20 border-red-500/50 text-red-300"
                 : "glass border-white/20 text-white/70 hover:border-white/40 hover:text-white"
@@ -932,10 +925,26 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
                 d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
               />
             </svg>
+            <span className="whitespace-nowrap text-sm font-light">
+              Bulk Delete
+            </span>
             {isBulkDeleteMode && selectedIds.length > 0 && (
               <span className="font-medium">({selectedIds.length})</span>
             )}
           </button>
+        </div>
+
+        {/* Search Bar Row */}
+        <div className="flex justify-center">
+          <div className="w-full max-w-2xl">
+            <SearchBar
+              onSearch={handleSearch}
+              onClear={handleClearSearch}
+              value={searchQuery}
+              placeholder="Search by description, tags, or filename..."
+              isLoading={isSearching}
+            />
+          </div>
         </div>
 
         {/* Bulk Regenerate Actions Bar */}
