@@ -103,9 +103,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         {/* Form content */}
         <div className="p-8">
           {mode === "login" ? (
-            <LoginForm onSuccess={handleSuccess} />
+            <LoginForm
+              onSuccess={handleSuccess}
+              onSwitchToSignup={() => setMode("signup")}
+            />
           ) : (
-            <SignupForm onSuccess={handleSuccess} />
+            <SignupForm
+              onSuccess={handleSuccess}
+              onSwitchToLogin={() => setMode("login")}
+            />
           )}
         </div>
       </div>
