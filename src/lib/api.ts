@@ -849,6 +849,50 @@ export async function regenerateFile(
 }
 
 /**
+ * Bulk regenerate AI analysis for multiple files
+ */
+export async function bulkRegenerateFiles(
+  ids: number[]
+): Promise<UpdateFileResponse> {
+  try {
+    const token = localStorage.getItem("access_token");
+
+    if (!token) {
+      throw new Error("Authentication required");
+    }
+
+    console.log(`🔄 Bulk regenerating ${ids.length} files:`, ids);
+
+    const response = await fetch(`${API_BASE_URL}/api/files/regenerate`, {
+      method: "POST",
+      headers: {
+        ...getAuthHeaders(token),
+        "Content-Type": "application/json",
+      },
+      mode: "cors",
+      body: JSON.stringify({ ids }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Bulk Regenerate Error: ${response.status} - ${errorText}`);
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log(`✅ Bulk regenerate completed:`, data);
+    return data;
+  } catch (error) {
+    console.error("Error in bulk regenerate:", error);
+    return {
+      success: false,
+      message: "Failed to regenerate files",
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
+/**
  * Update file metadata (description and/or tags)
  */
 export async function updateFile(

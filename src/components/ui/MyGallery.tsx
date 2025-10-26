@@ -6,6 +6,7 @@ import {
   deleteFile,
   searchFiles,
   bulkDeleteFiles,
+  bulkRegenerateFiles,
   FileItem,
 } from "@/lib/api";
 import { useGallery, useAuth } from "@/lib/contexts";
@@ -75,6 +76,13 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
   const [isBulkDeleteMode, setIsBulkDeleteMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+
+  // Bulk regenerate state
+  const [isBulkRegenerateMode, setIsBulkRegenerateMode] = useState(false);
+  const [regenerateSelectedIds, setRegenerateSelectedIds] = useState<number[]>(
+    []
+  );
+  const [isBulkRegenerating, setIsBulkRegenerating] = useState(false);
 
   const fetchPhotos = useCallback(
     async (page = 1, showLoading = true) => {
@@ -460,6 +468,11 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
   };
 
   const handleToggleBulkDelete = () => {
+    // If switching from regenerate mode, clear those selections
+    if (isBulkRegenerateMode) {
+      setIsBulkRegenerateMode(false);
+      setRegenerateSelectedIds([]);
+    }
     setIsBulkDeleteMode(!isBulkDeleteMode);
     setSelectedIds([]); // Clear selections when toggling
   };
@@ -512,6 +525,95 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
       console.error("Bulk delete error:", err);
     } finally {
       setIsBulkDeleting(false);
+    }
+  };
+
+  // Bulk Regenerate Handlers
+  const handleToggleBulkRegenerate = () => {
+    // If switching from delete mode, clear those selections
+    if (isBulkDeleteMode) {
+      setIsBulkDeleteMode(false);
+      setSelectedIds([]);
+    }
+    setIsBulkRegenerateMode(!isBulkRegenerateMode);
+    setRegenerateSelectedIds([]);
+  };
+
+  const handleSelectImageForRegenerate = (id: number) => {
+    setRegenerateSelectedIds((prev) =>
+      prev.includes(id)
+        ? prev.filter((selectedId) => selectedId !== id)
+        : [...prev, id]
+    );
+  };
+
+  const handleSelectAllForRegenerate = () => {
+    if (regenerateSelectedIds.length === photos.length) {
+      setRegenerateSelectedIds([]);
+    } else {
+      setRegenerateSelectedIds(photos.map((p) => p.id));
+    }
+  };
+
+  const handleBulkRegenerate = async () => {
+    if (regenerateSelectedIds.length === 0) return;
+
+    if (regenerateSelectedIds.length > 20) {
+      alert("You can only regenerate up to 20 files at a time");
+      return;
+    }
+
+    const confirmMessage = `Are you sure you want to regenerate AI analysis for ${
+      regenerateSelectedIds.length
+    } selected image${
+      regenerateSelectedIds.length > 1 ? "s" : ""
+    }? This will overwrite existing descriptions and tags.`;
+
+    if (!window.confirm(confirmMessage)) return;
+
+    setIsBulkRegenerating(true);
+
+    try {
+      const result = await bulkRegenerateFiles(regenerateSelectedIds);
+
+      if (result.success && result.data) {
+        // Update the photos with regenerated data
+        const regeneratedData = result.data.regenerated || [];
+
+        setPhotos((prev) =>
+          prev.map((photo) => {
+            const regenerated = regeneratedData.find(
+              (r: any) => r.id === photo.id
+            );
+            if (regenerated) {
+              return {
+                ...photo,
+                description: regenerated.description,
+                tags: regenerated.tags,
+                updated_at: regenerated.updatedAt,
+              };
+            }
+            return photo;
+          })
+        );
+
+        setRegenerateSelectedIds([]);
+        setIsBulkRegenerateMode(false);
+
+        // Reload to get accurate data
+        if (isSearchMode && searchQuery) {
+          handleSearchPageChange(currentPage);
+        } else {
+          fetchPhotos(currentPage, false);
+        }
+      } else {
+        setError(result.error || "Failed to regenerate selected images");
+      }
+    } catch (err) {
+      setError("An unexpected error occurred while regenerating images");
+      console.error("Bulk regenerate error:", err);
+    } finally {
+      setIsBulkRegenerating(false);
     }
   };
 
@@ -768,6 +870,36 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
             onChange={(value) => handlePerPageChange(Number(value))}
           />
 
+          {/* Bulk Regenerate Button */}
+          <button
+            onClick={handleToggleBulkRegenerate}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all cursor-pointer ${
+              isBulkRegenerateMode
+                ? "bg-blue-500/20 border-blue-500/50 text-blue-300"
+                : "glass border-white/20 text-white/70 hover:border-white/40 hover:text-white"
+            }`}
+            title="Bulk regenerate AI mode"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+              />
+            </svg>
+            {isBulkRegenerateMode && regenerateSelectedIds.length > 0 && (
+              <span className="font-medium">
+                ({regenerateSelectedIds.length})
+              </span>
+            )}
+          </button>
+
           {/* Bulk Delete Button */}
           <button
             onClick={handleToggleBulkDelete}
@@ -796,6 +928,60 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
             )}
           </button>
         </div>
+
+        {/* Bulk Regenerate Actions Bar */}
+        {isBulkRegenerateMode && (
+          <div className="mt-4 flex items-center justify-between glass rounded-xl px-4 py-3 border border-blue-500/50">
+            <div className="flex items-center gap-4">
+              <span className="text-white/90 text-sm font-light">
+                {regenerateSelectedIds.length === 0
+                  ? "Select images to regenerate AI analysis"
+                  : `${regenerateSelectedIds.length} image${
+                      regenerateSelectedIds.length > 1 ? "s" : ""
+                    } selected ${
+                      regenerateSelectedIds.length > 20 ? "(max 20)" : ""
+                    }`}
+              </span>
+              <button
+                onClick={handleSelectAllForRegenerate}
+                className="text-blue-300 hover:text-blue-200 text-sm font-medium cursor-pointer"
+              >
+                {regenerateSelectedIds.length === photos.length
+                  ? "Deselect All"
+                  : "Select All"}
+              </button>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleToggleBulkRegenerate}
+                disabled={isBulkRegenerating}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={handleBulkRegenerate}
+                disabled={
+                  regenerateSelectedIds.length === 0 ||
+                  isBulkRegenerating ||
+                  regenerateSelectedIds.length > 20
+                }
+                className="!bg-blue-500 hover:!bg-blue-600"
+              >
+                {isBulkRegenerating
+                  ? "Regenerating..."
+                  : `Regenerate ${
+                      regenerateSelectedIds.length > 0
+                        ? `(${regenerateSelectedIds.length})`
+                        : ""
+                    }`}
+              </Button>
+            </div>
+          </div>
+        )}
 
         {/* Bulk Delete Actions Bar */}
         {isBulkDeleteMode && (
@@ -864,6 +1050,9 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
               isBulkDeleteMode={isBulkDeleteMode}
               isSelected={selectedIds.includes(photo.id)}
               onSelect={handleSelectImage}
+              isBulkRegenerateMode={isBulkRegenerateMode}
+              isRegenerateSelected={regenerateSelectedIds.includes(photo.id)}
+              onRegenerateSelect={handleSelectImageForRegenerate}
             />
           ))}
         </div>
