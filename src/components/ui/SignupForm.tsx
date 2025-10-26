@@ -3,8 +3,6 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "./Button";
 import { signup } from "@/lib/api";
-import { useAuth } from "@/lib/contexts";
-import { useRouter } from "next/navigation";
 
 interface SignupFormProps {
   onSuccess?: () => void;

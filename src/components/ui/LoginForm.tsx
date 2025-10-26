@@ -38,7 +38,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
       } else {
         setError(response.error || "Failed to login");
       }
-    } catch (err) {
+    } catch {
       setError("An unexpected error occurred");
     } finally {
       setIsLoading(false);

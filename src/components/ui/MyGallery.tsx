@@ -459,7 +459,7 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
     }
   };
 
-  const handleUpdate = (updatedPhoto: FileItem) => {
+  const handleUpdate = () => {
     console.log("📝 Card updated, reloading page to reflect sort order...");
 
     // Reload the current page to get updated data and correct sorting
@@ -588,7 +588,12 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
         setPhotos((prev) =>
           prev.map((photo) => {
             const regenerated = regeneratedData.find(
-              (r: any) => r.id === photo.id
+              (r: {
+                id: number;
+                description: string;
+                tags: string[];
+                updatedAt: string;
+              }) => r.id === photo.id
             );
             if (regenerated) {
               return {
