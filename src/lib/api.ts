@@ -806,6 +806,49 @@ export async function bulkDeleteFiles(ids: number[]): Promise<DeleteResponse> {
 }
 
 /**
+ * Regenerate AI analysis for a single file
+ */
+export async function regenerateFile(
+  fileId: number
+): Promise<UpdateFileResponse> {
+  try {
+    const token = localStorage.getItem("access_token");
+
+    if (!token) {
+      throw new Error("Authentication required");
+    }
+
+    console.log(`🔄 Regenerating AI analysis for file ${fileId}`);
+
+    const response = await fetch(
+      `${API_BASE_URL}/api/files/${fileId}/regenerate`,
+      {
+        method: "POST",
+        headers: getAuthHeaders(token),
+        mode: "cors",
+      }
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Regenerate Error: ${response.status} - ${errorText}`);
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log(`✅ AI analysis regenerated:`, data);
+    return data;
+  } catch (error) {
+    console.error("Error regenerating file:", error);
+    return {
+      success: false,
+      message: "Failed to regenerate AI analysis",
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
+/**
  * Update file metadata (description and/or tags)
  */
 export async function updateFile(

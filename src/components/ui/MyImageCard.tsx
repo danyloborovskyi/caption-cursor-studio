@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import Image from "next/image";
-import { FileItem, updateFile } from "@/lib/api";
+import { FileItem, updateFile, regenerateFile } from "@/lib/api";
 import { Button } from "./Button";
 
 interface MyImageCardProps {
@@ -47,6 +47,11 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
+  // Regenerate state
+  const [isRegenerating, setIsRegenerating] = useState(false);
+  const [regenerateError, setRegenerateError] = useState<string | null>(null);
+  const [regenerateSuccess, setRegenerateSuccess] = useState(false);
+
   // Check if tags overflow
   useEffect(() => {
     if (tagsContainerRef.current && !isEditingTags) {
@@ -78,6 +83,49 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
 
   const handleCancelDelete = () => {
     setShowConfirmation(false);
+  };
+
+  const handleRegenerateClick = async () => {
+    if (isRegenerating) return;
+
+    if (
+      !window.confirm(
+        "Are you sure you want to regenerate AI analysis? This will overwrite the current description and tags."
+      )
+    ) {
+      return;
+    }
+
+    setIsRegenerating(true);
+    setRegenerateError(null);
+    setRegenerateSuccess(false);
+
+    try {
+      const result = await regenerateFile(photo.id);
+
+      if (result.success && result.data) {
+        setRegenerateSuccess(true);
+        setTimeout(() => setRegenerateSuccess(false), 3000);
+
+        // Update the local state with new data
+        setEditedDescription(result.data.description || "");
+        setEditedTags((result.data.tags || []).join(", "));
+
+        // Call onUpdate to refresh the parent component
+        if (onUpdate) {
+          onUpdate(result.data);
+        }
+      } else {
+        setRegenerateError(result.error || "Failed to regenerate AI analysis");
+        setTimeout(() => setRegenerateError(null), 5000);
+      }
+    } catch (error) {
+      setRegenerateError("An unexpected error occurred");
+      setTimeout(() => setRegenerateError(null), 5000);
+      console.error("Regenerate error:", error);
+    } finally {
+      setIsRegenerating(false);
+    }
   };
 
   const handleCopyTags = async () => {
@@ -552,13 +600,50 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
           </div>
         )}
 
-        {/* Delete Button - Stuck to Bottom */}
-        <div className="mt-auto">
+        {/* Regenerate Messages */}
+        {regenerateSuccess && (
+          <div className="mb-3 p-2 bg-green-500/20 border border-green-500/50 rounded-lg text-xs text-green-300">
+            ✓ AI analysis regenerated successfully!
+          </div>
+        )}
+        {regenerateError && (
+          <div className="mb-3 p-2 bg-red-500/20 border border-red-500/50 rounded-lg text-xs text-red-300">
+            {regenerateError}
+          </div>
+        )}
+
+        {/* Action Buttons - Stuck to Bottom */}
+        <div className="mt-auto space-y-2">
+          {/* Regenerate Button */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRegenerateClick}
+            disabled={isRegenerating || isDeleting || showConfirmation}
+            className="w-full text-blue-300 hover:!text-blue-600 hover:!bg-white border-blue-300/50 hover:!border-white disabled:opacity-50 transition-colors"
+          >
+            <svg
+              className="w-4 h-4 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+              />
+            </svg>
+            {isRegenerating ? "Regenerating..." : "Regenerate AI"}
+          </Button>
+
+          {/* Delete Button */}
           <Button
             variant="outline"
             size="sm"
             onClick={handleDeleteClick}
-            disabled={isDeleting || showConfirmation}
+            disabled={isDeleting || showConfirmation || isRegenerating}
             className="w-full text-red-300 hover:!text-red-600 hover:!bg-white border-red-300/50 hover:!border-white disabled:opacity-50 transition-colors"
           >
             <svg
