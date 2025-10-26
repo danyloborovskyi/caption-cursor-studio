@@ -11,6 +11,9 @@ interface MyImageCardProps {
   onDelete: (photo: FileItem) => void;
   searchQuery?: string;
   onUpdate?: (updatedPhoto: FileItem) => void;
+  isBulkDeleteMode?: boolean;
+  isSelected?: boolean;
+  onSelect?: (id: number) => void;
 }
 
 export const MyImageCard: React.FC<MyImageCardProps> = ({
@@ -19,6 +22,9 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
   onDelete,
   searchQuery = "",
   onUpdate,
+  isBulkDeleteMode = false,
+  isSelected = false,
+  onSelect,
 }) => {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [copiedTags, setCopiedTags] = useState(false);
@@ -213,6 +219,39 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
 
   return (
     <div className="glass glass-hover rounded-2xl overflow-hidden transition-all duration-300 flex flex-col relative">
+      {/* Bulk Delete Checkbox */}
+      {isBulkDeleteMode && onSelect && (
+        <div className="absolute top-4 left-4 z-10">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelect(photo.id);
+            }}
+            className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all cursor-pointer border-2 ${
+              isSelected
+                ? "bg-blue-500 border-blue-500"
+                : "bg-white/10 border-white/40 backdrop-blur-sm hover:border-white/60"
+            }`}
+          >
+            {isSelected && (
+              <svg
+                className="w-5 h-5 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={3}
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+            )}
+          </button>
+        </div>
+      )}
+
       {/* Image */}
       <div className="aspect-square relative bg-white/5">
         <Image

@@ -1,7 +1,13 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { getFiles, deleteFile, searchFiles, FileItem } from "@/lib/api";
+import {
+  getFiles,
+  deleteFile,
+  searchFiles,
+  bulkDeleteFiles,
+  FileItem,
+} from "@/lib/api";
 import { useGallery, useAuth } from "@/lib/contexts";
 import { Button } from "./Button";
 import { MyImageCard } from "./MyImageCard";
@@ -64,6 +70,11 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
     }
     return false;
   });
+
+  // Bulk delete state
+  const [isBulkDeleteMode, setIsBulkDeleteMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
 
   const fetchPhotos = useCallback(
     async (page = 1, showLoading = true) => {
@@ -448,6 +459,62 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
     }
   };
 
+  const handleToggleBulkDelete = () => {
+    setIsBulkDeleteMode(!isBulkDeleteMode);
+    setSelectedIds([]); // Clear selections when toggling
+  };
+
+  const handleSelectImage = (id: number) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((sid) => sid !== id) : [...prev, id]
+    );
+  };
+
+  const handleSelectAll = () => {
+    if (selectedIds.length === photos.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(photos.map((p) => p.id));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+
+    const confirmMessage = `Are you sure you want to delete ${
+      selectedIds.length
+    } selected image${selectedIds.length > 1 ? "s" : ""}?`;
+
+    if (!window.confirm(confirmMessage)) return;
+
+    setIsBulkDeleting(true);
+
+    try {
+      const result = await bulkDeleteFiles(selectedIds);
+
+      if (result.success) {
+        // Remove deleted photos from the list
+        setPhotos((prev) => prev.filter((p) => !selectedIds.includes(p.id)));
+        setSelectedIds([]);
+        setIsBulkDeleteMode(false);
+
+        // Reload to get accurate pagination
+        if (isSearchMode && searchQuery) {
+          handleSearchPageChange(currentPage);
+        } else {
+          fetchPhotos(currentPage, false);
+        }
+      } else {
+        setError(result.error || "Failed to delete selected images");
+      }
+    } catch (err) {
+      setError("An unexpected error occurred while deleting images");
+      console.error("Bulk delete error:", err);
+    } finally {
+      setIsBulkDeleting(false);
+    }
+  };
+
   if (isInitialLoading) {
     return (
       <div className={`w-full ${className}`}>
@@ -700,7 +767,77 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
             ]}
             onChange={(value) => handlePerPageChange(Number(value))}
           />
+
+          {/* Bulk Delete Button */}
+          <button
+            onClick={handleToggleBulkDelete}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all cursor-pointer ${
+              isBulkDeleteMode
+                ? "bg-red-500/20 border-red-500/50 text-red-300"
+                : "glass border-white/20 text-white/70 hover:border-white/40 hover:text-white"
+            }`}
+            title="Bulk delete mode"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+              />
+            </svg>
+            {isBulkDeleteMode && selectedIds.length > 0 && (
+              <span className="font-medium">({selectedIds.length})</span>
+            )}
+          </button>
         </div>
+
+        {/* Bulk Delete Actions Bar */}
+        {isBulkDeleteMode && (
+          <div className="mt-4 flex items-center justify-between glass rounded-xl px-4 py-3 border border-blue-500/50">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={handleSelectAll}
+                className="text-sm text-blue-300 hover:text-blue-200 transition-colors cursor-pointer font-light"
+              >
+                {selectedIds.length === photos.length
+                  ? "Deselect All"
+                  : "Select All"}
+              </button>
+              <span className="text-white/60 text-sm">
+                {selectedIds.length} of {photos.length} selected
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleToggleBulkDelete}
+                disabled={isBulkDeleting}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={handleBulkDelete}
+                disabled={selectedIds.length === 0 || isBulkDeleting}
+                className="!bg-red-500 hover:!bg-red-600"
+              >
+                {isBulkDeleting
+                  ? "Deleting..."
+                  : `Delete ${
+                      selectedIds.length > 0 ? `(${selectedIds.length})` : ""
+                    }`}
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Grid of Image Cards */}
@@ -724,6 +861,9 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
               onDelete={handleDelete}
               onUpdate={handleUpdate}
               searchQuery={isSearchMode ? searchQuery : ""}
+              isBulkDeleteMode={isBulkDeleteMode}
+              isSelected={selectedIds.includes(photo.id)}
+              onSelect={handleSelectImage}
             />
           ))}
         </div>

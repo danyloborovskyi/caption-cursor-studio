@@ -764,6 +764,48 @@ export async function deleteFile(fileId: number): Promise<DeleteResponse> {
 }
 
 /**
+ * Bulk delete multiple files
+ */
+export async function bulkDeleteFiles(ids: number[]): Promise<DeleteResponse> {
+  try {
+    const token = localStorage.getItem("access_token");
+
+    if (!token) {
+      throw new Error("Authentication required");
+    }
+
+    console.log(`🗑️ Bulk deleting ${ids.length} files:`, ids);
+
+    const response = await fetch(`${API_BASE_URL}/api/files`, {
+      method: "DELETE",
+      headers: {
+        ...getAuthHeaders(token),
+        "Content-Type": "application/json",
+      },
+      mode: "cors",
+      body: JSON.stringify({ ids }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Bulk Delete Error: ${response.status} - ${errorText}`);
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log(`✅ Bulk delete completed:`, data);
+    return data;
+  } catch (error) {
+    console.error("Error in bulk delete:", error);
+    return {
+      success: false,
+      message: "Failed to delete files",
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
+/**
  * Update file metadata (description and/or tags)
  */
 export async function updateFile(
