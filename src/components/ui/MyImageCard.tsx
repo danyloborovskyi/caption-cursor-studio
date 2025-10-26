@@ -228,47 +228,32 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
       {/* Card Content */}
       <div className="p-6 flex-1 flex flex-col">
         {/* Filename */}
-        <div className="mb-3 pb-3 border-b border-white/10">
-          <div className="flex items-start justify-between gap-2 mb-1">
-            <span className="text-xs text-white/50 font-light">File:</span>
-            {!isEditingFilename && (
-              <button
-                onClick={handleEditFilename}
-                className="text-xs text-green-300 hover:text-green-200 transition-colors flex items-center gap-1 cursor-pointer"
-                title="Edit filename"
-              >
-                <svg
-                  className="w-3 h-3"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                  />
-                </svg>
-                <span>Edit</span>
-              </button>
-            )}
-          </div>
+        <div className="mb-3">
           {isEditingFilename ? (
-            <input
-              type="text"
-              value={editedFilename}
-              onChange={(e) => setEditedFilename(e.target.value)}
-              className="w-full px-3 py-2 bg-white/10 border border-white/30 rounded-lg text-white text-sm font-light focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-              placeholder="Enter filename..."
-            />
+            <>
+              <div className="mb-1">
+                <span className="text-xs text-white/50 font-light">File:</span>
+              </div>
+              <input
+                type="text"
+                value={editedFilename}
+                onChange={(e) => setEditedFilename(e.target.value)}
+                className="w-full px-3 py-2 bg-white/10 border border-white/30 rounded-lg text-white text-sm font-light focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                placeholder="Enter filename..."
+                autoFocus
+              />
+            </>
           ) : (
-            <p
-              className="text-white/90 text-sm font-medium truncate"
-              title={photo.filename}
-            >
-              {highlightText(photo.filename)}
-            </p>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-white/50 font-light">File:</span>
+              <p
+                onClick={handleEditFilename}
+                className="text-white/90 text-sm font-medium truncate cursor-pointer hover:text-white hover:bg-white/5 px-2 py-1 rounded transition-all flex-1"
+                title={photo.filename}
+              >
+                {highlightText(photo.filename)}
+              </p>
+            </div>
           )}
         </div>
 
@@ -281,69 +266,50 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
               </span>
               <div className="flex items-center gap-2">
                 {!isEditingDescription && (
-                  <>
-                    <button
-                      onClick={handleEditDescription}
-                      className="text-xs text-green-300 hover:text-green-200 transition-colors flex items-center gap-1 cursor-pointer"
-                      title="Edit description"
-                    >
-                      <svg
-                        className="w-3 h-3"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                        />
-                      </svg>
-                      <span>Edit</span>
-                    </button>
-                    <button
-                      onClick={handleCopyDescription}
-                      className="text-xs text-blue-300 hover:text-blue-200 transition-colors flex items-center gap-1 cursor-pointer"
-                      title="Copy description"
-                    >
-                      {copiedDescription ? (
-                        <>
-                          <svg
-                            className="w-3 h-3"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M5 13l4 4L19 7"
-                            />
-                          </svg>
-                          <span className="text-green-300">Copied!</span>
-                        </>
-                      ) : (
-                        <>
-                          <svg
-                            className="w-3 h-3"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                            />
-                          </svg>
-                          <span>Copy</span>
-                        </>
-                      )}
-                    </button>
-                  </>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleCopyDescription();
+                    }}
+                    className="text-xs text-blue-300 hover:text-blue-200 transition-colors flex items-center gap-1 cursor-pointer"
+                    title="Copy description"
+                  >
+                    {copiedDescription ? (
+                      <>
+                        <svg
+                          className="w-3 h-3"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                        <span className="text-green-300">Copied!</span>
+                      </>
+                    ) : (
+                      <>
+                        <svg
+                          className="w-3 h-3"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                          />
+                        </svg>
+                        <span>Copy</span>
+                      </>
+                    )}
+                  </button>
                 )}
               </div>
             </div>
@@ -355,21 +321,25 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
                   className="w-full px-3 py-2 bg-white/10 border border-white/30 rounded-lg text-white text-sm font-light focus:outline-none focus:ring-2 focus:ring-blue-500/50 resize-none"
                   rows={3}
                   placeholder="Enter description..."
+                  autoFocus
                 />
               ) : (
                 <>
                   <p
-                    className={`text-white/80 text-sm font-light transition-all ${
+                    onClick={handleEditDescription}
+                    className={`text-white/80 text-sm font-light transition-all cursor-pointer hover:text-white hover:bg-white/5 px-2 py-1 rounded ${
                       isDescriptionExpanded ? "" : "line-clamp-2"
                     }`}
+                    title={photo.description}
                   >
                     {highlightText(photo.description)}
                   </p>
                   {photo.description.length > 100 && (
                     <button
-                      onClick={() =>
-                        setIsDescriptionExpanded(!isDescriptionExpanded)
-                      }
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsDescriptionExpanded(!isDescriptionExpanded);
+                      }}
                       className="text-xs text-blue-300 hover:text-blue-200 transition-colors mt-1 cursor-pointer font-light"
                     >
                       {isDescriptionExpanded ? "Show less" : "Show more"}
@@ -388,85 +358,68 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
               <span className="text-xs text-white/50 font-light">Tags:</span>
               <div className="flex items-center gap-2">
                 {!isEditingTags && (
-                  <>
-                    <button
-                      onClick={handleEditTags}
-                      className="text-xs text-green-300 hover:text-green-200 transition-colors flex items-center gap-1 cursor-pointer"
-                      title="Edit tags"
-                    >
-                      <svg
-                        className="w-3 h-3"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                        />
-                      </svg>
-                      <span>Edit</span>
-                    </button>
-                    <button
-                      onClick={handleCopyTags}
-                      className="text-xs text-blue-300 hover:text-blue-200 transition-colors flex items-center gap-1 cursor-pointer"
-                      title="Copy all tags"
-                    >
-                      {copiedTags ? (
-                        <>
-                          <svg
-                            className="w-3 h-3"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M5 13l4 4L19 7"
-                            />
-                          </svg>
-                          <span className="text-green-300">Copied!</span>
-                        </>
-                      ) : (
-                        <>
-                          <svg
-                            className="w-3 h-3"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                            />
-                          </svg>
-                          <span>Copy</span>
-                        </>
-                      )}
-                    </button>
-                  </>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleCopyTags();
+                    }}
+                    className="text-xs text-blue-300 hover:text-blue-200 transition-colors flex items-center gap-1 cursor-pointer"
+                    title="Copy all tags"
+                  >
+                    {copiedTags ? (
+                      <>
+                        <svg
+                          className="w-3 h-3"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                        <span className="text-green-300">Copied!</span>
+                      </>
+                    ) : (
+                      <>
+                        <svg
+                          className="w-3 h-3"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                          />
+                        </svg>
+                        <span>Copy</span>
+                      </>
+                    )}
+                  </button>
                 )}
               </div>
             </div>
             {isEditingTags ? (
-              <input
-                type="text"
+              <textarea
                 value={editedTags}
                 onChange={(e) => setEditedTags(e.target.value)}
-                className="w-full px-3 py-2 bg-white/10 border border-white/30 rounded-lg text-white text-sm font-light focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                rows={3}
+                className="w-full px-3 py-2 bg-white/10 border border-white/30 rounded-lg text-white text-sm font-light focus:outline-none focus:ring-2 focus:ring-blue-500/50 resize-y"
                 placeholder="Enter tags separated by commas..."
+                autoFocus
               />
             ) : (
               <>
                 <div
                   ref={tagsContainerRef}
-                  className={`flex flex-wrap gap-2 transition-all duration-300 overflow-hidden ${
+                  onClick={handleEditTags}
+                  className={`flex flex-wrap gap-2 transition-all duration-300 overflow-hidden cursor-pointer hover:bg-white/5 px-2 py-1 rounded ${
                     isTagsExpanded ? "max-h-96" : "max-h-[4.5rem]"
                   }`}
                 >
@@ -486,12 +439,15 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
                     );
                   })}
                 </div>
-                {/* Show more/less button and creation date on same line */}
+                {/* Show more/less button */}
                 <div className="flex items-center justify-between mt-2">
                   <div className="flex-1">
                     {(hasTagsOverflow || isTagsExpanded) && (
                       <button
-                        onClick={() => setIsTagsExpanded(!isTagsExpanded)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsTagsExpanded(!isTagsExpanded);
+                        }}
                         className="text-xs text-blue-300 hover:text-blue-200 transition-colors cursor-pointer font-light flex items-center gap-1"
                       >
                         <span>
@@ -513,32 +469,6 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
                           />
                         </svg>
                       </button>
-                    )}
-                  </div>
-                  <div className="text-right flex flex-col gap-1">
-                    {photo.uploaded_at && (
-                      <p className="text-white/50 text-xs font-light">
-                        Created:{" "}
-                        {new Date(photo.uploaded_at).toLocaleString("en-US", {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </p>
-                    )}
-                    {photo.updated_at && (
-                      <p className="text-white/40 text-xs font-light">
-                        Updated:{" "}
-                        {new Date(photo.updated_at).toLocaleString("en-US", {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </p>
                     )}
                   </div>
                 </div>
@@ -584,7 +514,7 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
         )}
 
         {/* Delete Button - Stuck to Bottom */}
-        <div className="mt-auto pt-4 border-t border-white/10">
+        <div className="mt-auto">
           <Button
             variant="outline"
             size="sm"
@@ -607,6 +537,34 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
             </svg>
             {isDeleting ? "Deleting..." : "Delete"}
           </Button>
+
+          {/* Dates under delete button */}
+          <div className="flex items-center justify-center gap-4 mt-3 flex-wrap">
+            {photo.uploaded_at && (
+              <p className="text-white/50 text-xs font-light">
+                Created:{" "}
+                {new Date(photo.uploaded_at).toLocaleString("en-US", {
+                  year: "numeric",
+                  month: "short",
+                  day: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </p>
+            )}
+            {photo.updated_at && (
+              <p className="text-white/40 text-xs font-light">
+                Updated:{" "}
+                {new Date(photo.updated_at).toLocaleString("en-US", {
+                  year: "numeric",
+                  month: "short",
+                  day: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </p>
+            )}
+          </div>
         </div>
       </div>
 
