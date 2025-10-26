@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { FileItem, updateFile } from "@/lib/api";
 import { Button } from "./Button";
@@ -24,6 +24,9 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
   const [copiedTags, setCopiedTags] = useState(false);
   const [copiedDescription, setCopiedDescription] = useState(false);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+  const [isTagsExpanded, setIsTagsExpanded] = useState(false);
+  const [hasTagsOverflow, setHasTagsOverflow] = useState(false);
+  const tagsContainerRef = useRef<HTMLDivElement>(null);
 
   // Edit states
   const [isEditingDescription, setIsEditingDescription] = useState(false);
@@ -35,6 +38,26 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
+
+  // Check if tags overflow
+  useEffect(() => {
+    if (tagsContainerRef.current && !isEditingTags) {
+      const container = tagsContainerRef.current;
+      // Wait for animation to complete before checking
+      const timer = setTimeout(
+        () => {
+          if (tagsContainerRef.current) {
+            const hasOverflow =
+              tagsContainerRef.current.scrollHeight >
+              tagsContainerRef.current.clientHeight;
+            setHasTagsOverflow(hasOverflow);
+          }
+        },
+        isTagsExpanded ? 0 : 350
+      ); // Wait for collapse animation
+      return () => clearTimeout(timer);
+    }
+  }, [photo.tags, isEditingTags, isTagsExpanded]);
 
   const handleDeleteClick = () => {
     setShowConfirmation(true);
@@ -376,28 +399,53 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
                 placeholder="Enter tags separated by commas..."
               />
             ) : (
-              <div className="flex flex-wrap gap-2">
-                {photo.tags.slice(0, 5).map((tag, index) => {
-                  const isHighlighted = isTagHighlighted(tag);
-                  return (
-                    <span
-                      key={index}
-                      className={`px-3 py-1 text-xs rounded-full font-light transition-all ${
-                        isHighlighted
-                          ? "bg-yellow-500/30 text-yellow-200 border-2 border-yellow-400/60 shadow-lg shadow-yellow-500/20 font-medium"
-                          : "bg-blue-500/20 text-blue-200 border border-blue-400/30"
+              <>
+                <div
+                  ref={tagsContainerRef}
+                  className={`flex flex-wrap gap-2 transition-all duration-300 overflow-hidden ${
+                    isTagsExpanded ? "max-h-96" : "max-h-[4.5rem]"
+                  }`}
+                >
+                  {photo.tags.map((tag, index) => {
+                    const isHighlighted = isTagHighlighted(tag);
+                    return (
+                      <span
+                        key={index}
+                        className={`px-3 py-1 text-xs rounded-full font-light transition-all ${
+                          isHighlighted
+                            ? "bg-yellow-500/30 text-yellow-200 border-2 border-yellow-400/60 shadow-lg shadow-yellow-500/20 font-medium"
+                            : "bg-blue-500/20 text-blue-200 border border-blue-400/30"
+                        }`}
+                      >
+                        {tag}
+                      </span>
+                    );
+                  })}
+                </div>
+                {(hasTagsOverflow || isTagsExpanded) && (
+                  <button
+                    onClick={() => setIsTagsExpanded(!isTagsExpanded)}
+                    className="text-xs text-blue-300 hover:text-blue-200 transition-colors mt-2 cursor-pointer font-light flex items-center gap-1"
+                  >
+                    <span>{isTagsExpanded ? "Show less" : "Show more"}</span>
+                    <svg
+                      className={`w-3 h-3 transition-transform duration-200 ${
+                        isTagsExpanded ? "rotate-180" : ""
                       }`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
                     >
-                      {tag}
-                    </span>
-                  );
-                })}
-                {photo.tags.length > 5 && (
-                  <span className="px-3 py-1 text-xs bg-white/10 text-white/60 rounded-full font-light border border-white/20">
-                    +{photo.tags.length - 5} more
-                  </span>
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
+                  </button>
                 )}
-              </div>
+              </>
             )}
           </div>
         )}
