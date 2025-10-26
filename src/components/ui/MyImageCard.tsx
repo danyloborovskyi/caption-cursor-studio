@@ -515,20 +515,32 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
                       </button>
                     )}
                   </div>
-                  {photo.uploaded_at && (
-                    <div className="text-right">
+                  <div className="text-right flex flex-col gap-1">
+                    {photo.uploaded_at && (
                       <p className="text-white/50 text-xs font-light">
-                        {new Date(photo.uploaded_at).toLocaleDateString(
-                          "en-US",
-                          {
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                          }
-                        )}
+                        Created:{" "}
+                        {new Date(photo.uploaded_at).toLocaleString("en-US", {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
                       </p>
-                    </div>
-                  )}
+                    )}
+                    {photo.updated_at && (
+                      <p className="text-white/40 text-xs font-light">
+                        Updated:{" "}
+                        {new Date(photo.updated_at).toLocaleString("en-US", {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </p>
+                    )}
+                  </div>
                 </div>
               </>
             )}

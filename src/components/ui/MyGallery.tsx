@@ -79,6 +79,9 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
         }
         setError(null);
 
+        console.log(
+          `📊 Fetching gallery - page: ${page}, sortBy: ${sortBy}, sortOrder: ${sortOrder}`
+        );
         const result = await getFiles(page, perPage, sortBy, sortOrder);
 
         if (result.success && result.data) {
@@ -122,7 +125,7 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
         setIsInitialLoading(false);
       }
     },
-    [isAuthenticated, perPage, sortOrder]
+    [isAuthenticated, perPage, sortOrder, sortBy]
   );
 
   // Initial load - check for saved search or load regular gallery
@@ -136,7 +139,13 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
         setIsSearchMode(true);
         setError(null);
 
-        searchFiles(savedQuery, 1, perPage, sortOrder)
+        // Read sortBy and sortOrder from localStorage to avoid race conditions
+        const savedSortBy =
+          localStorage.getItem("gallery_sort_by") || "uploaded_at";
+        const savedSortOrder = (localStorage.getItem("gallery_sort_order") ||
+          "desc") as "asc" | "desc";
+
+        searchFiles(savedQuery, 1, perPage, savedSortOrder, savedSortBy)
           .then((result) => {
             if (result.success) {
               const limitedPhotos = result.data.slice(0, perPage);
@@ -426,10 +435,17 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
   };
 
   const handleUpdate = (updatedPhoto: FileItem) => {
-    // Update the photo in the current photos array
-    setPhotos((prev) =>
-      prev.map((p) => (p.id === updatedPhoto.id ? updatedPhoto : p))
-    );
+    console.log("📝 Card updated, reloading page to reflect sort order...");
+
+    // Reload the current page to get updated data and correct sorting
+    // This is especially important when sorting by filename or updated_at
+    if (isSearchMode && searchQuery) {
+      // Reload search results
+      handleSearchPageChange(currentPage);
+    } else {
+      // Reload regular gallery
+      fetchPhotos(currentPage, false);
+    }
   };
 
   if (isInitialLoading) {

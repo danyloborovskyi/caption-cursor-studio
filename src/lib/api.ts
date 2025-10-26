@@ -631,6 +631,7 @@ export async function getFiles(
     const params = new URLSearchParams({
       page: page.toString(),
       per_page: limit.toString(),
+      sortBy: sortBy,
       sortOrder: sortOrder,
     });
 
@@ -639,7 +640,7 @@ export async function getFiles(
     console.log("===============================================");
     console.log("🚀 FETCHING FILES - URL:", url);
     console.log("📄 Query params:", params.toString());
-    console.log("📊 Expected: per_page=12, page=" + page);
+    console.log("📊 sortBy:", sortBy, "| sortOrder:", sortOrder);
     console.log("===============================================");
 
     const response = await fetch(url, {
