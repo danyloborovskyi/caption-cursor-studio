@@ -267,7 +267,7 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
               className="text-white/90 text-sm font-medium truncate"
               title={photo.filename}
             >
-              {photo.filename}
+              {highlightText(photo.filename)}
             </p>
           )}
         </div>

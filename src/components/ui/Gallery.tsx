@@ -6,6 +6,7 @@ import { useGallery, useAuth } from "@/lib/contexts";
 import { Button } from "./Button";
 import { ImageCard } from "./ImageCard";
 import { SearchBar } from "./SearchBar";
+import { CustomSelect } from "./CustomSelect";
 
 interface GalleryProps {
   className?: string;
@@ -409,25 +410,18 @@ export const Gallery: React.FC<GalleryProps> = ({ className = "" }) => {
               </div>
 
               {/* Items Per Page Selector */}
-              <div className="flex items-center gap-2 glass rounded-xl px-4 py-2 border border-white/20">
-                <label
-                  htmlFor="per-page-select"
-                  className="text-white/70 text-sm font-light whitespace-nowrap"
-                >
-                  Items per page:
-                </label>
-                <select
-                  id="per-page-select"
-                  value={perPage}
-                  onChange={(e) => handlePerPageChange(Number(e.target.value))}
-                  className="bg-white/10 text-white rounded-lg px-3 py-1.5 text-sm font-light border border-white/20 focus:outline-none focus:ring-2 focus:ring-blue-500/50 cursor-pointer hover:bg-white/20 transition-colors"
-                >
-                  <option value="12">12</option>
-                  <option value="24">24</option>
-                  <option value="48">48</option>
-                  <option value="100">100</option>
-                </select>
-              </div>
+              <CustomSelect
+                id="per-page-select-empty"
+                label="Items per page:"
+                value={perPage}
+                options={[
+                  { value: 12, label: "12" },
+                  { value: 24, label: "24" },
+                  { value: 48, label: "48" },
+                  { value: 100, label: "100" },
+                ]}
+                onChange={(value) => handlePerPageChange(Number(value))}
+              />
             </div>
           </div>
         )}
@@ -527,33 +521,18 @@ export const Gallery: React.FC<GalleryProps> = ({ className = "" }) => {
           </div>
 
           {/* Items Per Page Selector */}
-          <div className="flex items-center gap-2 glass rounded-xl px-4 py-2 border border-white/20">
-            <label
-              htmlFor="per-page-select"
-              className="text-white/70 text-sm font-light whitespace-nowrap"
-            >
-              Items per page:
-            </label>
-            <select
-              id="per-page-select"
-              value={perPage}
-              onChange={(e) => handlePerPageChange(Number(e.target.value))}
-              className="bg-white/10 text-white rounded-lg px-3 py-1.5 text-sm font-light border border-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all cursor-pointer hover:bg-white/20"
-            >
-              <option value={12} className="bg-gray-800">
-                12
-              </option>
-              <option value={24} className="bg-gray-800">
-                24
-              </option>
-              <option value={48} className="bg-gray-800">
-                48
-              </option>
-              <option value={100} className="bg-gray-800">
-                100
-              </option>
-            </select>
-          </div>
+          <CustomSelect
+            id="per-page-select"
+            label="Items per page:"
+            value={perPage}
+            options={[
+              { value: 12, label: "12" },
+              { value: 24, label: "24" },
+              { value: 48, label: "48" },
+              { value: 100, label: "100" },
+            ]}
+            onChange={(value) => handlePerPageChange(Number(value))}
+          />
         </div>
       </div>
 
