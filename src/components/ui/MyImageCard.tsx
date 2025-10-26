@@ -63,7 +63,6 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
   // Check if tags overflow
   useEffect(() => {
     if (tagsContainerRef.current && !isEditingTags) {
-      const container = tagsContainerRef.current;
       // Wait for animation to complete before checking
       const timer = setTimeout(
         () => {

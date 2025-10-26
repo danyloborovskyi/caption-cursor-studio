@@ -11,12 +11,7 @@ interface SignupFormProps {
   onSwitchToLogin?: () => void;
 }
 
-export const SignupForm: React.FC<SignupFormProps> = ({
-  onSuccess,
-  onSwitchToLogin,
-}) => {
-  const { login: setUser } = useAuth();
-  const router = useRouter();
+export const SignupForm: React.FC<SignupFormProps> = ({ onSwitchToLogin }) => {
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -72,7 +67,7 @@ export const SignupForm: React.FC<SignupFormProps> = ({
       } else {
         setError(response.error || "Failed to sign up");
       }
-    } catch (err) {
+    } catch {
       setError("An unexpected error occurred");
     } finally {
       setIsLoading(false);
@@ -105,7 +100,7 @@ export const SignupForm: React.FC<SignupFormProps> = ({
               Check Your Email!
             </h3>
             <p className="text-white/80 mb-2">
-              We've sent a confirmation email to <strong>{email}</strong>
+              We&apos;ve sent a confirmation email to <strong>{email}</strong>
             </p>
             <p className="text-white/70 text-sm mb-4">
               Please check your inbox and click the confirmation link to
@@ -114,8 +109,8 @@ export const SignupForm: React.FC<SignupFormProps> = ({
             </p>
             <div className="bg-white/5 rounded-lg p-3 mb-4">
               <p className="text-white/60 text-xs">
-                💡 Tip: Don't forget to check your spam folder if you don't see
-                the email within a few minutes.
+                💡 Tip: Don&apos;t forget to check your spam folder if you
+                don&apos;t see the email within a few minutes.
               </p>
             </div>
             <p className="text-blue-300 text-sm font-medium">

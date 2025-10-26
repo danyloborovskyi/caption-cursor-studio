@@ -621,8 +621,7 @@ export async function getFiles(
   page = 1,
   limit = 12,
   sortBy = "uploaded_at",
-  sortOrder: "asc" | "desc" = "desc",
-  status = "all"
+  sortOrder: "asc" | "desc" = "desc"
 ): Promise<FilesResponse> {
   try {
     const token = localStorage.getItem("access_token");
