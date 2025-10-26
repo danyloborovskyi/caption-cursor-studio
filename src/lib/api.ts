@@ -548,6 +548,34 @@ export interface UpdateFileResponse {
   error?: string;
 }
 
+export interface BulkRegenerateResponse {
+  success: boolean;
+  message: string;
+  data?: {
+    regenerated: Array<{
+      id: number;
+      filename: string;
+      filePath: string;
+      fileSize: number;
+      mimeType: string;
+      publicUrl: string;
+      description: string;
+      tags: string[];
+      status: string;
+      uploadedAt: string;
+      updatedAt: string;
+      fileSizeMb: string;
+      hasAiAnalysis: boolean;
+      isImage: boolean;
+    }>;
+    totalRegenerated: number;
+    totalRequested: number;
+    tagStyle: string;
+    processingTimeSeconds: number;
+  };
+  error?: string;
+}
+
 export interface SearchResponse {
   success: boolean;
   data: FileItem[];
@@ -852,7 +880,7 @@ export async function regenerateFile(
  */
 export async function bulkRegenerateFiles(
   ids: number[]
-): Promise<UpdateFileResponse> {
+): Promise<BulkRegenerateResponse> {
   try {
     const token = localStorage.getItem("access_token");
 
