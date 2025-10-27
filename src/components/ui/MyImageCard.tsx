@@ -252,7 +252,19 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
       }
 
       if (isEditingFilename) {
-        updates.filename = editedFilename.trim();
+        let filename = editedFilename.trim();
+
+        // Check if filename has an extension
+        const hasExtension = /\.[a-zA-Z0-9]+$/.test(filename);
+
+        // If no extension, add .jpg
+        if (!hasExtension && filename.length > 0) {
+          filename = `${filename}.jpg`;
+        }
+
+        updates.filename = filename;
+        // Update the local state to reflect the added extension
+        setEditedFilename(filename);
       }
 
       const result = await updateFile(photo.id, updates);
