@@ -913,6 +913,44 @@ export async function downloadFile(fileId: number): Promise<Blob | null> {
 }
 
 /**
+ * Bulk download files
+ */
+export async function bulkDownloadFiles(ids: number[]): Promise<Blob | null> {
+  try {
+    const token = localStorage.getItem("access_token");
+
+    if (!token) {
+      throw new Error("Authentication required");
+    }
+
+    console.log(`⬇️ Bulk downloading ${ids.length} files:`, ids);
+
+    const response = await fetch(`${API_BASE_URL}/api/files/download`, {
+      method: "POST",
+      headers: {
+        ...getAuthHeaders(token),
+        "Content-Type": "application/json",
+      },
+      mode: "cors",
+      body: JSON.stringify({ ids }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Bulk Download Error: ${response.status} - ${errorText}`);
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const blob = await response.blob();
+    console.log(`✅ Bulk download completed`);
+    return blob;
+  } catch (error) {
+    console.error("Error in bulk download:", error);
+    return null;
+  }
+}
+
+/**
  * Bulk regenerate AI analysis for multiple files
  */
 export async function bulkRegenerateFiles(

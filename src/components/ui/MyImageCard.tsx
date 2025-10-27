@@ -18,6 +18,9 @@ interface MyImageCardProps {
   isBulkRegenerateMode?: boolean;
   isRegenerateSelected?: boolean;
   onRegenerateSelect?: (id: number) => void;
+  isBulkDownloadMode?: boolean;
+  isDownloadSelected?: boolean;
+  onDownloadSelect?: (id: number) => void;
 }
 
 export const MyImageCard: React.FC<MyImageCardProps> = ({
@@ -32,6 +35,9 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
   isBulkRegenerateMode = false,
   isRegenerateSelected = false,
   onRegenerateSelect,
+  isBulkDownloadMode = false,
+  isDownloadSelected = false,
+  onDownloadSelect,
 }) => {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [copiedTags, setCopiedTags] = useState(false);
@@ -355,6 +361,39 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
             }`}
           >
             {isRegenerateSelected && (
+              <svg
+                className="w-5 h-5 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={3}
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+            )}
+          </button>
+        </div>
+      )}
+
+      {/* Custom checkbox for bulk download */}
+      {isBulkDownloadMode && onDownloadSelect && (
+        <div className="absolute top-4 left-4 z-10">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onDownloadSelect(photo.id);
+            }}
+            className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all cursor-pointer border-2 ${
+              isDownloadSelected
+                ? "bg-green-500 border-green-500"
+                : "bg-white/10 border-white/40 backdrop-blur-sm hover:border-white/60"
+            }`}
+          >
+            {isDownloadSelected && (
               <svg
                 className="w-5 h-5 text-white"
                 fill="none"

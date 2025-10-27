@@ -7,6 +7,7 @@ import {
   searchFiles,
   bulkDeleteFiles,
   bulkRegenerateFiles,
+  bulkDownloadFiles,
   FileItem,
 } from "@/lib/api";
 import { useGallery, useAuth } from "@/lib/contexts";
@@ -84,6 +85,11 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
     []
   );
   const [isBulkRegenerating, setIsBulkRegenerating] = useState(false);
+
+  // Bulk download state
+  const [isBulkDownloadMode, setIsBulkDownloadMode] = useState(false);
+  const [downloadSelectedIds, setDownloadSelectedIds] = useState<number[]>([]);
+  const [isBulkDownloading, setIsBulkDownloading] = useState(false);
 
   // Confirmation modals
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
@@ -631,6 +637,69 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
     setShowBulkRegenerateConfirm(false);
   };
 
+  // Bulk Download Handlers
+  const handleToggleBulkDownload = () => {
+    // If switching from other modes, clear those selections
+    if (isBulkDeleteMode) {
+      setIsBulkDeleteMode(false);
+      setSelectedIds([]);
+    }
+    if (isBulkRegenerateMode) {
+      setIsBulkRegenerateMode(false);
+      setRegenerateSelectedIds([]);
+    }
+    setIsBulkDownloadMode(!isBulkDownloadMode);
+    setDownloadSelectedIds([]);
+  };
+
+  const handleSelectImageForDownload = (id: number) => {
+    setDownloadSelectedIds((prev) =>
+      prev.includes(id)
+        ? prev.filter((selectedId) => selectedId !== id)
+        : [...prev, id]
+    );
+  };
+
+  const handleSelectAllForDownload = () => {
+    if (downloadSelectedIds.length === photos.length) {
+      setDownloadSelectedIds([]);
+    } else {
+      setDownloadSelectedIds(photos.map((p) => p.id));
+    }
+  };
+
+  const handleBulkDownload = async () => {
+    if (downloadSelectedIds.length === 0) return;
+
+    setIsBulkDownloading(true);
+
+    try {
+      const blob = await bulkDownloadFiles(downloadSelectedIds);
+
+      if (blob) {
+        // Create a download link for the zip file
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `images-${Date.now()}.zip`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+
+        setDownloadSelectedIds([]);
+        setIsBulkDownloadMode(false);
+      } else {
+        setError("Failed to download files");
+      }
+    } catch (err) {
+      setError("An unexpected error occurred while downloading images");
+      console.error("Bulk download error:", err);
+    } finally {
+      setIsBulkDownloading(false);
+    }
+  };
+
   if (isInitialLoading) {
     return (
       <div className={`w-full ${className}`}>
@@ -874,6 +943,39 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
             onChange={(value) => handlePerPageChange(Number(value))}
           />
 
+          {/* Bulk Download Button */}
+          <button
+            onClick={handleToggleBulkDownload}
+            className={`flex items-center gap-2 px-4 rounded-xl border transition-all cursor-pointer h-[52px] ${
+              isBulkDownloadMode
+                ? "bg-green-500/20 border-green-500/50 text-green-300"
+                : "glass border-white/20 text-white/70 hover:border-white/40 hover:text-white"
+            }`}
+            title="Bulk download mode"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+              />
+            </svg>
+            <span className="whitespace-nowrap text-sm font-light">
+              Bulk Download
+            </span>
+            {isBulkDownloadMode && downloadSelectedIds.length > 0 && (
+              <span className="font-medium">
+                ({downloadSelectedIds.length})
+              </span>
+            )}
+          </button>
+
           {/* Bulk Regenerate Button */}
           <button
             onClick={handleToggleBulkRegenerate}
@@ -951,6 +1053,54 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
             />
           </div>
         </div>
+
+        {/* Bulk Download Actions Bar */}
+        {isBulkDownloadMode && (
+          <div className="mt-4 flex items-center justify-between glass rounded-xl px-4 py-3 border border-green-500/50">
+            <div className="flex items-center gap-4">
+              <span className="text-white/90 text-sm font-light">
+                {downloadSelectedIds.length === 0
+                  ? "Select images to download"
+                  : `${downloadSelectedIds.length} image${
+                      downloadSelectedIds.length > 1 ? "s" : ""
+                    } selected`}
+              </span>
+              <button
+                onClick={handleSelectAllForDownload}
+                className="text-green-300 hover:text-green-200 text-sm font-medium cursor-pointer"
+              >
+                {downloadSelectedIds.length === photos.length
+                  ? "Deselect All"
+                  : "Select All"}
+              </button>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleToggleBulkDownload}
+                disabled={isBulkDownloading}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={handleBulkDownload}
+                disabled={downloadSelectedIds.length === 0 || isBulkDownloading}
+                className="!bg-green-500 hover:!bg-green-600"
+              >
+                {isBulkDownloading
+                  ? "Downloading..."
+                  : `Download ${
+                      downloadSelectedIds.length > 0
+                        ? `(${downloadSelectedIds.length})`
+                        : ""
+                    }`}
+              </Button>
+            </div>
+          </div>
+        )}
 
         {/* Bulk Regenerate Actions Bar */}
         {isBulkRegenerateMode && (
@@ -1076,6 +1226,9 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
               isBulkRegenerateMode={isBulkRegenerateMode}
               isRegenerateSelected={regenerateSelectedIds.includes(photo.id)}
               onRegenerateSelect={handleSelectImageForRegenerate}
+              isBulkDownloadMode={isBulkDownloadMode}
+              isDownloadSelected={downloadSelectedIds.includes(photo.id)}
+              onDownloadSelect={handleSelectImageForDownload}
             />
           ))}
         </div>
