@@ -876,6 +876,43 @@ export async function regenerateFile(
 }
 
 /**
+ * Download a file
+ */
+export async function downloadFile(fileId: number): Promise<Blob | null> {
+  try {
+    const token = localStorage.getItem("access_token");
+
+    if (!token) {
+      throw new Error("Authentication required");
+    }
+
+    console.log(`⬇️ Downloading file ${fileId}`);
+
+    const response = await fetch(
+      `${API_BASE_URL}/api/files/${fileId}/download`,
+      {
+        method: "GET",
+        headers: getAuthHeaders(token),
+        mode: "cors",
+      }
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Download Error: ${response.status} - ${errorText}`);
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const blob = await response.blob();
+    console.log(`✅ File downloaded successfully`);
+    return blob;
+  } catch (error) {
+    console.error("Error downloading file:", error);
+    return null;
+  }
+}
+
+/**
  * Bulk regenerate AI analysis for multiple files
  */
 export async function bulkRegenerateFiles(

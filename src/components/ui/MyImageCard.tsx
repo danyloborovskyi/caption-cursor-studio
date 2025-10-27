@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import Image from "next/image";
-import { FileItem, updateFile, regenerateFile } from "@/lib/api";
+import { FileItem, updateFile, regenerateFile, downloadFile } from "@/lib/api";
 import { Button } from "./Button";
 import { ConfirmationModal } from "./ConfirmationModal";
 
@@ -59,6 +59,9 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
   const [regenerateError, setRegenerateError] = useState<string | null>(null);
   const [regenerateSuccess, setRegenerateSuccess] = useState(false);
   const [showRegenerateConfirm, setShowRegenerateConfirm] = useState(false);
+
+  // Download state
+  const [isDownloading, setIsDownloading] = useState(false);
 
   // Check if tags overflow
   useEffect(() => {
@@ -134,6 +137,34 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
 
   const handleCancelRegenerate = () => {
     setShowRegenerateConfirm(false);
+  };
+
+  const handleDownload = async () => {
+    if (isDownloading) return;
+
+    setIsDownloading(true);
+
+    try {
+      const blob = await downloadFile(photo.id);
+
+      if (blob) {
+        // Create a download link
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = photo.filename || `image-${photo.id}`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      } else {
+        console.error("Failed to download file");
+      }
+    } catch (error) {
+      console.error("Download error:", error);
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   const handleCopyTags = async () => {
@@ -656,14 +687,43 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
 
         {/* Action Buttons - Stuck to Bottom */}
         <div className="mt-auto">
-          {/* Regenerate and Delete in one row */}
+          {/* Action Buttons Row */}
           <div className="flex gap-2">
+            {/* Download Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDownload}
+              disabled={isDownloading || isDeleting || isRegenerating}
+              className="flex-1 text-green-300 hover:!text-green-600 hover:!bg-white border-green-300/50 hover:!border-white disabled:opacity-50 transition-colors"
+            >
+              <svg
+                className="w-4 h-4 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                />
+              </svg>
+              {isDownloading ? "Downloading..." : "Download"}
+            </Button>
+
             {/* Regenerate Button */}
             <Button
               variant="outline"
               size="sm"
               onClick={handleRegenerateClick}
-              disabled={isRegenerating || isDeleting || showConfirmation}
+              disabled={
+                isRegenerating ||
+                isDeleting ||
+                showConfirmation ||
+                isDownloading
+              }
               className="flex-1 text-blue-300 hover:!text-blue-600 hover:!bg-white border-blue-300/50 hover:!border-white disabled:opacity-50 transition-colors"
             >
               <svg
@@ -687,7 +747,12 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
               variant="outline"
               size="sm"
               onClick={handleDeleteClick}
-              disabled={isDeleting || showConfirmation || isRegenerating}
+              disabled={
+                isDeleting ||
+                showConfirmation ||
+                isRegenerating ||
+                isDownloading
+              }
               className="flex-1 text-red-300 hover:!text-red-600 hover:!bg-white border-red-300/50 hover:!border-white disabled:opacity-50 transition-colors"
             >
               <svg
