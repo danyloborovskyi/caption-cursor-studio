@@ -1,4 +1,5 @@
-const API_BASE_URL = "https://caption-studio-back.onrender.com";
+// const API_BASE_URL = "https://caption-studio-back.onrender.com";
+const API_BASE_URL = "https://caption-studio-back-audit-fix.onrender.com";
 // =====================
 // Auth Types
 // =====================
@@ -486,20 +487,21 @@ export interface UploadResponse {
 }
 
 export interface FileItem {
-  id: number;
+  id: string;
   filename: string;
-  file_path: string;
-  file_size: number;
-  mime_type: string;
-  public_url: string;
+  filePath: string;
+  fileSize: number;
+  mimeType: string;
+  publicUrl: string;
+  userId: string;
   description: string;
   tags: string[];
   status: string;
-  uploaded_at: string;
-  updated_at: string;
-  file_size_mb: string;
-  has_ai_analysis: boolean;
-  is_image: boolean;
+  uploadedAt: string;
+  updatedAt: string;
+  fileSizeMB: string;
+  hasAIAnalysis: boolean;
+  isImage: boolean;
 }
 
 export interface FilesResponse {
@@ -643,22 +645,32 @@ export async function bulkUploadAndAnalyzeImages(
 }
 
 /**
+ * Convert camelCase to snake_case for API parameters
+ */
+function toSnakeCase(str: string): string {
+  return str.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
+}
+
+/**
  * Get list of all uploaded files with pagination
  */
 export async function getFiles(
   page = 1,
   limit = 12,
-  sortBy = "uploaded_at",
+  sortBy = "uploadedAt",
   sortOrder: "asc" | "desc" = "desc"
 ): Promise<FilesResponse> {
   try {
     const token = localStorage.getItem("access_token");
 
+    // Convert sortBy to snake_case for the API
+    const sortBySnakeCase = toSnakeCase(sortBy);
+
     // Build URL with query parameters - backend expects per_page, not limit
     const params = new URLSearchParams({
       page: page.toString(),
       per_page: limit.toString(),
-      sortBy: sortBy,
+      sortBy: sortBySnakeCase,
       sortOrder: sortOrder,
     });
 
@@ -667,7 +679,14 @@ export async function getFiles(
     console.log("===============================================");
     console.log("🚀 FETCHING FILES - URL:", url);
     console.log("📄 Query params:", params.toString());
-    console.log("📊 sortBy:", sortBy, "| sortOrder:", sortOrder);
+    console.log(
+      "📊 sortBy:",
+      sortBy,
+      "→",
+      sortBySnakeCase,
+      "| sortOrder:",
+      sortOrder
+    );
     console.log("===============================================");
 
     const response = await fetch(url, {
@@ -736,7 +755,7 @@ export async function checkRecentFilesAnalyzed(
     const processingFiles = recentFiles.filter(
       (file) =>
         file.status === "processing" ||
-        !file.has_ai_analysis ||
+        !file.hasAIAnalysis ||
         !file.tags ||
         file.tags.length === 0
     );
@@ -758,7 +777,7 @@ export async function checkRecentFilesAnalyzed(
 /**
  * Delete a single file by ID
  */
-export async function deleteFile(fileId: number): Promise<DeleteResponse> {
+export async function deleteFile(fileId: string): Promise<DeleteResponse> {
   try {
     const token = localStorage.getItem("access_token");
 
@@ -836,7 +855,7 @@ export async function bulkDeleteFiles(ids: number[]): Promise<DeleteResponse> {
  * Regenerate AI analysis for a single file
  */
 export async function regenerateFile(
-  fileId: number
+  fileId: string
 ): Promise<UpdateFileResponse> {
   try {
     const token = localStorage.getItem("access_token");
@@ -878,7 +897,7 @@ export async function regenerateFile(
 /**
  * Download a file
  */
-export async function downloadFile(fileId: number): Promise<Blob | null> {
+export async function downloadFile(fileId: string): Promise<Blob | null> {
   try {
     const token = localStorage.getItem("access_token");
 
@@ -998,7 +1017,7 @@ export async function bulkRegenerateFiles(
  * Update file metadata (description and/or tags)
  */
 export async function updateFile(
-  fileId: number,
+  fileId: string,
   updates: UpdateFileRequest
 ): Promise<UpdateFileResponse> {
   try {
@@ -1044,7 +1063,7 @@ export async function searchFiles(
   page = 1,
   limit = 12,
   sortOrder: "asc" | "desc" = "desc",
-  sortBy = "uploaded_at"
+  sortBy = "uploadedAt"
 ): Promise<SearchResponse> {
   try {
     const token = localStorage.getItem("access_token");
@@ -1053,16 +1072,19 @@ export async function searchFiles(
       throw new Error("Authentication required");
     }
 
+    // Convert sortBy to snake_case for the API
+    const sortBySnakeCase = toSnakeCase(sortBy);
+
     const params = new URLSearchParams({
       q: query,
       page: page.toString(),
       per_page: limit.toString(),
       sortOrder: sortOrder,
-      sortBy: sortBy,
+      sortBy: sortBySnakeCase,
     });
 
     console.log(
-      `🔍 API: Searching files with sortBy=${sortBy}, sortOrder=${sortOrder}: ${API_BASE_URL}/api/files/search?${params.toString()}`
+      `🔍 API: Searching files with sortBy=${sortBy} → ${sortBySnakeCase}, sortOrder=${sortOrder}: ${API_BASE_URL}/api/files/search?${params.toString()}`
     );
 
     const response = await fetch(

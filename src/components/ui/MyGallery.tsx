@@ -31,7 +31,7 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
-  const [deletingPhotoId, setDeletingPhotoId] = useState<number | null>(null);
+  const [deletingPhotoId, setDeletingPhotoId] = useState<string | null>(null);
   const [perPage, setPerPage] = useState(() => {
     // Load from localStorage or default to 12
     if (typeof window !== "undefined") {
@@ -54,9 +54,9 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
   const [sortBy, setSortBy] = useState<string>(() => {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("gallery_sort_by");
-      return saved || "uploaded_at";
+      return saved || "uploadedAt";
     }
-    return "uploaded_at";
+    return "uploadedAt";
   });
 
   // Search state - Load from localStorage
@@ -117,7 +117,7 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
 
         if (result.success && result.data) {
           // Limit to perPage items
-          const limitedPhotos = result.data.slice(0, perPage);
+          // Backend already returns paginated data
           console.log(
             "🖼️ Gallery: Displaying",
             limitedPhotos.length,
@@ -125,7 +125,7 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
             result.data?.length,
             "items"
           );
-          setPhotos(limitedPhotos);
+          setPhotos(result.data);
 
           if (result.pagination) {
             console.log(
@@ -172,15 +172,15 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
 
         // Read sortBy and sortOrder from localStorage to avoid race conditions
         const savedSortBy =
-          localStorage.getItem("gallery_sort_by") || "uploaded_at";
+          localStorage.getItem("gallery_sort_by") || "uploadedAt";
         const savedSortOrder = (localStorage.getItem("gallery_sort_order") ||
           "desc") as "asc" | "desc";
 
         searchFiles(savedQuery, 1, perPage, savedSortOrder, savedSortBy)
           .then((result) => {
             if (result.success) {
-              const limitedPhotos = result.data.slice(0, perPage);
-              setPhotos(limitedPhotos);
+              // Backend already returns paginated data
+              setPhotos(result.data);
               setCurrentPage(result.pagination?.current_page || 1);
               setTotalPages(result.pagination?.total_pages || 1);
               setTotalItems(result.pagination?.total_items || 0);
@@ -241,8 +241,8 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
             `   ✅ Search completed, got ${result.data?.length || 0} results`
           );
           if (result.success) {
-            const limitedPhotos = result.data.slice(0, perPage);
-            setPhotos(limitedPhotos);
+            // Backend already returns paginated data
+            setPhotos(result.data);
             setCurrentPage(1);
             setTotalPages(result.pagination?.total_pages || 1);
             setTotalItems(result.pagination?.total_items || 0);
@@ -284,8 +284,8 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
 
       if (result.success) {
         // Limit to perPage items
-        const limitedPhotos = result.data.slice(0, perPage);
-        setPhotos(limitedPhotos);
+        // Backend already returns paginated data
+        setPhotos(result.data);
         setCurrentPage(result.pagination?.current_page || 1);
         setTotalPages(result.pagination?.total_pages || 1);
         setTotalItems(result.pagination?.total_items || 0);
@@ -325,8 +325,8 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
 
       if (result.success) {
         // Limit to perPage items
-        const limitedPhotos = result.data.slice(0, perPage);
-        setPhotos(limitedPhotos);
+        // Backend already returns paginated data
+        setPhotos(result.data);
         setCurrentPage(result.pagination?.current_page || newPage);
         setTotalPages(result.pagination?.total_pages || 1);
         setTotalItems(result.pagination?.total_items || 0);
@@ -380,8 +380,8 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
       try {
         const result = await searchFiles(searchQuery, 1, newPerPage, sortOrder);
         if (result.success) {
-          const limitedPhotos = result.data.slice(0, newPerPage);
-          setPhotos(limitedPhotos);
+          // Backend already returns paginated data
+          setPhotos(result.data);
           setCurrentPage(result.pagination?.current_page || 1);
           setTotalPages(result.pagination?.total_pages || 1);
           setTotalItems(result.pagination?.total_items || 0);
@@ -395,10 +395,10 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
       // Otherwise, fetch regular photos with new per_page
       setIsLoading(true);
       try {
-        const result = await getFiles(1, newPerPage, "uploaded_at", sortOrder);
+        const result = await getFiles(1, newPerPage, sortBy, sortOrder);
         if (result.success && result.data) {
-          const limitedPhotos = result.data.slice(0, newPerPage);
-          setPhotos(limitedPhotos);
+          // Backend already returns paginated data
+          setPhotos(result.data);
           if (result.pagination) {
             setCurrentPage(result.pagination.current_page);
             setTotalPages(result.pagination.total_pages);
@@ -469,7 +469,7 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
     console.log("📝 Card updated, reloading page to reflect sort order...");
 
     // Reload the current page to get updated data and correct sorting
-    // This is especially important when sorting by filename or updated_at
+    // This is especially important when sorting by filename or updatedAt
     if (isSearchMode && searchQuery) {
       // Reload search results
       handleSearchPageChange(currentPage);
@@ -606,7 +606,7 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
                 ...photo,
                 description: regenerated.description,
                 tags: regenerated.tags,
-                updated_at: regenerated.updatedAt,
+                updatedAt: regenerated.updatedAt,
               };
             }
             return photo;
@@ -782,8 +782,8 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
                 label="Sort by:"
                 value={sortBy}
                 options={[
-                  { value: "uploaded_at", label: "Upload Date" },
-                  { value: "updated_at", label: "Update Date" },
+                  { value: "uploadedAt", label: "Upload Date" },
+                  { value: "updatedAt", label: "Update Date" },
                   { value: "filename", label: "Filename" },
                 ]}
                 onChange={(value) => handleSortByChange(value as string)}
@@ -910,8 +910,8 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
             label="Sort by:"
             value={sortBy}
             options={[
-              { value: "uploaded_at", label: "Upload Date" },
-              { value: "updated_at", label: "Update Date" },
+              { value: "uploadedAt", label: "Upload Date" },
+              { value: "updatedAt", label: "Update Date" },
               { value: "filename", label: "Filename" },
             ]}
             onChange={(value) => handleSortByChange(value as string)}

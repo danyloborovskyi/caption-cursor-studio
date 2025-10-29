@@ -22,7 +22,7 @@ export const Gallery: React.FC<GalleryProps> = ({ className = "" }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
-  const [deletingPhotoId, setDeletingPhotoId] = useState<number | null>(null);
+  const [deletingPhotoId, setDeletingPhotoId] = useState<string | null>(null);
   const [perPage, setPerPage] = useState(() => {
     // Load from localStorage or default to 12
     if (typeof window !== "undefined") {
@@ -64,25 +64,29 @@ export const Gallery: React.FC<GalleryProps> = ({ className = "" }) => {
         const result = await getFiles(page, perPage);
 
         if (result.success && result.data) {
-          // Limit to perPage items
-          const limitedPhotos = result.data.slice(0, perPage);
+          // Backend already returns paginated data - no need to slice
           console.log(
             "🖼️ Gallery: Displaying",
-            limitedPhotos.length,
-            "of",
-            result.data?.length,
-            "items"
+            result.data.length,
+            "items on page",
+            page
           );
-          setPhotos(limitedPhotos);
+          setPhotos(result.data);
 
           if (result.pagination) {
-            console.log(
-              "📊 Gallery: Setting totalPages to",
-              result.pagination.total_pages
-            );
+            console.log("📊 Gallery: Pagination received:", {
+              current_page: result.pagination.current_page,
+              total_pages: result.pagination.total_pages,
+              total_items: result.pagination.total_items,
+              per_page: result.pagination.per_page,
+            });
             setCurrentPage(result.pagination.current_page);
             setTotalPages(result.pagination.total_pages);
             setTotalItems(result.pagination.total_items || 0);
+            console.log(
+              "📊 Gallery: State updated - totalPages:",
+              result.pagination.total_pages
+            );
           } else {
             console.log(
               "⚠️ Gallery: No pagination info, setting totalPages to 1"
@@ -121,8 +125,8 @@ export const Gallery: React.FC<GalleryProps> = ({ className = "" }) => {
         searchFiles(savedQuery, 1, perPage)
           .then((result) => {
             if (result.success) {
-              const limitedPhotos = result.data.slice(0, perPage);
-              setPhotos(limitedPhotos);
+              // Backend already returns paginated data
+              setPhotos(result.data);
               setCurrentPage(result.pagination?.current_page || 1);
               setTotalPages(result.pagination?.total_pages || 1);
               setTotalItems(result.pagination?.total_items || 0);
@@ -176,9 +180,8 @@ export const Gallery: React.FC<GalleryProps> = ({ className = "" }) => {
       const result = await searchFiles(query, 1, perPage);
 
       if (result.success) {
-        // Limit to perPage items
-        const limitedPhotos = result.data.slice(0, perPage);
-        setPhotos(limitedPhotos);
+        // Backend already returns paginated data
+        setPhotos(result.data);
         setCurrentPage(result.pagination?.current_page || 1);
         setTotalPages(result.pagination?.total_pages || 1);
         setTotalItems(result.pagination?.total_items || 0);
@@ -211,9 +214,8 @@ export const Gallery: React.FC<GalleryProps> = ({ className = "" }) => {
       const result = await searchFiles(searchQuery, newPage, perPage);
 
       if (result.success) {
-        // Limit to perPage items
-        const limitedPhotos = result.data.slice(0, perPage);
-        setPhotos(limitedPhotos);
+        // Backend already returns paginated data
+        setPhotos(result.data);
         setCurrentPage(result.pagination?.current_page || newPage);
         setTotalPages(result.pagination?.total_pages || 1);
         setTotalItems(result.pagination?.total_items || 0);
@@ -248,8 +250,8 @@ export const Gallery: React.FC<GalleryProps> = ({ className = "" }) => {
       try {
         const result = await searchFiles(searchQuery, 1, newPerPage);
         if (result.success) {
-          const limitedPhotos = result.data.slice(0, newPerPage);
-          setPhotos(limitedPhotos);
+          // Backend already returns paginated data
+          setPhotos(result.data);
           setCurrentPage(result.pagination?.current_page || 1);
           setTotalPages(result.pagination?.total_pages || 1);
           setTotalItems(result.pagination?.total_items || 0);
@@ -265,8 +267,8 @@ export const Gallery: React.FC<GalleryProps> = ({ className = "" }) => {
       try {
         const result = await getFiles(1, newPerPage);
         if (result.success && result.data) {
-          const limitedPhotos = result.data.slice(0, newPerPage);
-          setPhotos(limitedPhotos);
+          // Backend already returns paginated data
+          setPhotos(result.data);
           if (result.pagination) {
             setCurrentPage(result.pagination.current_page);
             setTotalPages(result.pagination.total_pages);
@@ -562,7 +564,15 @@ export const Gallery: React.FC<GalleryProps> = ({ className = "" }) => {
       </div>
 
       {/* Pagination */}
-      {totalPages > 1 && (
+      {(() => {
+        console.log(
+          "🔍 Gallery: Rendering pagination check - totalPages:",
+          totalPages,
+          "currentPage:",
+          currentPage
+        );
+        return totalPages > 1;
+      })() && (
         <div className="flex items-center justify-center space-x-3">
           <Button
             onClick={() => handlePageChange(currentPage - 1)}

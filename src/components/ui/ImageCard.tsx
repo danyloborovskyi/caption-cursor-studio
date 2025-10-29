@@ -91,18 +91,43 @@ export const ImageCard: React.FC<ImageCardProps> = ({
     );
   };
 
+  // Check if we have a valid image URL
+  const hasValidImage =
+    photo.publicUrl && photo.publicUrl !== "." && photo.publicUrl.trim() !== "";
+
   return (
     <div className="glass glass-hover rounded-2xl overflow-hidden transition-all duration-300 flex flex-col relative">
       {/* Image */}
       <div className="aspect-square relative bg-white/5">
-        <Image
-          src={photo.public_url}
-          alt={photo.description || photo.filename}
-          fill
-          className="object-cover"
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-          priority={false}
-        />
+        {hasValidImage ? (
+          <Image
+            src={photo.publicUrl}
+            alt={photo.description || photo.filename}
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            priority={false}
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <div className="text-white/30 text-center">
+              <svg
+                className="w-16 h-16 mx-auto mb-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+              <p className="text-xs">Image unavailable</p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Card Content */}

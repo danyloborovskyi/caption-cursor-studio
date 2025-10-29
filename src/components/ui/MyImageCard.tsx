@@ -427,7 +427,7 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
       {/* Image */}
       <div className="aspect-square relative bg-white/5">
         <Image
-          src={photo.public_url}
+          src={photo.publicUrl}
           alt={photo.description || photo.filename}
           fill
           className="object-cover"
@@ -825,10 +825,10 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
 
           {/* Dates under delete button */}
           <div className="flex items-center justify-center gap-4 mt-3 flex-wrap">
-            {photo.uploaded_at && (
+            {photo.uploadedAt && (
               <p className="text-white/50 text-xs font-light">
                 Created:{" "}
-                {new Date(photo.uploaded_at).toLocaleString("en-US", {
+                {new Date(photo.uploadedAt).toLocaleString("en-US", {
                   year: "numeric",
                   month: "short",
                   day: "numeric",
@@ -837,10 +837,10 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
                 })}
               </p>
             )}
-            {photo.updated_at && (
+            {photo.updatedAt && (
               <p className="text-white/40 text-xs font-light">
                 Updated:{" "}
-                {new Date(photo.updated_at).toLocaleString("en-US", {
+                {new Date(photo.updatedAt).toLocaleString("en-US", {
                   year: "numeric",
                   month: "short",
                   day: "numeric",
