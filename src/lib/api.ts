@@ -934,7 +934,7 @@ export async function downloadFile(fileId: string): Promise<Blob | null> {
 /**
  * Bulk download files
  */
-export async function bulkDownloadFiles(ids: number[]): Promise<Blob | null> {
+export async function bulkDownloadFiles(ids: string[]): Promise<Blob | null> {
   try {
     const token = localStorage.getItem("access_token");
 
@@ -973,7 +973,7 @@ export async function bulkDownloadFiles(ids: number[]): Promise<Blob | null> {
  * Bulk regenerate AI analysis for multiple files
  */
 export async function bulkRegenerateFiles(
-  ids: number[]
+  ids: string[]
 ): Promise<BulkRegenerateResponse> {
   try {
     const token = localStorage.getItem("access_token");

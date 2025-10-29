@@ -116,14 +116,12 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
         const result = await getFiles(page, perPage, sortBy, sortOrder);
 
         if (result.success && result.data) {
-          // Limit to perPage items
-          // Backend already returns paginated data
+          // Backend already returns paginated data - no need to slice
           console.log(
             "🖼️ Gallery: Displaying",
-            limitedPhotos.length,
-            "of",
-            result.data?.length,
-            "items"
+            result.data.length,
+            "items on page",
+            page
           );
           setPhotos(result.data);
 
