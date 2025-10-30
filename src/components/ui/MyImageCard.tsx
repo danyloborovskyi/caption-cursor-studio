@@ -442,7 +442,7 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
       </div>
 
       {/* Card Content */}
-      <div className="p-4 flex-1 flex flex-col">
+      <div className="px-4 py-2 flex-1 flex flex-col">
         {/* Filename */}
         <div className="mb-2">
           {isEditingFilename ? (
@@ -636,7 +636,7 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
                   ref={tagsContainerRef}
                   onClick={handleEditTags}
                   className={`flex flex-wrap gap-2 transition-all duration-300 overflow-hidden cursor-pointer hover:bg-white/5 px-2 py-1 rounded ${
-                    isTagsExpanded ? "max-h-96" : "max-h-[4.5rem]"
+                    isTagsExpanded ? "max-h-96" : "max-h-[2rem]"
                   }`}
                 >
                   {photo.tags.map((tag, index) => {
@@ -644,7 +644,7 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
                     return (
                       <span
                         key={index}
-                        className={`px-3 py-1 text-xs rounded-full font-light transition-all ${
+                        className={`px-3 py-1 text-xs rounded-full font-light transition-all whitespace-nowrap ${
                           isHighlighted
                             ? "bg-yellow-500/30 text-yellow-200 border-2 border-yellow-400/60 shadow-lg shadow-yellow-500/20 font-medium"
                             : "bg-blue-500/20 text-blue-200 border border-blue-400/30"
@@ -656,38 +656,34 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
                   })}
                 </div>
                 {/* Show more/less button */}
-                <div className="flex items-center justify-between mt-2">
-                  <div className="flex-1">
-                    {(hasTagsOverflow || isTagsExpanded) && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setIsTagsExpanded(!isTagsExpanded);
-                        }}
-                        className="text-xs text-blue-300 hover:text-blue-200 transition-colors cursor-pointer font-light flex items-center gap-1"
+                {(hasTagsOverflow || isTagsExpanded) && (
+                  <div className="flex items-center mt-1">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsTagsExpanded(!isTagsExpanded);
+                      }}
+                      className="text-xs text-blue-300 hover:text-blue-200 transition-colors cursor-pointer font-light flex items-center gap-1"
+                    >
+                      <span>{isTagsExpanded ? "Show less" : "Show more"}</span>
+                      <svg
+                        className={`w-3 h-3 transition-transform duration-200 ${
+                          isTagsExpanded ? "rotate-180" : ""
+                        }`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
                       >
-                        <span>
-                          {isTagsExpanded ? "Show less" : "Show more"}
-                        </span>
-                        <svg
-                          className={`w-3 h-3 transition-transform duration-200 ${
-                            isTagsExpanded ? "rotate-180" : ""
-                          }`}
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M19 9l-7 7-7-7"
-                          />
-                        </svg>
-                      </button>
-                    )}
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
+                        />
+                      </svg>
+                    </button>
                   </div>
-                </div>
+                )}
               </>
             )}
           </div>
