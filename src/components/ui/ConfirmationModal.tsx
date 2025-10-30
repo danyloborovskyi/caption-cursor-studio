@@ -13,6 +13,7 @@ interface ConfirmationModalProps {
   onCancel: () => void;
   variant?: "danger" | "warning" | "info";
   isLoading?: boolean;
+  children?: React.ReactNode;
 }
 
 export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
@@ -25,6 +26,7 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   onCancel,
   variant = "warning",
   isLoading = false,
+  children,
 }) => {
   if (!isOpen) return null;
 
@@ -121,6 +123,9 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
         <p className="text-white/70 text-center mb-6 text-sm leading-relaxed">
           {message}
         </p>
+
+        {/* Optional children (e.g., form inputs) */}
+        {children && <div className="mb-6">{children}</div>}
 
         {/* Actions */}
         <div className="flex gap-3">

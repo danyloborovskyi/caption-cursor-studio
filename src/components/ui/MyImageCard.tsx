@@ -65,6 +65,9 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
   const [regenerateError, setRegenerateError] = useState<string | null>(null);
   const [regenerateSuccess, setRegenerateSuccess] = useState(false);
   const [showRegenerateConfirm, setShowRegenerateConfirm] = useState(false);
+  const [selectedTagStyle, setSelectedTagStyle] = useState<
+    "neutral" | "playful" | "seo"
+  >("playful");
 
   // Download state
   const [isDownloading, setIsDownloading] = useState(false);
@@ -114,7 +117,7 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
     setRegenerateSuccess(false);
 
     try {
-      const result = await regenerateFile(photo.id);
+      const result = await regenerateFile(photo.id, selectedTagStyle);
 
       if (result.success && result.data) {
         setRegenerateSuccess(true);
@@ -143,6 +146,8 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
 
   const handleCancelRegenerate = () => {
     setShowRegenerateConfirm(false);
+    // Reset tag style to default when canceling
+    setSelectedTagStyle("playful");
   };
 
   const handleDownload = async () => {
@@ -920,7 +925,57 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
         onCancel={handleCancelRegenerate}
         variant="warning"
         isLoading={isRegenerating}
-      />
+      >
+        {/* Tag Style Selector */}
+        <div className="space-y-3">
+          <label className="block text-sm font-medium text-white/90 text-center">
+            Choose Tag Style:
+          </label>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setSelectedTagStyle("playful")}
+              className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                selectedTagStyle === "playful"
+                  ? "bg-blue-500 text-white border-2 border-blue-400 shadow-lg"
+                  : "bg-white/10 text-white/70 border-2 border-white/20 hover:bg-white/20 hover:text-white"
+              }`}
+            >
+              🎨 Playful
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedTagStyle("neutral")}
+              className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                selectedTagStyle === "neutral"
+                  ? "bg-blue-500 text-white border-2 border-blue-400 shadow-lg"
+                  : "bg-white/10 text-white/70 border-2 border-white/20 hover:bg-white/20 hover:text-white"
+              }`}
+            >
+              📝 Neutral
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedTagStyle("seo")}
+              className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                selectedTagStyle === "seo"
+                  ? "bg-blue-500 text-white border-2 border-blue-400 shadow-lg"
+                  : "bg-white/10 text-white/70 border-2 border-white/20 hover:bg-white/20 hover:text-white"
+              }`}
+            >
+              🚀 SEO
+            </button>
+          </div>
+          <p className="text-xs text-white/50 text-center">
+            {selectedTagStyle === "playful" &&
+              "Creative and engaging tags with personality"}
+            {selectedTagStyle === "neutral" &&
+              "Professional and straightforward tags"}
+            {selectedTagStyle === "seo" &&
+              "Search-optimized tags for better discoverability"}
+          </p>
+        </div>
+      </ConfirmationModal>
     </div>
   );
 };

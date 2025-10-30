@@ -85,6 +85,9 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
     []
   );
   const [isBulkRegenerating, setIsBulkRegenerating] = useState(false);
+  const [bulkRegenerateTagStyle, setBulkRegenerateTagStyle] = useState<
+    "neutral" | "playful" | "seo"
+  >("playful");
 
   // Bulk download state
   const [isBulkDownloadMode, setIsBulkDownloadMode] = useState(false);
@@ -583,7 +586,10 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
     setIsBulkRegenerating(true);
 
     try {
-      const result = await bulkRegenerateFiles(regenerateSelectedIds);
+      const result = await bulkRegenerateFiles(
+        regenerateSelectedIds,
+        bulkRegenerateTagStyle
+      );
 
       if (result.success && result.data) {
         // Update the photos with regenerated data
@@ -633,6 +639,8 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
 
   const handleCancelBulkRegenerate = () => {
     setShowBulkRegenerateConfirm(false);
+    // Reset tag style to default when canceling
+    setBulkRegenerateTagStyle("playful");
   };
 
   // Bulk Download Handlers
@@ -1395,7 +1403,57 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
         onCancel={handleCancelBulkRegenerate}
         variant="warning"
         isLoading={isBulkRegenerating}
-      />
+      >
+        {/* Tag Style Selector */}
+        <div className="space-y-3">
+          <label className="block text-sm font-medium text-white/90 text-center">
+            Choose Tag Style:
+          </label>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setBulkRegenerateTagStyle("playful")}
+              className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                bulkRegenerateTagStyle === "playful"
+                  ? "bg-blue-500 text-white border-2 border-blue-400 shadow-lg"
+                  : "bg-white/10 text-white/70 border-2 border-white/20 hover:bg-white/20 hover:text-white"
+              }`}
+            >
+              🎨 Playful
+            </button>
+            <button
+              type="button"
+              onClick={() => setBulkRegenerateTagStyle("neutral")}
+              className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                bulkRegenerateTagStyle === "neutral"
+                  ? "bg-blue-500 text-white border-2 border-blue-400 shadow-lg"
+                  : "bg-white/10 text-white/70 border-2 border-white/20 hover:bg-white/20 hover:text-white"
+              }`}
+            >
+              📝 Neutral
+            </button>
+            <button
+              type="button"
+              onClick={() => setBulkRegenerateTagStyle("seo")}
+              className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                bulkRegenerateTagStyle === "seo"
+                  ? "bg-blue-500 text-white border-2 border-blue-400 shadow-lg"
+                  : "bg-white/10 text-white/70 border-2 border-white/20 hover:bg-white/20 hover:text-white"
+              }`}
+            >
+              🚀 SEO
+            </button>
+          </div>
+          <p className="text-xs text-white/50 text-center">
+            {bulkRegenerateTagStyle === "playful" &&
+              "Creative and engaging tags with personality"}
+            {bulkRegenerateTagStyle === "neutral" &&
+              "Professional and straightforward tags"}
+            {bulkRegenerateTagStyle === "seo" &&
+              "Search-optimized tags for better discoverability"}
+          </p>
+        </div>
+      </ConfirmationModal>
     </div>
   );
 };

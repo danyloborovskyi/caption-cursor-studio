@@ -855,7 +855,8 @@ export async function bulkDeleteFiles(ids: number[]): Promise<DeleteResponse> {
  * Regenerate AI analysis for a single file
  */
 export async function regenerateFile(
-  fileId: string
+  fileId: string,
+  tagStyle: "neutral" | "playful" | "seo" = "playful"
 ): Promise<UpdateFileResponse> {
   try {
     const token = localStorage.getItem("access_token");
@@ -865,7 +866,9 @@ export async function regenerateFile(
     }
 
     const url = `${API_BASE_URL}/api/files/${fileId}/regenerate`;
-    console.log(`🔄 Regenerating AI analysis for file ${fileId}`);
+    console.log(
+      `🔄 Regenerating AI analysis for file ${fileId} with tag style: ${tagStyle}`
+    );
     console.log(`📍 URL: ${url}`);
     console.log(`🔑 Token present:`, !!token);
 
@@ -875,6 +878,7 @@ export async function regenerateFile(
         ...getAuthHeaders(token),
         "Content-Type": "application/json",
       },
+      body: JSON.stringify({ tagStyle }),
       mode: "cors",
     });
 
@@ -978,7 +982,8 @@ export async function bulkDownloadFiles(ids: string[]): Promise<Blob | null> {
  * Bulk regenerate AI analysis for multiple files
  */
 export async function bulkRegenerateFiles(
-  ids: string[]
+  ids: string[],
+  tagStyle: "neutral" | "playful" | "seo" = "playful"
 ): Promise<BulkRegenerateResponse> {
   try {
     const token = localStorage.getItem("access_token");
@@ -987,7 +992,10 @@ export async function bulkRegenerateFiles(
       throw new Error("Authentication required");
     }
 
-    console.log(`🔄 Bulk regenerating ${ids.length} files:`, ids);
+    console.log(
+      `🔄 Bulk regenerating ${ids.length} files with tag style: ${tagStyle}`,
+      ids
+    );
 
     const response = await fetch(`${API_BASE_URL}/api/files/regenerate`, {
       method: "POST",
@@ -996,7 +1004,7 @@ export async function bulkRegenerateFiles(
         "Content-Type": "application/json",
       },
       mode: "cors",
-      body: JSON.stringify({ ids }),
+      body: JSON.stringify({ ids, tagStyle }),
     });
 
     if (!response.ok) {
