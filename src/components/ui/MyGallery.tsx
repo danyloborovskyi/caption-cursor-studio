@@ -482,10 +482,14 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
   };
 
   const handleToggleBulkDelete = () => {
-    // If switching from regenerate mode, clear those selections
+    // If switching from other modes, clear those selections
     if (isBulkRegenerateMode) {
       setIsBulkRegenerateMode(false);
       setRegenerateSelectedIds([]);
+    }
+    if (isBulkDownloadMode) {
+      setIsBulkDownloadMode(false);
+      setDownloadSelectedIds([]);
     }
     setIsBulkDeleteMode(!isBulkDeleteMode);
     setSelectedIds([]); // Clear selections when toggling
@@ -546,10 +550,14 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
 
   // Bulk Regenerate Handlers
   const handleToggleBulkRegenerate = () => {
-    // If switching from delete mode, clear those selections
+    // If switching from other modes, clear those selections
     if (isBulkDeleteMode) {
       setIsBulkDeleteMode(false);
       setSelectedIds([]);
+    }
+    if (isBulkDownloadMode) {
+      setIsBulkDownloadMode(false);
+      setDownloadSelectedIds([]);
     }
     setIsBulkRegenerateMode(!isBulkRegenerateMode);
     setRegenerateSelectedIds([]);
@@ -655,7 +663,7 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
       setRegenerateSelectedIds([]);
     }
     setIsBulkDownloadMode(!isBulkDownloadMode);
-    setDownloadSelectedIds([]);
+    setDownloadSelectedIds([]); // Clear download selections when toggling
   };
 
   const handleSelectImageForDownload = (id: string) => {
