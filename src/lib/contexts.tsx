@@ -103,15 +103,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           setUser(response.data.user);
           localStorage.setItem("user_data", JSON.stringify(response.data.user));
         } else {
-          // Only clear on authentication errors (401, 403)
+          // Only clear on authentication errors (400, 401, 403)
           const status = (response as { status?: number }).status;
 
-          if (status === 401 || status === 403) {
+          if (status === 400 || status === 401 || status === 403) {
             // Token is invalid, clear everything
+            console.log("Token expired or invalid, clearing auth data");
             localStorage.removeItem("access_token");
             localStorage.removeItem("refresh_token");
             localStorage.removeItem("user_data");
             setUser(null);
+
+            // Redirect to home page if not already there
+            if (
+              typeof window !== "undefined" &&
+              window.location.pathname !== "/"
+            ) {
+              window.location.href = "/";
+            }
           }
           // On other errors, keep the user logged in with cached data
         }
@@ -123,8 +132,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           localStorage.setItem("user_data", JSON.stringify(response.data.user));
         } else {
           // Token is invalid, clear it
+          console.log("Token invalid, clearing auth data");
           localStorage.removeItem("access_token");
           localStorage.removeItem("refresh_token");
+          localStorage.removeItem("user_data");
+
+          // Redirect to home page
+          if (
+            typeof window !== "undefined" &&
+            window.location.pathname !== "/"
+          ) {
+            window.location.href = "/";
+          }
         }
       } else if (!token && storedUser) {
         // No token but has cached user data - clear the stale data
