@@ -1395,7 +1395,74 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
           onCancel={handleCancelBulkDelete}
           variant="danger"
           isLoading={isBulkDeleting}
-        />
+        >
+          {/* Preview of selected images */}
+          <div className="mt-4 max-h-[500px] overflow-y-auto">
+            <p className="text-sm text-white/70 mb-3 text-center">
+              Preview of selected images ({selectedIds.length} selected):
+            </p>
+            {selectedIds.length === 0 ? (
+              <p className="text-sm text-white/50 text-center py-4">
+                No images selected
+              </p>
+            ) : (
+              <div className="flex flex-wrap gap-3 justify-center">
+                {photos
+                  .filter((photo) => selectedIds.includes(photo.id))
+                  .map((photo) => (
+                    <div
+                      key={photo.id}
+                      className="relative rounded-lg overflow-hidden border border-white/20 hover:border-white/40 transition-colors group"
+                      style={{ width: "150px", height: "150px" }}
+                    >
+                      <img
+                        src={photo.publicUrl}
+                        alt={photo.filename}
+                        className="w-full h-full object-cover"
+                      />
+                      {/* Remove button */}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setSelectedIds((prev) =>
+                            prev.filter((id) => id !== photo.id)
+                          );
+                        }}
+                        className="absolute top-2 right-2 w-6 h-6 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                        title="Remove from deletion"
+                      >
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M6 18L18 6M6 6l12 12"
+                          />
+                        </svg>
+                      </button>
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                        <div className="absolute bottom-0 left-0 right-0 p-2">
+                          <p className="text-xs text-white truncate font-medium">
+                            {photo.filename}
+                          </p>
+                          <p className="text-xs text-white/60">
+                            {photo.fileSizeMB} MB
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            )}
+          </div>
+        </ConfirmationModal>
       )}
 
       {/* Bulk Regenerate Confirmation Modal */}
@@ -1465,6 +1532,74 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
               {bulkRegenerateTagStyle === "seo" &&
                 "Search-optimized tags for better discoverability"}
             </p>
+          </div>
+
+          {/* Preview of selected images */}
+          <div className="mt-4 max-h-[500px] overflow-y-auto">
+            <p className="text-sm text-white/70 mb-3 text-center">
+              Preview of selected images ({regenerateSelectedIds.length}{" "}
+              selected):
+            </p>
+            {regenerateSelectedIds.length === 0 ? (
+              <p className="text-sm text-white/50 text-center py-4">
+                No images selected
+              </p>
+            ) : (
+              <div className="flex flex-wrap gap-3 justify-center">
+                {photos
+                  .filter((photo) => regenerateSelectedIds.includes(photo.id))
+                  .map((photo) => (
+                    <div
+                      key={photo.id}
+                      className="relative rounded-lg overflow-hidden border border-white/20 hover:border-white/40 transition-colors group"
+                      style={{ width: "150px", height: "150px" }}
+                    >
+                      <img
+                        src={photo.publicUrl}
+                        alt={photo.filename}
+                        className="w-full h-full object-cover"
+                      />
+                      {/* Remove button */}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setRegenerateSelectedIds((prev) =>
+                            prev.filter((id) => id !== photo.id)
+                          );
+                        }}
+                        className="absolute top-2 right-2 w-6 h-6 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                        title="Remove from regeneration"
+                      >
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M6 18L18 6M6 6l12 12"
+                          />
+                        </svg>
+                      </button>
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                        <div className="absolute bottom-0 left-0 right-0 p-2">
+                          <p className="text-xs text-white truncate font-medium">
+                            {photo.filename}
+                          </p>
+                          <p className="text-xs text-white/60">
+                            {photo.fileSizeMB} MB
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            )}
           </div>
         </ConfirmationModal>
       )}
