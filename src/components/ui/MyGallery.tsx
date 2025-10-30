@@ -1370,90 +1370,96 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
       )}
 
       {/* Bulk Delete Confirmation Modal */}
-      <ConfirmationModal
-        isOpen={showBulkDeleteConfirm}
-        title="Delete Selected Images?"
-        message={`Are you sure you want to delete ${selectedIds.length} image${
-          selectedIds.length > 1 ? "s" : ""
-        }? This action cannot be undone.`}
-        confirmText={`Delete ${selectedIds.length} image${
-          selectedIds.length > 1 ? "s" : ""
-        }`}
-        cancelText="Cancel"
-        onConfirm={handleConfirmBulkDelete}
-        onCancel={handleCancelBulkDelete}
-        variant="danger"
-        isLoading={isBulkDeleting}
-      />
+      {showBulkDeleteConfirm && (
+        <ConfirmationModal
+          isOpen={showBulkDeleteConfirm}
+          title="Delete Selected Images?"
+          message={`Are you sure you want to delete ${
+            selectedIds.length
+          } image${
+            selectedIds.length > 1 ? "s" : ""
+          }? This action cannot be undone.`}
+          confirmText={`Delete ${selectedIds.length} image${
+            selectedIds.length > 1 ? "s" : ""
+          }`}
+          cancelText="Cancel"
+          onConfirm={handleConfirmBulkDelete}
+          onCancel={handleCancelBulkDelete}
+          variant="danger"
+          isLoading={isBulkDeleting}
+        />
+      )}
 
       {/* Bulk Regenerate Confirmation Modal */}
-      <ConfirmationModal
-        isOpen={showBulkRegenerateConfirm}
-        title="Regenerate AI Analysis?"
-        message={`Are you sure you want to regenerate AI analysis for ${
-          regenerateSelectedIds.length
-        } image${
-          regenerateSelectedIds.length > 1 ? "s" : ""
-        }? This will overwrite existing descriptions and tags. This action cannot be undone.`}
-        confirmText={`Regenerate ${regenerateSelectedIds.length} image${
-          regenerateSelectedIds.length > 1 ? "s" : ""
-        }`}
-        cancelText="Cancel"
-        onConfirm={handleConfirmBulkRegenerate}
-        onCancel={handleCancelBulkRegenerate}
-        variant="warning"
-        isLoading={isBulkRegenerating}
-      >
-        {/* Tag Style Selector */}
-        <div className="space-y-3">
-          <label className="block text-sm font-medium text-white/90 text-center">
-            Choose Tag Style:
-          </label>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => setBulkRegenerateTagStyle("playful")}
-              className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                bulkRegenerateTagStyle === "playful"
-                  ? "bg-blue-500 text-white border-2 border-blue-400 shadow-lg"
-                  : "bg-white/10 text-white/70 border-2 border-white/20 hover:bg-white/20 hover:text-white"
-              }`}
-            >
-              🎨 Playful
-            </button>
-            <button
-              type="button"
-              onClick={() => setBulkRegenerateTagStyle("neutral")}
-              className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                bulkRegenerateTagStyle === "neutral"
-                  ? "bg-blue-500 text-white border-2 border-blue-400 shadow-lg"
-                  : "bg-white/10 text-white/70 border-2 border-white/20 hover:bg-white/20 hover:text-white"
-              }`}
-            >
-              📝 Neutral
-            </button>
-            <button
-              type="button"
-              onClick={() => setBulkRegenerateTagStyle("seo")}
-              className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                bulkRegenerateTagStyle === "seo"
-                  ? "bg-blue-500 text-white border-2 border-blue-400 shadow-lg"
-                  : "bg-white/10 text-white/70 border-2 border-white/20 hover:bg-white/20 hover:text-white"
-              }`}
-            >
-              🚀 SEO
-            </button>
+      {showBulkRegenerateConfirm && (
+        <ConfirmationModal
+          isOpen={showBulkRegenerateConfirm}
+          title="Regenerate AI Analysis?"
+          message={`Are you sure you want to regenerate AI analysis for ${
+            regenerateSelectedIds.length
+          } image${
+            regenerateSelectedIds.length > 1 ? "s" : ""
+          }? This will overwrite existing descriptions and tags. This action cannot be undone.`}
+          confirmText={`Regenerate ${regenerateSelectedIds.length} image${
+            regenerateSelectedIds.length > 1 ? "s" : ""
+          }`}
+          cancelText="Cancel"
+          onConfirm={handleConfirmBulkRegenerate}
+          onCancel={handleCancelBulkRegenerate}
+          variant="primary"
+          isLoading={isBulkRegenerating}
+        >
+          {/* Tag Style Selector */}
+          <div className="space-y-3">
+            <label className="block text-sm font-medium text-white/90 text-center">
+              Choose Tag Style:
+            </label>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setBulkRegenerateTagStyle("playful")}
+                className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                  bulkRegenerateTagStyle === "playful"
+                    ? "bg-blue-500 text-white border-2 border-blue-400 shadow-lg"
+                    : "bg-white/10 text-white/70 border-2 border-white/20 hover:bg-white/20 hover:text-white"
+                }`}
+              >
+                🎨 Playful
+              </button>
+              <button
+                type="button"
+                onClick={() => setBulkRegenerateTagStyle("neutral")}
+                className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                  bulkRegenerateTagStyle === "neutral"
+                    ? "bg-blue-500 text-white border-2 border-blue-400 shadow-lg"
+                    : "bg-white/10 text-white/70 border-2 border-white/20 hover:bg-white/20 hover:text-white"
+                }`}
+              >
+                📝 Neutral
+              </button>
+              <button
+                type="button"
+                onClick={() => setBulkRegenerateTagStyle("seo")}
+                className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                  bulkRegenerateTagStyle === "seo"
+                    ? "bg-blue-500 text-white border-2 border-blue-400 shadow-lg"
+                    : "bg-white/10 text-white/70 border-2 border-white/20 hover:bg-white/20 hover:text-white"
+                }`}
+              >
+                🚀 SEO
+              </button>
+            </div>
+            <p className="text-xs text-white/50 text-center">
+              {bulkRegenerateTagStyle === "playful" &&
+                "Creative and engaging tags with personality"}
+              {bulkRegenerateTagStyle === "neutral" &&
+                "Professional and straightforward tags"}
+              {bulkRegenerateTagStyle === "seo" &&
+                "Search-optimized tags for better discoverability"}
+            </p>
           </div>
-          <p className="text-xs text-white/50 text-center">
-            {bulkRegenerateTagStyle === "playful" &&
-              "Creative and engaging tags with personality"}
-            {bulkRegenerateTagStyle === "neutral" &&
-              "Professional and straightforward tags"}
-            {bulkRegenerateTagStyle === "seo" &&
-              "Search-optimized tags for better discoverability"}
-          </p>
-        </div>
-      </ConfirmationModal>
+        </ConfirmationModal>
+      )}
     </div>
   );
 };

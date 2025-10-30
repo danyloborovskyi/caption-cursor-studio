@@ -332,7 +332,7 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
       {/* Bulk Delete Checkbox */}
       {/* Custom checkbox for bulk delete */}
       {isBulkDeleteMode && onSelect && (
-        <div className="absolute top-4 left-4 z-10">
+        <div className="absolute top-4 right-4 z-10">
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -365,7 +365,7 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
 
       {/* Custom checkbox for bulk regenerate */}
       {isBulkRegenerateMode && onRegenerateSelect && (
-        <div className="absolute top-4 left-4 z-10">
+        <div className="absolute top-4 right-4 z-10">
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -398,7 +398,7 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
 
       {/* Custom checkbox for bulk download */}
       {isBulkDownloadMode && onDownloadSelect && (
-        <div className="absolute top-4 left-4 z-10">
+        <div className="absolute top-4 right-4 z-10">
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -442,9 +442,9 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
       </div>
 
       {/* Card Content */}
-      <div className="p-6 flex-1 flex flex-col">
+      <div className="p-4 flex-1 flex flex-col">
         {/* Filename */}
-        <div className="mb-3">
+        <div className="mb-2">
           {isEditingFilename ? (
             <>
               <div className="mb-1">
@@ -475,7 +475,7 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
 
         {/* Description */}
         {photo.description && (
-          <div className="mb-3">
+          <div className="mb-2">
             <div className="flex items-start justify-between gap-2 mb-1">
               <span className="text-xs text-white/50 font-light">
                 Description:
@@ -569,7 +569,7 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
 
         {/* Tags */}
         {photo.tags && photo.tags.length > 0 && (
-          <div className="mb-4 flex-1">
+          <div className="mb-3 flex-1">
             <div className="flex items-start justify-between gap-2 mb-2">
               <span className="text-xs text-white/50 font-light">Tags:</span>
               <div className="flex items-center gap-2">
@@ -695,7 +695,7 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
 
         {/* Save/Cancel Buttons - Show when editing */}
         {(isEditingDescription || isEditingTags || isEditingFilename) && (
-          <div className="flex gap-2 mb-3">
+          <div className="flex gap-2 mb-2">
             <Button
               variant="outline"
               size="sm"
@@ -719,24 +719,24 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
 
         {/* Success/Error Messages */}
         {saveSuccess && (
-          <div className="mb-3 p-2 bg-green-500/20 border border-green-500/50 rounded-lg text-xs text-green-300">
+          <div className="mb-2 p-2 bg-green-500/20 border border-green-500/50 rounded-lg text-xs text-green-300">
             ✓ Changes saved successfully!
           </div>
         )}
         {saveError && (
-          <div className="mb-3 p-2 bg-red-500/20 border border-red-500/50 rounded-lg text-xs text-red-300">
+          <div className="mb-2 p-2 bg-red-500/20 border border-red-500/50 rounded-lg text-xs text-red-300">
             {saveError}
           </div>
         )}
 
         {/* Regenerate Messages */}
         {regenerateSuccess && (
-          <div className="mb-3 p-2 bg-green-500/20 border border-green-500/50 rounded-lg text-xs text-green-300">
+          <div className="mb-2 p-2 bg-green-500/20 border border-green-500/50 rounded-lg text-xs text-green-300">
             ✓ AI analysis regenerated successfully!
           </div>
         )}
         {regenerateError && (
-          <div className="mb-3 p-2 bg-red-500/20 border border-red-500/50 rounded-lg text-xs text-red-300">
+          <div className="mb-2 p-2 bg-red-500/20 border border-red-500/50 rounded-lg text-xs text-red-300">
             {regenerateError}
           </div>
         )}
@@ -744,17 +744,17 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
         {/* Action Buttons - Stuck to Bottom */}
         <div className="mt-auto">
           {/* Action Buttons Row */}
-          <div className="flex gap-2">
+          <div className="flex gap-1.5">
             {/* Download Button */}
             <Button
               variant="outline"
               size="sm"
               onClick={handleDownload}
               disabled={isDownloading || isDeleting || isRegenerating}
-              className="flex-1 text-green-300 hover:!text-green-600 hover:!bg-white border-green-300/50 hover:!border-white disabled:opacity-50 transition-colors"
+              className="flex-1 text-green-300 hover:!text-green-600 hover:!bg-white border-green-300/50 hover:!border-white disabled:opacity-50 transition-colors !px-2 !h-8 !text-xs"
             >
               <svg
-                className="w-4 h-4 mr-2"
+                className="w-3.5 h-3.5 mr-1"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -766,7 +766,9 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
                   d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
                 />
               </svg>
-              {isDownloading ? "Downloading..." : "Download"}
+              <span className="truncate">
+                {isDownloading ? "Downloading..." : "Download"}
+              </span>
             </Button>
 
             {/* Regenerate Button */}
@@ -780,10 +782,10 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
                 showConfirmation ||
                 isDownloading
               }
-              className="flex-1 text-blue-300 hover:!text-blue-600 hover:!bg-white border-blue-300/50 hover:!border-white disabled:opacity-50 transition-colors"
+              className="flex-1 text-blue-300 hover:!text-blue-600 hover:!bg-white border-blue-300/50 hover:!border-white disabled:opacity-50 transition-colors !px-2 !h-8 !text-xs"
             >
               <svg
-                className="w-4 h-4 mr-2"
+                className="w-3.5 h-3.5 mr-1"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -795,7 +797,9 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
                   d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                 />
               </svg>
-              {isRegenerating ? "Regenerating..." : "Regenerate"}
+              <span className="truncate">
+                {isRegenerating ? "Regenerating..." : "Regenerate"}
+              </span>
             </Button>
 
             {/* Delete Button */}
@@ -809,10 +813,10 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
                 isRegenerating ||
                 isDownloading
               }
-              className="flex-1 text-red-300 hover:!text-red-600 hover:!bg-white border-red-300/50 hover:!border-white disabled:opacity-50 transition-colors"
+              className="flex-1 text-red-300 hover:!text-red-600 hover:!bg-white border-red-300/50 hover:!border-white disabled:opacity-50 transition-colors !px-2 !h-8 !text-xs"
             >
               <svg
-                className="w-4 h-4 mr-2"
+                className="w-3.5 h-3.5 mr-1"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -824,12 +828,14 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
                   d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
                 />
               </svg>
-              {isDeleting ? "Deleting..." : "Delete"}
+              <span className="truncate">
+                {isDeleting ? "Deleting..." : "Delete"}
+              </span>
             </Button>
           </div>
 
           {/* Dates under delete button */}
-          <div className="flex items-center justify-center gap-4 mt-3 flex-wrap">
+          <div className="flex items-center justify-center gap-4 mt-2 flex-wrap">
             {photo.uploadedAt && (
               <p className="text-white/50 text-xs font-light">
                 Created:{" "}
@@ -914,68 +920,114 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
         </div>
       )}
 
-      {/* Regenerate Confirmation Modal */}
-      <ConfirmationModal
-        isOpen={showRegenerateConfirm}
-        title="Regenerate AI Analysis?"
-        message="This will overwrite the current description and tags with new AI-generated content. This action cannot be undone."
-        confirmText="Regenerate"
-        cancelText="Cancel"
-        onConfirm={handleConfirmRegenerate}
-        onCancel={handleCancelRegenerate}
-        variant="warning"
-        isLoading={isRegenerating}
-      >
-        {/* Tag Style Selector */}
-        <div className="space-y-3">
-          <label className="block text-sm font-medium text-white/90 text-center">
-            Choose Tag Style:
-          </label>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => setSelectedTagStyle("playful")}
-              className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                selectedTagStyle === "playful"
-                  ? "bg-blue-500 text-white border-2 border-blue-400 shadow-lg"
-                  : "bg-white/10 text-white/70 border-2 border-white/20 hover:bg-white/20 hover:text-white"
-              }`}
-            >
-              🎨 Playful
-            </button>
-            <button
-              type="button"
-              onClick={() => setSelectedTagStyle("neutral")}
-              className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                selectedTagStyle === "neutral"
-                  ? "bg-blue-500 text-white border-2 border-blue-400 shadow-lg"
-                  : "bg-white/10 text-white/70 border-2 border-white/20 hover:bg-white/20 hover:text-white"
-              }`}
-            >
-              📝 Neutral
-            </button>
-            <button
-              type="button"
-              onClick={() => setSelectedTagStyle("seo")}
-              className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                selectedTagStyle === "seo"
-                  ? "bg-blue-500 text-white border-2 border-blue-400 shadow-lg"
-                  : "bg-white/10 text-white/70 border-2 border-white/20 hover:bg-white/20 hover:text-white"
-              }`}
-            >
-              🚀 SEO
-            </button>
+      {/* Regenerate Confirmation Overlay */}
+      {showRegenerateConfirm && (
+        <div className="absolute inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-6 animate-fade-in z-10">
+          <div className="text-center max-w-md w-full">
+            {/* Icon */}
+            <div className="flex justify-center mb-4">
+              <div className="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center">
+                <svg
+                  className="w-6 h-6 text-blue-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                  />
+                </svg>
+              </div>
+            </div>
+
+            {/* Title */}
+            <h3 className="text-lg font-semibold text-white mb-2">
+              Regenerate AI Analysis?
+            </h3>
+
+            {/* Message */}
+            <p className="text-white/70 text-sm mb-4 font-light">
+              This will overwrite the current description and tags with new
+              AI-generated content. This action cannot be undone.
+            </p>
+
+            {/* Tag Style Selector */}
+            <div className="space-y-3 mb-4">
+              <label className="block text-sm font-medium text-white/90 text-center">
+                Choose Tag Style:
+              </label>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSelectedTagStyle("playful")}
+                  className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                    selectedTagStyle === "playful"
+                      ? "bg-blue-500 text-white border-2 border-blue-400 shadow-lg"
+                      : "bg-white/10 text-white/70 border-2 border-white/20 hover:bg-white/20 hover:text-white"
+                  }`}
+                >
+                  🎨 Playful
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedTagStyle("neutral")}
+                  className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                    selectedTagStyle === "neutral"
+                      ? "bg-blue-500 text-white border-2 border-blue-400 shadow-lg"
+                      : "bg-white/10 text-white/70 border-2 border-white/20 hover:bg-white/20 hover:text-white"
+                  }`}
+                >
+                  📝 Neutral
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedTagStyle("seo")}
+                  className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                    selectedTagStyle === "seo"
+                      ? "bg-blue-500 text-white border-2 border-blue-400 shadow-lg"
+                      : "bg-white/10 text-white/70 border-2 border-white/20 hover:bg-white/20 hover:text-white"
+                  }`}
+                >
+                  🚀 SEO
+                </button>
+              </div>
+              <p className="text-xs text-white/50 text-center">
+                {selectedTagStyle === "playful" &&
+                  "Creative and engaging tags with personality"}
+                {selectedTagStyle === "neutral" &&
+                  "Professional and straightforward tags"}
+                {selectedTagStyle === "seo" &&
+                  "Search-optimized tags for better discoverability"}
+              </p>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleCancelRegenerate}
+                disabled={isRegenerating}
+                className="flex-1 text-white/80 hover:text-white border-white/30 hover:border-white/50"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={handleConfirmRegenerate}
+                disabled={isRegenerating}
+                className="flex-1 bg-blue-500 hover:bg-blue-600 border-blue-500"
+              >
+                {isRegenerating ? "Regenerating..." : "Regenerate"}
+              </Button>
+            </div>
           </div>
-          <p className="text-xs text-white/50 text-center">
-            {selectedTagStyle === "playful" &&
-              "Creative and engaging tags with personality"}
-            {selectedTagStyle === "neutral" &&
-              "Professional and straightforward tags"}
-            {selectedTagStyle === "seo" &&
-              "Search-optimized tags for better discoverability"}
-          </p>
         </div>
-      </ConfirmationModal>
+      )}
     </div>
   );
 };

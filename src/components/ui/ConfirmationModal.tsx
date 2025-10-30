@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { createPortal } from "react-dom";
 import { Button } from "./Button";
 
 interface ConfirmationModalProps {
@@ -11,7 +12,7 @@ interface ConfirmationModalProps {
   cancelText?: string;
   onConfirm: () => void;
   onCancel: () => void;
-  variant?: "danger" | "warning" | "info";
+  variant?: "danger" | "warning" | "info" | "primary";
   isLoading?: boolean;
   children?: React.ReactNode;
 }
@@ -28,7 +29,13 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   isLoading = false,
   children,
 }) => {
-  if (!isOpen) return null;
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!isOpen || !mounted) return null;
 
   const variantStyles = {
     danger: {
@@ -49,12 +56,18 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
       border: "border-blue-500/50",
       button: "!bg-blue-500 hover:!bg-blue-600",
     },
+    primary: {
+      icon: "text-blue-400",
+      iconBg: "bg-blue-500/20",
+      border: "border-blue-500/50",
+      button: "!bg-blue-500 hover:!bg-blue-600",
+    },
   };
 
   const styles = variantStyles[variant];
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fadeIn">
+  const modalContent = (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 animate-fadeIn">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
@@ -62,7 +75,10 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
       />
 
       {/* Modal */}
-      <div className="relative glass rounded-2xl p-6 max-w-md w-full border border-white/20 shadow-2xl animate-scaleIn">
+      <div
+        className="relative glass rounded-2xl p-6 max-w-md w-full border border-white/20 shadow-2xl animate-scaleIn"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Icon */}
         <div
           className={`w-12 h-12 rounded-full ${styles.iconBg} flex items-center justify-center mb-4 mx-auto`}
@@ -97,7 +113,7 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
               />
             </svg>
           )}
-          {variant === "info" && (
+          {(variant === "info" || variant === "primary") && (
             <svg
               className={`w-6 h-6 ${styles.icon}`}
               fill="none"
@@ -108,7 +124,7 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth={2}
-                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
               />
             </svg>
           )}
@@ -151,4 +167,6 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 };
