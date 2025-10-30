@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
+import Image from "next/image";
 import {
   getFiles,
   deleteFile,
@@ -1423,10 +1424,11 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
                       className="relative rounded-lg overflow-hidden border border-white/20 hover:border-white/40 transition-colors group"
                       style={{ width: "150px", height: "150px" }}
                     >
-                      <img
+                      <Image
                         src={photo.publicUrl}
                         alt={photo.filename}
-                        className="w-full h-full object-cover"
+                        fill
+                        className="object-cover"
                       />
                       {/* Remove button */}
                       <button
@@ -1562,10 +1564,11 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
                       className="relative rounded-lg overflow-hidden border border-white/20 hover:border-white/40 transition-colors group"
                       style={{ width: "150px", height: "150px" }}
                     >
-                      <img
+                      <Image
                         src={photo.publicUrl}
                         alt={photo.filename}
-                        className="w-full h-full object-cover"
+                        fill
+                        className="object-cover"
                       />
                       {/* Remove button */}
                       <button
@@ -1650,10 +1653,11 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
                       className="relative rounded-lg overflow-hidden border border-white/20 hover:border-white/40 transition-colors group"
                       style={{ width: "150px", height: "150px" }}
                     >
-                      <img
+                      <Image
                         src={photo.publicUrl}
                         alt={photo.filename}
-                        className="w-full h-full object-cover"
+                        fill
+                        className="object-cover"
                       />
                       {/* Remove button */}
                       <button
