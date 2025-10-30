@@ -1,5 +1,59 @@
 // const API_BASE_URL = "https://caption-studio-back.onrender.com";
 const API_BASE_URL = "https://caption-studio-back-audit-fix.onrender.com";
+
+// =====================
+// Error Message Helper
+// =====================
+
+/**
+ * Get user-friendly error message based on HTTP status
+ */
+function getUserFriendlyError(status: number, defaultMessage?: string): string {
+  const errorMessages: Record<number, string> = {
+    400: "Invalid request. Please check your input and try again.",
+    401: "Authentication failed. Please log in again.",
+    403: "You don't have permission to perform this action.",
+    404: "The requested resource was not found.",
+    409: "This item already exists. Please try a different one.",
+    413: "File is too large. Please choose a smaller file.",
+    429: "Too many requests. Please wait a moment and try again.",
+    500: "Server error. Please try again later.",
+    502: "Service temporarily unavailable. Please try again later.",
+    503: "Service temporarily unavailable. Please try again later.",
+  };
+
+  return (
+    errorMessages[status] ||
+    defaultMessage ||
+    "Something went wrong. Please try again."
+  );
+}
+
+// =====================
+// Token Expiration Handler
+// =====================
+
+/**
+ * Handle token expiration by clearing storage and redirecting to home immediately
+ */
+function handleTokenExpiration() {
+  if (typeof window !== "undefined") {
+    // Clear tokens
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+
+    // Redirect immediately
+    window.location.href = "/";
+  }
+}
+
+/**
+ * Check if response indicates token expiration
+ */
+function isTokenExpired(response: Response): boolean {
+  return response.status === 401;
+}
+
 // =====================
 // Auth Types
 // =====================
@@ -76,9 +130,13 @@ export async function signup(
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(
-        errorData.error || `HTTP error! status: ${response.status}`
-      );
+      const errorMessage =
+        errorData.error ||
+        getUserFriendlyError(
+          response.status,
+          "Registration failed. Please try again."
+        );
+      throw new Error(errorMessage);
     }
 
     const data = await response.json();
@@ -124,9 +182,13 @@ export async function login(
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(
-        errorData.error || `HTTP error! status: ${response.status}`
-      );
+      const errorMessage =
+        errorData.error ||
+        getUserFriendlyError(
+          response.status,
+          "Login failed. Please check your credentials and try again."
+        );
+      throw new Error(errorMessage);
     }
 
     const data = await response.json();
@@ -628,8 +690,17 @@ export async function bulkUploadAndAnalyzeImages(
     );
 
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`HTTP ${response.status}: ${errorText}`);
+      if (isTokenExpired(response)) {
+        handleTokenExpiration();
+        throw new Error("Session expired");
+      }
+      await response.text(); // Read response to clear stream
+      throw new Error(
+        getUserFriendlyError(
+          response.status,
+          "Failed to upload images. Please try again."
+        )
+      );
     }
 
     const data = await response.json();
@@ -696,9 +767,15 @@ export async function getFiles(
     });
 
     if (!response.ok) {
+      if (isTokenExpired(response)) {
+        handleTokenExpiration();
+        throw new Error("Session expired");
+      }
       const errorText = await response.text();
       console.error(`API Error: ${response.status} - ${errorText}`);
-      throw new Error(`HTTP error! status: ${response.status}`);
+      throw new Error(
+        getUserFriendlyError(response.status, "Failed to load gallery")
+      );
     }
 
     const data = await response.json();
@@ -792,9 +869,15 @@ export async function deleteFile(fileId: string): Promise<DeleteResponse> {
     });
 
     if (!response.ok) {
+      if (isTokenExpired(response)) {
+        handleTokenExpiration();
+        throw new Error("Session expired");
+      }
       const errorText = await response.text();
       console.error(`Delete Error: ${response.status} - ${errorText}`);
-      throw new Error(`HTTP error! status: ${response.status}`);
+      throw new Error(
+        getUserFriendlyError(response.status, "Failed to delete file")
+      );
     }
 
     const data = await response.json();
@@ -833,9 +916,15 @@ export async function bulkDeleteFiles(ids: number[]): Promise<DeleteResponse> {
     });
 
     if (!response.ok) {
+      if (isTokenExpired(response)) {
+        handleTokenExpiration();
+        throw new Error("Session expired");
+      }
       const errorText = await response.text();
       console.error(`Bulk Delete Error: ${response.status} - ${errorText}`);
-      throw new Error(`HTTP error! status: ${response.status}`);
+      throw new Error(
+        getUserFriendlyError(response.status, "Failed to delete files")
+      );
     }
 
     const data = await response.json();
@@ -885,9 +974,18 @@ export async function regenerateFile(
     console.log(`📡 Response status: ${response.status}`);
 
     if (!response.ok) {
+      if (isTokenExpired(response)) {
+        handleTokenExpiration();
+        throw new Error("Session expired");
+      }
       const errorText = await response.text();
       console.error(`❌ Regenerate Error: ${response.status} - ${errorText}`);
-      throw new Error(`HTTP error! status: ${response.status}`);
+      throw new Error(
+        getUserFriendlyError(
+          response.status,
+          "Failed to regenerate AI analysis"
+        )
+      );
     }
 
     const data = await response.json();
@@ -926,9 +1024,15 @@ export async function downloadFile(fileId: string): Promise<Blob | null> {
     );
 
     if (!response.ok) {
+      if (isTokenExpired(response)) {
+        handleTokenExpiration();
+        throw new Error("Session expired");
+      }
       const errorText = await response.text();
       console.error(`Download Error: ${response.status} - ${errorText}`);
-      throw new Error(`HTTP error! status: ${response.status}`);
+      throw new Error(
+        getUserFriendlyError(response.status, "Failed to download file")
+      );
     }
 
     const blob = await response.blob();
@@ -964,9 +1068,15 @@ export async function bulkDownloadFiles(ids: string[]): Promise<Blob | null> {
     });
 
     if (!response.ok) {
+      if (isTokenExpired(response)) {
+        handleTokenExpiration();
+        throw new Error("Session expired");
+      }
       const errorText = await response.text();
       console.error(`Bulk Download Error: ${response.status} - ${errorText}`);
-      throw new Error(`HTTP error! status: ${response.status}`);
+      throw new Error(
+        getUserFriendlyError(response.status, "Failed to download files")
+      );
     }
 
     const blob = await response.blob();
@@ -1008,9 +1118,15 @@ export async function bulkRegenerateFiles(
     });
 
     if (!response.ok) {
+      if (isTokenExpired(response)) {
+        handleTokenExpiration();
+        throw new Error("Session expired");
+      }
       const errorText = await response.text();
       console.error(`Bulk Regenerate Error: ${response.status} - ${errorText}`);
-      throw new Error(`HTTP error! status: ${response.status}`);
+      throw new Error(
+        getUserFriendlyError(response.status, "Failed to regenerate files")
+      );
     }
 
     const data = await response.json();
@@ -1051,9 +1167,15 @@ export async function updateFile(
     });
 
     if (!response.ok) {
+      if (isTokenExpired(response)) {
+        handleTokenExpiration();
+        throw new Error("Session expired");
+      }
       const errorText = await response.text();
       console.error(`Update Error: ${response.status} - ${errorText}`);
-      throw new Error(`HTTP error! status: ${response.status}`);
+      throw new Error(
+        getUserFriendlyError(response.status, "Failed to update file")
+      );
     }
 
     const data = await response.json();
@@ -1110,9 +1232,15 @@ export async function searchFiles(
     );
 
     if (!response.ok) {
+      if (isTokenExpired(response)) {
+        handleTokenExpiration();
+        throw new Error("Session expired");
+      }
       const errorText = await response.text();
       console.error(`Search Error: ${response.status} - ${errorText}`);
-      throw new Error(`HTTP error! status: ${response.status}`);
+      throw new Error(
+        getUserFriendlyError(response.status, "Search failed. Please try again")
+      );
     }
 
     const data = await response.json();
