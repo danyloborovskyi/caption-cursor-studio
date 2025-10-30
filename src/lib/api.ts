@@ -895,7 +895,7 @@ export async function deleteFile(fileId: string): Promise<DeleteResponse> {
 /**
  * Bulk delete multiple files
  */
-export async function bulkDeleteFiles(ids: number[]): Promise<DeleteResponse> {
+export async function bulkDeleteFiles(ids: string[]): Promise<DeleteResponse> {
   try {
     const token = localStorage.getItem("access_token");
 

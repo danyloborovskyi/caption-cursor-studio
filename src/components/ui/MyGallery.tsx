@@ -594,18 +594,17 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
 
       if (result.success && result.data) {
         // Update the photos with regenerated data
-        const regeneratedData = result.data.regenerated || [];
+        const regeneratedData = (result.data.regenerated ||
+          []) as unknown as Array<{
+          id: string;
+          description: string;
+          tags: string[];
+          updatedAt: string;
+        }>;
 
         setPhotos((prev) =>
           prev.map((photo) => {
-            const regenerated = regeneratedData.find(
-              (r: {
-                id: string;
-                description: string;
-                tags: string[];
-                updatedAt: string;
-              }) => r.id === photo.id
-            );
+            const regenerated = regeneratedData.find((r) => r.id === photo.id);
             if (regenerated) {
               return {
                 ...photo,
@@ -1489,7 +1488,7 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
           confirmClassName="!bg-green-500 hover:!bg-green-600"
         >
           {/* Preview of selected images */}
-          <div className="mt-4 max-h-80 overflow-y-auto">
+          <div className="mt-4 max-h-[500px] overflow-y-auto">
             <p className="text-sm text-white/70 mb-3 text-center">
               Preview of selected images ({downloadSelectedIds.length}{" "}
               selected):
@@ -1499,20 +1498,48 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
                 No images selected
               </p>
             ) : (
-              <div className="grid grid-cols-4 gap-3">
+              <div className="flex flex-wrap gap-3 justify-center">
                 {photos
                   .filter((photo) => downloadSelectedIds.includes(photo.id))
                   .map((photo) => (
                     <div
                       key={photo.id}
-                      className="relative aspect-square rounded-lg overflow-hidden border border-white/20 hover:border-white/40 transition-colors group"
+                      className="relative rounded-lg overflow-hidden border border-white/20 hover:border-white/40 transition-colors group"
+                      style={{ width: "150px", height: "150px" }}
                     >
                       <img
                         src={photo.publicUrl}
                         alt={photo.filename}
                         className="w-full h-full object-cover"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                      {/* Remove button */}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setDownloadSelectedIds((prev) =>
+                            prev.filter((id) => id !== photo.id)
+                          );
+                        }}
+                        className="absolute top-2 right-2 w-6 h-6 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                        title="Remove from download"
+                      >
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M6 18L18 6M6 6l12 12"
+                          />
+                        </svg>
+                      </button>
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                         <div className="absolute bottom-0 left-0 right-0 p-2">
                           <p className="text-xs text-white truncate font-medium">
                             {photo.filename}

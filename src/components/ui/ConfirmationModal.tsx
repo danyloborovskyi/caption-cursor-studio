@@ -78,7 +78,9 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
 
       {/* Modal */}
       <div
-        className="relative glass rounded-2xl p-6 max-w-md w-full border border-white/20 shadow-2xl animate-scaleIn"
+        className={`relative glass rounded-2xl p-6 w-full border border-white/20 shadow-2xl animate-scaleIn ${
+          children ? "max-w-4xl" : "max-w-md"
+        }`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Icon */}
