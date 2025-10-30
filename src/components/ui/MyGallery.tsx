@@ -76,12 +76,12 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
 
   // Bulk delete state
   const [isBulkDeleteMode, setIsBulkDeleteMode] = useState(false);
-  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
 
   // Bulk regenerate state
   const [isBulkRegenerateMode, setIsBulkRegenerateMode] = useState(false);
-  const [regenerateSelectedIds, setRegenerateSelectedIds] = useState<number[]>(
+  const [regenerateSelectedIds, setRegenerateSelectedIds] = useState<string[]>(
     []
   );
   const [isBulkRegenerating, setIsBulkRegenerating] = useState(false);
@@ -91,13 +91,14 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
 
   // Bulk download state
   const [isBulkDownloadMode, setIsBulkDownloadMode] = useState(false);
-  const [downloadSelectedIds, setDownloadSelectedIds] = useState<number[]>([]);
+  const [downloadSelectedIds, setDownloadSelectedIds] = useState<string[]>([]);
   const [isBulkDownloading, setIsBulkDownloading] = useState(false);
 
   // Confirmation modals
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
   const [showBulkRegenerateConfirm, setShowBulkRegenerateConfirm] =
     useState(false);
+  const [showBulkDownloadConfirm, setShowBulkDownloadConfirm] = useState(false);
 
   const fetchPhotos = useCallback(
     async (page = 1, showLoading = true) => {
@@ -490,7 +491,7 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
     setSelectedIds([]); // Clear selections when toggling
   };
 
-  const handleSelectImage = (id: number) => {
+  const handleSelectImage = (id: string) => {
     setSelectedIds((prev) =>
       prev.includes(id) ? prev.filter((sid) => sid !== id) : [...prev, id]
     );
@@ -554,7 +555,7 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
     setRegenerateSelectedIds([]);
   };
 
-  const handleSelectImageForRegenerate = (id: number) => {
+  const handleSelectImageForRegenerate = (id: string) => {
     setRegenerateSelectedIds((prev) =>
       prev.includes(id)
         ? prev.filter((selectedId) => selectedId !== id)
@@ -599,7 +600,7 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
           prev.map((photo) => {
             const regenerated = regeneratedData.find(
               (r: {
-                id: number;
+                id: string;
                 description: string;
                 tags: string[];
                 updatedAt: string;
@@ -658,7 +659,7 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
     setDownloadSelectedIds([]);
   };
 
-  const handleSelectImageForDownload = (id: number) => {
+  const handleSelectImageForDownload = (id: string) => {
     setDownloadSelectedIds((prev) =>
       prev.includes(id)
         ? prev.filter((selectedId) => selectedId !== id)
@@ -674,9 +675,13 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
     }
   };
 
-  const handleBulkDownload = async () => {
+  const handleBulkDownload = () => {
     if (downloadSelectedIds.length === 0) return;
+    setShowBulkDownloadConfirm(true);
+  };
 
+  const executeBulkDownload = async () => {
+    setShowBulkDownloadConfirm(false);
     setIsBulkDownloading(true);
 
     try {
@@ -1218,25 +1223,29 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
         )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          {photos.map((photo) => (
-            <MyImageCard
-              key={photo.id}
-              photo={photo}
-              isDeleting={deletingPhotoId === photo.id}
-              onDelete={handleDelete}
-              onUpdate={handleUpdate}
-              searchQuery={isSearchMode ? searchQuery : ""}
-              isBulkDeleteMode={isBulkDeleteMode}
-              isSelected={selectedIds.includes(photo.id)}
-              onSelect={handleSelectImage}
-              isBulkRegenerateMode={isBulkRegenerateMode}
-              isRegenerateSelected={regenerateSelectedIds.includes(photo.id)}
-              onRegenerateSelect={handleSelectImageForRegenerate}
-              isBulkDownloadMode={isBulkDownloadMode}
-              isDownloadSelected={downloadSelectedIds.includes(photo.id)}
-              onDownloadSelect={handleSelectImageForDownload}
-            />
-          ))}
+          {photos.map((photo) => {
+            const isDownloadSelected = downloadSelectedIds.includes(photo.id);
+
+            return (
+              <MyImageCard
+                key={photo.id}
+                photo={photo}
+                isDeleting={deletingPhotoId === photo.id}
+                onDelete={handleDelete}
+                onUpdate={handleUpdate}
+                searchQuery={isSearchMode ? searchQuery : ""}
+                isBulkDeleteMode={isBulkDeleteMode}
+                isSelected={selectedIds.includes(photo.id)}
+                onSelect={handleSelectImage}
+                isBulkRegenerateMode={isBulkRegenerateMode}
+                isRegenerateSelected={regenerateSelectedIds.includes(photo.id)}
+                onRegenerateSelect={handleSelectImageForRegenerate}
+                isBulkDownloadMode={isBulkDownloadMode}
+                isDownloadSelected={isDownloadSelected}
+                onDownloadSelect={handleSelectImageForDownload}
+              />
+            );
+          })}
         </div>
       </div>
 
@@ -1457,6 +1466,66 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
               {bulkRegenerateTagStyle === "seo" &&
                 "Search-optimized tags for better discoverability"}
             </p>
+          </div>
+        </ConfirmationModal>
+      )}
+
+      {/* Bulk Download Confirmation Modal */}
+      {showBulkDownloadConfirm && (
+        <ConfirmationModal
+          isOpen={showBulkDownloadConfirm}
+          title="Download Images?"
+          message={`Ready to download ${downloadSelectedIds.length} image${
+            downloadSelectedIds.length > 1 ? "s" : ""
+          } as a ZIP file.`}
+          confirmText={`Download ${downloadSelectedIds.length} image${
+            downloadSelectedIds.length > 1 ? "s" : ""
+          }`}
+          cancelText="Cancel"
+          onConfirm={executeBulkDownload}
+          onCancel={() => setShowBulkDownloadConfirm(false)}
+          variant="primary"
+          isLoading={isBulkDownloading}
+          confirmClassName="!bg-green-500 hover:!bg-green-600"
+        >
+          {/* Preview of selected images */}
+          <div className="mt-4 max-h-80 overflow-y-auto">
+            <p className="text-sm text-white/70 mb-3 text-center">
+              Preview of selected images ({downloadSelectedIds.length}{" "}
+              selected):
+            </p>
+            {downloadSelectedIds.length === 0 ? (
+              <p className="text-sm text-white/50 text-center py-4">
+                No images selected
+              </p>
+            ) : (
+              <div className="grid grid-cols-4 gap-3">
+                {photos
+                  .filter((photo) => downloadSelectedIds.includes(photo.id))
+                  .map((photo) => (
+                    <div
+                      key={photo.id}
+                      className="relative aspect-square rounded-lg overflow-hidden border border-white/20 hover:border-white/40 transition-colors group"
+                    >
+                      <img
+                        src={photo.publicUrl}
+                        alt={photo.filename}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="absolute bottom-0 left-0 right-0 p-2">
+                          <p className="text-xs text-white truncate font-medium">
+                            {photo.filename}
+                          </p>
+                          <p className="text-xs text-white/60">
+                            {photo.fileSizeMB} MB
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            )}
           </div>
         </ConfirmationModal>
       )}

@@ -15,6 +15,7 @@ interface ConfirmationModalProps {
   variant?: "danger" | "warning" | "info" | "primary";
   isLoading?: boolean;
   children?: React.ReactNode;
+  confirmClassName?: string;
 }
 
 export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
@@ -28,6 +29,7 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   variant = "warning",
   isLoading = false,
   children,
+  confirmClassName,
 }) => {
   const [mounted, setMounted] = React.useState(false);
 
@@ -159,7 +161,7 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
             size="sm"
             onClick={onConfirm}
             disabled={isLoading}
-            className={`flex-1 ${styles.button}`}
+            className={`flex-1 ${styles.button} ${confirmClassName || ""}`}
           >
             {isLoading ? "Processing..." : confirmText}
           </Button>

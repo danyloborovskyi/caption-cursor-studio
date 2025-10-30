@@ -14,13 +14,13 @@ interface MyImageCardProps {
   onUpdate?: (updatedPhoto: FileItem) => void;
   isBulkDeleteMode?: boolean;
   isSelected?: boolean;
-  onSelect?: (id: number) => void;
+  onSelect?: (id: string) => void;
   isBulkRegenerateMode?: boolean;
   isRegenerateSelected?: boolean;
-  onRegenerateSelect?: (id: number) => void;
+  onRegenerateSelect?: (id: string) => void;
   isBulkDownloadMode?: boolean;
   isDownloadSelected?: boolean;
-  onDownloadSelect?: (id: number) => void;
+  onDownloadSelect?: (id: string) => void;
 }
 
 export const MyImageCard: React.FC<MyImageCardProps> = ({
@@ -332,9 +332,14 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
       {/* Bulk Delete Checkbox */}
       {/* Custom checkbox for bulk delete */}
       {isBulkDeleteMode && onSelect && (
-        <div className="absolute top-4 right-4 z-10">
+        <div
+          className="absolute top-4 right-4 z-10"
+          onClick={(e) => e.stopPropagation()}
+        >
           <button
+            type="button"
             onClick={(e) => {
+              e.preventDefault();
               e.stopPropagation();
               onSelect(photo.id);
             }}
@@ -365,9 +370,14 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
 
       {/* Custom checkbox for bulk regenerate */}
       {isBulkRegenerateMode && onRegenerateSelect && (
-        <div className="absolute top-4 right-4 z-10">
+        <div
+          className="absolute top-4 right-4 z-10"
+          onClick={(e) => e.stopPropagation()}
+        >
           <button
+            type="button"
             onClick={(e) => {
+              e.preventDefault();
               e.stopPropagation();
               onRegenerateSelect(photo.id);
             }}
@@ -398,9 +408,14 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
 
       {/* Custom checkbox for bulk download */}
       {isBulkDownloadMode && onDownloadSelect && (
-        <div className="absolute top-4 right-4 z-10">
+        <div
+          className="absolute top-4 right-4 z-20"
+          onClick={(e) => e.stopPropagation()}
+        >
           <button
+            type="button"
             onClick={(e) => {
+              e.preventDefault();
               e.stopPropagation();
               onDownloadSelect(photo.id);
             }}
