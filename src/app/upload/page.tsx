@@ -1,26 +1,54 @@
 "use client";
 
-import { Gallery } from "@/components";
+import { Gallery, EmailConfirmationHandler } from "@/components";
 import { BulkUpload } from "@/components/ui/BulkUpload";
 import { useAuth } from "@/lib/contexts";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState, Suspense } from "react";
 
 export default function UploadPage() {
   const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
+  const [isProcessingAuth, setIsProcessingAuth] = useState(false);
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
+    // Check if there's a hash (email confirmation tokens)
+    const hash = window.location.hash;
+
+    if (hash && hash.includes("access_token")) {
+      console.log(
+        "🔐 Hash detected on upload page, processing email confirmation"
+      );
+      setIsProcessingAuth(true);
+      return;
+    }
+
+    if (!isLoading && !isAuthenticated && !isProcessingAuth) {
+      // No auth and not processing, redirect to home
       router.push("/");
     }
-  }, [isAuthenticated, isLoading, router]);
+  }, [isAuthenticated, isLoading, isProcessingAuth, router]);
 
-  if (isLoading) {
+  // When user becomes authenticated, clear the processing flag
+  useEffect(() => {
+    if (isAuthenticated && isProcessingAuth) {
+      console.log("✅ User authenticated, clearing processing flag");
+      setIsProcessingAuth(false);
+    }
+  }, [isAuthenticated, isProcessingAuth]);
+
+  if (isLoading || isProcessingAuth) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-white text-xl">Loading...</div>
-      </div>
+      <>
+        <Suspense fallback={null}>
+          <EmailConfirmationHandler />
+        </Suspense>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-white text-xl">
+            {isProcessingAuth ? "Confirming your email..." : "Loading..."}
+          </div>
+        </div>
+      </>
     );
   }
 

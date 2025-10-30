@@ -2,6 +2,8 @@
 
 import { LandingPage } from "@/components";
 import { useAuth } from "@/lib/contexts";
+import { EmailConfirmationHandler } from "@/components/EmailConfirmation";
+import { Suspense } from "react";
 
 export default function Home() {
   const { isLoading } = useAuth();
@@ -14,5 +16,12 @@ export default function Home() {
     );
   }
 
-  return <LandingPage />;
+  return (
+    <>
+      <Suspense fallback={null}>
+        <EmailConfirmationHandler />
+      </Suspense>
+      <LandingPage />
+    </>
+  );
 }

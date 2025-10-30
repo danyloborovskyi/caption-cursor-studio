@@ -15,3 +15,4 @@ export { AuthModal } from "./ui/AuthModal";
 export { Hero } from "./ui/Hero";
 export { AuthSection } from "./ui/AuthSection";
 export { LandingPage } from "./ui/LandingPage";
+export { EmailConfirmationHandler } from "./EmailConfirmation";

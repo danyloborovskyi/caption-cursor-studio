@@ -1,5 +1,5 @@
-const API_BASE_URL = "https://caption-studio-back.onrender.com";
-// const API_BASE_URL = "https://caption-studio-back-audit-fix.onrender.com";
+// const API_BASE_URL = "https://caption-studio-back.onrender.com";
+const API_BASE_URL = "https://caption-studio-back-test.onrender.com";
 
 // =====================
 // Error Message Helper
@@ -95,6 +95,21 @@ export interface SignupCredentials {
 export interface UpdateProfileData {
   username?: string;
   metadata?: Record<string, unknown>;
+}
+
+export interface ConfirmEmailResponse {
+  success: boolean;
+  message?: string;
+  data?: {
+    user: User;
+    session?: {
+      access_token: string;
+      refresh_token?: string;
+      expires_at?: number;
+      expires_in?: number;
+    };
+  };
+  error?: string;
 }
 
 // =====================
@@ -228,6 +243,109 @@ export async function login(
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to login",
+    };
+  }
+}
+
+/**
+ * Confirm email with token from confirmation link
+ */
+export async function confirmEmail(
+  token: string
+): Promise<ConfirmEmailResponse> {
+  try {
+    console.log("🔐 Confirming email with token:", token);
+
+    const response = await fetch(
+      `${API_BASE_URL}/api/auth/confirm-email?token=${token}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        mode: "cors",
+      }
+    );
+
+    console.log("📡 Confirm email response status:", response.status);
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const errorMessage =
+        errorData.error ||
+        getUserFriendlyError(
+          response.status,
+          "Email confirmation failed. The link may be expired or invalid."
+        );
+      throw new Error(errorMessage);
+    }
+
+    const data = await response.json();
+    console.log(
+      "📦 Confirm email response data:",
+      JSON.stringify(data, null, 2)
+    );
+
+    // Store tokens if provided
+    let tokenStored = false;
+    if (data.data?.session?.accessToken) {
+      console.log("💾 Storing accessToken from data.data.session.accessToken");
+      localStorage.setItem("access_token", data.data.session.accessToken);
+      tokenStored = true;
+    } else if (data.data?.session?.access_token) {
+      console.log(
+        "💾 Storing access_token from data.data.session.access_token"
+      );
+      localStorage.setItem("access_token", data.data.session.access_token);
+      tokenStored = true;
+    } else if (data.data?.access_token) {
+      console.log("💾 Storing access_token from data.data.access_token");
+      localStorage.setItem("access_token", data.data.access_token);
+      tokenStored = true;
+    } else if (data.access_token) {
+      console.log("💾 Storing access_token from data.access_token");
+      localStorage.setItem("access_token", data.access_token);
+      tokenStored = true;
+    }
+
+    if (!tokenStored) {
+      console.warn("⚠️ No access token found in response!");
+    }
+
+    // Store refresh_token if available
+    if (data.data?.session?.refreshToken) {
+      console.log("💾 Storing refreshToken");
+      localStorage.setItem("refresh_token", data.data.session.refreshToken);
+    } else if (data.data?.session?.refresh_token) {
+      console.log("💾 Storing refresh_token");
+      localStorage.setItem("refresh_token", data.data.session.refresh_token);
+    } else if (data.data?.refresh_token) {
+      console.log("💾 Storing refresh_token");
+      localStorage.setItem("refresh_token", data.data.refresh_token);
+    } else if (data.refresh_token) {
+      console.log("💾 Storing refresh_token");
+      localStorage.setItem("refresh_token", data.refresh_token);
+    }
+
+    // Also store user_data in localStorage for auth context
+    if (data.data?.user) {
+      console.log("💾 Storing user_data in localStorage");
+      localStorage.setItem("user_data", JSON.stringify(data.data.user));
+    }
+
+    console.log("✅ Email confirmed successfully");
+    console.log("🔑 Tokens in localStorage:", {
+      access_token: localStorage.getItem("access_token") ? "✓" : "✗",
+      refresh_token: localStorage.getItem("refresh_token") ? "✓" : "✗",
+      user_data: localStorage.getItem("user_data") ? "✓" : "✗",
+    });
+
+    return data;
+  } catch (error) {
+    console.error("❌ Error confirming email:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to confirm email",
     };
   }
 }
