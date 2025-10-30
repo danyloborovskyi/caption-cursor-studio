@@ -15,6 +15,12 @@ const nextConfig: NextConfig = {
         port: "",
         pathname: "/uploads/**",
       },
+      {
+        protocol: "https",
+        hostname: "caption-studio-back-test.onrender.com",
+        port: "",
+        pathname: "/**",
+      },
     ],
   },
 };

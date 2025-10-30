@@ -1428,6 +1428,7 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
                         src={photo.publicUrl}
                         alt={photo.filename}
                         fill
+                        unoptimized
                         className="object-cover"
                       />
                       {/* Remove button */}
@@ -1568,6 +1569,7 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
                         src={photo.publicUrl}
                         alt={photo.filename}
                         fill
+                        unoptimized
                         className="object-cover"
                       />
                       {/* Remove button */}
@@ -1657,6 +1659,7 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
                         src={photo.publicUrl}
                         alt={photo.filename}
                         fill
+                        unoptimized
                         className="object-cover"
                       />
                       {/* Remove button */}
