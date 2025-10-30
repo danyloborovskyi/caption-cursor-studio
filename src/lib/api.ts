@@ -1,5 +1,5 @@
-// const API_BASE_URL = "https://caption-studio-back.onrender.com";
-const API_BASE_URL = "https://caption-studio-back-test.onrender.com";
+const API_BASE_URL = "https://caption-studio-back.onrender.com";
+// const API_BASE_URL = "https://caption-studio-back-test.onrender.com";
 
 // =====================
 // Error Message Helper
