@@ -864,20 +864,25 @@ export async function regenerateFile(
       throw new Error("Authentication required");
     }
 
+    const url = `${API_BASE_URL}/api/files/${fileId}/regenerate`;
     console.log(`🔄 Regenerating AI analysis for file ${fileId}`);
+    console.log(`📍 URL: ${url}`);
+    console.log(`🔑 Token present:`, !!token);
 
-    const response = await fetch(
-      `${API_BASE_URL}/api/files/${fileId}/regenerate`,
-      {
-        method: "POST",
-        headers: getAuthHeaders(token),
-        mode: "cors",
-      }
-    );
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        ...getAuthHeaders(token),
+        "Content-Type": "application/json",
+      },
+      mode: "cors",
+    });
+
+    console.log(`📡 Response status: ${response.status}`);
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`Regenerate Error: ${response.status} - ${errorText}`);
+      console.error(`❌ Regenerate Error: ${response.status} - ${errorText}`);
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
@@ -885,7 +890,7 @@ export async function regenerateFile(
     console.log(`✅ AI analysis regenerated:`, data);
     return data;
   } catch (error) {
-    console.error("Error regenerating file:", error);
+    console.error("❌ Error regenerating file:", error);
     return {
       success: false,
       message: "Failed to regenerate AI analysis",
