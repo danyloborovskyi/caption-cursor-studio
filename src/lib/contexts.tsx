@@ -6,6 +6,7 @@ import {
   getCurrentUser as apiGetCurrentUser,
   logout as apiLogout,
 } from "@/lib/api";
+import { isTokenExpired } from "@/lib/security";
 
 // =====================
 // Gallery Context
@@ -79,6 +80,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
       const token = localStorage.getItem("access_token");
       const storedUser = localStorage.getItem("user_data");
+      const tokenExpiry = localStorage.getItem("token_expiry");
+
+      // Check if token is expired before making any requests
+      if (tokenExpiry) {
+        const expiryTimestamp = parseInt(tokenExpiry, 10);
+        if (isTokenExpired(expiryTimestamp)) {
+          console.log("Token has expired, clearing auth data");
+          localStorage.removeItem("access_token");
+          localStorage.removeItem("refresh_token");
+          localStorage.removeItem("user_data");
+          localStorage.removeItem("token_expiry");
+          setUser(null);
+          setIsLoading(false);
+
+          // Redirect to home page if not already there
+          if (
+            typeof window !== "undefined" &&
+            window.location.pathname !== "/"
+          ) {
+            window.location.href = "/";
+          }
+          return;
+        }
+      }
 
       // Only restore user if we have BOTH token and user_data
       if (token && storedUser) {
@@ -90,6 +115,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           localStorage.removeItem("user_data");
           localStorage.removeItem("access_token");
           localStorage.removeItem("refresh_token");
+          localStorage.removeItem("token_expiry");
           setUser(null);
           setIsLoading(false);
           return;
@@ -112,6 +138,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             localStorage.removeItem("access_token");
             localStorage.removeItem("refresh_token");
             localStorage.removeItem("user_data");
+            localStorage.removeItem("token_expiry");
             setUser(null);
 
             // Redirect to home page if not already there
@@ -136,6 +163,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           localStorage.removeItem("access_token");
           localStorage.removeItem("refresh_token");
           localStorage.removeItem("user_data");
+          localStorage.removeItem("token_expiry");
 
           // Redirect to home page
           if (
@@ -148,6 +176,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       } else if (!token && storedUser) {
         // No token but has cached user data - clear the stale data
         localStorage.removeItem("user_data");
+        localStorage.removeItem("token_expiry");
         setUser(null);
       }
 
@@ -172,6 +201,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     // Clear user data on client side only
     if (typeof window !== "undefined") {
       localStorage.removeItem("user_data");
+      localStorage.removeItem("token_expiry");
     }
 
     setUser(null);

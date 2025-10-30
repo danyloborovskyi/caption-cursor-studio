@@ -306,7 +306,9 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
     if (!searchQuery || !searchQuery.trim()) return text;
 
     const query = searchQuery.trim();
-    const regex = new RegExp(`(${query})`, "gi");
+    // Escape special regex characters to prevent ReDoS attacks
+    const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const regex = new RegExp(`(${escapedQuery})`, "gi");
     const parts = text.split(regex);
 
     return (

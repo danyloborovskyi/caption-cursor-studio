@@ -9,6 +9,11 @@ import {
 } from "@/lib/api";
 import { useGallery } from "@/lib/contexts";
 import { Button } from "./Button";
+import {
+  generateSecureId,
+  isValidImageFile,
+  sanitizeFilename,
+} from "@/lib/security";
 
 interface BulkUploadProps {
   className?: string;
@@ -41,7 +46,7 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({
   const createFilePreview = (file: File): SelectedFile => ({
     file,
     previewUrl: URL.createObjectURL(file),
-    id: Math.random().toString(36).substr(2, 9),
+    id: generateSecureId(),
   });
 
   const validateAndAddFiles = useCallback(
@@ -50,16 +55,10 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({
       const validFiles: File[] = [];
 
       for (const file of fileArray) {
-        // Validate file type
-        if (!file.type.startsWith("image/")) {
-          setError(`${file.name} is not a valid image file`);
-          continue;
-        }
-
-        // Validate file size (10MB limit)
-        const maxSize = 10 * 1024 * 1024;
-        if (file.size > maxSize) {
-          setError(`${file.name} is too large (max 10MB)`);
+        // Validate file using security utility
+        const validation = isValidImageFile(file);
+        if (!validation.valid) {
+          setError(`${sanitizeFilename(file.name)}: ${validation.error}`);
           continue;
         }
 

@@ -2,6 +2,7 @@
 
 import React, { useState, useCallback } from "react";
 import { Button } from "./Button";
+import { sanitizeSearchQuery, escapeRegExp } from "@/lib/security";
 
 interface SearchBarProps {
   onSearch: (query: string) => void;
@@ -39,8 +40,11 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   const handleSubmit = useCallback(
     (e: React.FormEvent) => {
       e.preventDefault();
-      if (searchQuery.trim()) {
-        onSearch(searchQuery.trim());
+      const trimmed = searchQuery.trim();
+      if (trimmed) {
+        // Sanitize search query to prevent injection attacks
+        const sanitized = sanitizeSearchQuery(trimmed);
+        onSearch(sanitized);
       }
     },
     [searchQuery, onSearch]
@@ -80,6 +84,8 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           placeholder={placeholder}
           className="w-full pl-12 pr-24 py-3 glass rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
           disabled={isLoading}
+          maxLength={200}
+          autoComplete="off"
         />
 
         <div className="absolute inset-y-0 right-0 pr-2 flex items-center gap-2">
