@@ -21,7 +21,6 @@ export interface SelectedFile {
 export interface UseFileUploadOptions {
   maxFiles?: number;
   maxFileSize?: number;
-  onUploadComplete?: () => void;
   onError?: (error: string) => void;
 }
 
@@ -45,7 +44,6 @@ export function useFileUpload(
   const {
     maxFiles = DEFAULT_MAX_FILES,
     maxFileSize = DEFAULT_MAX_FILE_SIZE,
-    onUploadComplete,
     onError,
   } = options;
 
