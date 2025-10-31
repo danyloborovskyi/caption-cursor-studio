@@ -1,18 +1,41 @@
 # This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
 
-name: Node.js CI
+name: Node.js CI/CD
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
-  build:
-
+  # Code Quality & Security Checks
+  quality:
     runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: TypeScript type check
+        run: npx tsc --noEmit
+
+  # Build and Test Matrix
+  build-and-test:
+    runs-on: ubuntu-latest
+    needs: quality
 
     strategy:
       matrix:
@@ -20,33 +43,60 @@ jobs:
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-    
-    - name: Install dependencies
-      run: npm ci
-    
-    - name: Run linter
-      run: npm run lint
-    
-    - name: Type check
-      run: npx tsc --noEmit
-    
-    - name: Run tests
-      run: npm test -- --run
-    
-    - name: Build application
-      run: npm run build
-    
-    - name: Upload build artifacts
-      if: matrix.node-version == '20.x'
-      uses: actions/upload-artifact@v4
-      with:
-        name: build
-        path: .next/
-        retention-days: 7
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build application
+        run: npm run build --if-present
+
+      - name: Run unit tests
+        run: npm test -- --run
+
+      - name: Generate coverage report
+        if: matrix.node-version == '20.x'
+        run: npm run test:coverage -- --run
+
+      - name: Upload coverage to Codecov
+        if: matrix.node-version == '20.x'
+        uses: codecov/codecov-action@v3
+        with:
+          fail_ci_if_error: false
+
+  # E2E Tests (Optional - can be uncommented when ready)
+  # e2e-tests:
+  #   runs-on: ubuntu-latest
+  #   needs: build-and-test
+  #
+  #   steps:
+  #   - uses: actions/checkout@v4
+  #
+  #   - name: Setup Node.js
+  #     uses: actions/setup-node@v4
+  #     with:
+  #       node-version: '20.x'
+  #       cache: 'npm'
+  #
+  #   - name: Install dependencies
+  #     run: npm ci
+  #
+  #   - name: Install Playwright browsers
+  #     run: npx playwright install --with-deps
+  #
+  #   - name: Run E2E tests
+  #     run: npm run test:e2e
+  #
+  #   - name: Upload test results
+  #     if: always()
+  #     uses: actions/upload-artifact@v3
+  #     with:
+  #       name: playwright-report
+  #       path: playwright-report/
+  #       retention-days: 30
