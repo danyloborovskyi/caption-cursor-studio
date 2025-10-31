@@ -156,9 +156,8 @@ export const STORAGE_KEYS = {
 
 export const ROUTES = {
   HOME: "/",
-  GALLERY: "/gallery",
-  MY_GALLERY: "/gallery",
   UPLOAD: "/upload",
+  MY_GALLERY: "/upload", // My Gallery is now on the upload page
   LOGIN: "/",
   SIGNUP: "/",
 } as const;

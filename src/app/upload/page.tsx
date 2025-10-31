@@ -1,7 +1,8 @@
 "use client";
 
-import { Gallery, EmailConfirmationHandler } from "@/components";
+import { EmailConfirmationHandler } from "@/components";
 import { BulkUpload } from "@/components/ui/BulkUpload";
+import { MyGallery } from "@/components/ui/MyGallery";
 import { useAuth } from "@/lib/contexts";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, Suspense } from "react";
@@ -10,6 +11,7 @@ export default function UploadPage() {
   const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
   const [isProcessingAuth, setIsProcessingAuth] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     // Check if there's a hash (email confirmation tokens)
@@ -74,14 +76,16 @@ export default function UploadPage() {
           <BulkUpload
             onUploadSuccess={() => {
               console.log("Upload completed successfully!");
+              // Refresh the gallery to show newly uploaded images
+              setRefreshKey((prev) => prev + 1);
             }}
           />
         </div>
       </section>
 
-      {/* Gallery Section */}
+      {/* My Gallery Section - Shows user's uploaded images */}
       <section className="mb-16">
-        <Gallery />
+        <MyGallery key={refreshKey} />
       </section>
     </main>
   );
