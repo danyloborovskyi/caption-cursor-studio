@@ -207,50 +207,50 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({
   return (
     <div className={`w-full ${className}`}>
       {/* Tag Style Selector */}
-      <div className="mb-6">
-        <label className="block text-sm font-medium text-white mb-3">
+      <div className="mb-4 sm:mb-6">
+        <label className="block text-xs sm:text-sm font-medium text-white mb-2 sm:mb-3">
           Tag Style
         </label>
-        <div className="flex gap-3">
+        <div className="grid grid-cols-3 gap-2 sm:gap-3">
           <button
             type="button"
             onClick={() => setTagStyle("neutral")}
-            className={`flex-1 px-4 py-3 rounded-lg text-sm font-medium transition-all cursor-pointer ${
+            className={`px-2 sm:px-4 py-2 sm:py-3 rounded-lg text-xs sm:text-sm font-medium transition-all cursor-pointer min-h-[60px] sm:min-h-0 ${
               tagStyle === "neutral"
                 ? "bg-blue-500 text-white shadow-lg shadow-blue-500/30"
-                : "glass text-white/70 hover:text-white"
+                : "glass text-white/70 hover:text-white active:scale-95"
             }`}
           >
-            <div className="font-semibold">Neutral</div>
-            <div className="text-xs opacity-80 mt-1">
+            <div className="font-semibold text-sm sm:text-base">Neutral</div>
+            <div className="text-[10px] sm:text-xs opacity-80 mt-0.5 sm:mt-1 hidden sm:block">
               Professional, balanced descriptions
             </div>
           </button>
           <button
             type="button"
             onClick={() => setTagStyle("playful")}
-            className={`flex-1 px-4 py-3 rounded-lg text-sm font-medium transition-all cursor-pointer ${
+            className={`px-2 sm:px-4 py-2 sm:py-3 rounded-lg text-xs sm:text-sm font-medium transition-all cursor-pointer min-h-[60px] sm:min-h-0 ${
               tagStyle === "playful"
                 ? "bg-blue-500 text-white shadow-lg shadow-blue-500/30"
-                : "glass text-white/70 hover:text-white"
+                : "glass text-white/70 hover:text-white active:scale-95"
             }`}
           >
-            <div className="font-semibold">Playful</div>
-            <div className="text-xs opacity-80 mt-1">
+            <div className="font-semibold text-sm sm:text-base">Playful</div>
+            <div className="text-[10px] sm:text-xs opacity-80 mt-0.5 sm:mt-1 hidden sm:block">
               Creative, engaging language
             </div>
           </button>
           <button
             type="button"
             onClick={() => setTagStyle("seo")}
-            className={`flex-1 px-4 py-3 rounded-lg text-sm font-medium transition-all cursor-pointer ${
+            className={`px-2 sm:px-4 py-2 sm:py-3 rounded-lg text-xs sm:text-sm font-medium transition-all cursor-pointer min-h-[60px] sm:min-h-0 ${
               tagStyle === "seo"
                 ? "bg-blue-500 text-white shadow-lg shadow-blue-500/30"
-                : "glass text-white/70 hover:text-white"
+                : "glass text-white/70 hover:text-white active:scale-95"
             }`}
           >
-            <div className="font-semibold">SEO</div>
-            <div className="text-xs opacity-80 mt-1">
+            <div className="font-semibold text-sm sm:text-base">SEO</div>
+            <div className="text-[10px] sm:text-xs opacity-80 mt-0.5 sm:mt-1 hidden sm:block">
               Search-optimized keywords
             </div>
           </button>
@@ -260,9 +260,9 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({
       {/* Upload Area */}
       <div
         className={`
-          relative border-2 border-dashed rounded-lg p-6 text-center transition-colors mb-4
+          relative border-2 border-dashed rounded-lg p-4 sm:p-6 text-center transition-colors mb-3 sm:mb-4 min-h-[180px] sm:min-h-0
           ${isDragOver ? "border-blue-500 bg-blue-50/10" : "border-white/30"}
-          hover:border-white/50
+          hover:border-white/50 active:border-blue-400
         `}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
@@ -277,8 +277,8 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
           disabled={isLoading || selectedFiles.length >= 10}
         />
-        <div className="space-y-3">
-          <div className="mx-auto w-10 h-10 text-white/60">
+        <div className="space-y-2 sm:space-y-3">
+          <div className="mx-auto w-8 h-8 sm:w-10 sm:h-10 text-white/60">
             <svg
               fill="none"
               stroke="currentColor"
@@ -294,28 +294,27 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({
             </svg>
           </div>
           <div>
-            <p className="text-lg font-light text-white">
-              Drop up to 10 images here
+            <p className="text-base sm:text-lg font-light text-white">
+              Drop up to 10 images
             </p>
-            <p className="text-sm text-white/60">or click to select files</p>
+            <p className="text-xs sm:text-sm text-white/60 mt-1">or click to select files</p>
           </div>
-          <p className="text-xs text-white/50">
-            Supports: JPG, PNG, GIF, WebP (max 10MB each) •{" "}
-            {selectedFiles.length}/10 selected
+          <p className="text-[10px] sm:text-xs text-white/50 px-2">
+            Supports: JPG, PNG, GIF, WebP (max 10MB each) • {selectedFiles.length}/10 selected
           </p>
         </div>
       </div>
 
       {/* Selected Files Preview */}
       {selectedFiles.length > 0 && (
-        <div className="mb-6">
-          <div className="mb-4">
-            <h4 className="font-light text-white text-lg">
+        <div className="mb-4 sm:mb-6">
+          <div className="mb-3 sm:mb-4">
+            <h4 className="font-light text-white text-base sm:text-lg">
               Selected Images ({selectedFiles.length})
             </h4>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6">
             {selectedFiles.map((fileObj) => (
               <div
                 key={fileObj.id}
@@ -385,18 +384,19 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({
                     </div>
                   )}
                 </div>
-                <div className="p-3">
-                  <p className="text-sm font-light text-white truncate">
+                <div className="p-2 sm:p-3">
+                  <p className="text-xs sm:text-sm font-light text-white truncate">
                     {fileObj.file.name}
                   </p>
-                  <p className="text-xs text-white/60">
+                  <p className="text-[10px] sm:text-xs text-white/60">
                     {(fileObj.file.size / 1024 / 1024).toFixed(2)} MB
                   </p>
                 </div>
                 {!isLoading && !isWaitingForAnalysis && (
                   <button
                     onClick={() => handleRemoveFile(fileObj.id)}
-                    className="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-600 transition-colors cursor-pointer"
+                    className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 w-7 h-7 sm:w-6 sm:h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-base sm:text-xs hover:bg-red-600 active:scale-95 transition-all cursor-pointer shadow-lg"
+                    aria-label="Remove file"
                   >
                     ×
                   </button>
@@ -406,25 +406,31 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center justify-center gap-3">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2 sm:gap-3">
             {!isLoading && !isWaitingForAnalysis && (
               <>
                 <Button
                   onClick={uploadFiles}
                   variant="primary"
-                  className="px-8 py-3 text-base"
+                  className="px-6 sm:px-8 py-3 text-sm sm:text-base min-h-[48px]"
+                  fullWidth
                 >
                   Analyze All Images
                 </Button>
-                <Button onClick={clearAll} variant="outline" className="px-6">
+                <Button 
+                  onClick={clearAll} 
+                  variant="outline" 
+                  className="px-6 py-3 text-sm sm:text-base min-h-[48px]"
+                  fullWidth
+                >
                   Clear All
                 </Button>
               </>
             )}
             {isWaitingForAnalysis && (
-              <div className="flex items-center gap-2 text-blue-400">
-                <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-400/30 border-t-blue-400"></div>
-                <span className="font-medium">AI Analysis in progress...</span>
+              <div className="flex items-center justify-center gap-2 text-blue-400 py-3">
+                <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-2 border-blue-400/30 border-t-blue-400"></div>
+                <span className="font-medium text-sm sm:text-base">AI Analysis in progress...</span>
               </div>
             )}
           </div>
@@ -433,7 +439,7 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({
 
       {/* Loading State */}
       {isLoading && (
-        <div className="mb-6">
+        <div className="mb-4 sm:mb-6">
           <LoadingState
             message={`Uploading and analyzing ${selectedFiles.length} image${
               selectedFiles.length !== 1 ? "s" : ""
@@ -445,7 +451,7 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({
 
       {/* Success Message */}
       {successMessage && (
-        <div className="p-4 glass rounded-lg mb-6 border border-green-500/30">
+        <div className="p-3 sm:p-4 glass rounded-lg mb-4 sm:mb-6 border border-green-500/30">
           <div className="flex items-start space-x-3">
             <svg
               className="w-5 h-5 text-green-400 mt-0.5"
