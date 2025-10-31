@@ -49,7 +49,9 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
   return (
     <div
       ref={dropdownRef}
-      className="flex items-center gap-1.5 sm:gap-2 glass rounded-lg sm:rounded-xl px-2 py-1.5 sm:px-4 sm:py-2 border border-white/20 relative"
+      className={`flex items-center gap-1.5 sm:gap-2 glass rounded-lg sm:rounded-xl px-2 py-1.5 sm:px-4 sm:py-2 border border-white/20 relative ${
+        isOpen ? "z-[100]" : "z-10"
+      }`}
     >
       {label && (
         <label
@@ -85,7 +87,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
         </button>
 
         {isOpen && (
-          <div className="absolute top-full left-0 right-0 mt-1.5 sm:mt-2 bg-[#1a1625] border border-white/30 rounded-lg shadow-2xl shadow-black/50 overflow-hidden z-50 backdrop-blur-xl">
+          <div className="absolute top-full left-0 right-0 mt-1.5 sm:mt-2 bg-[#1a1625] border border-white/30 rounded-lg shadow-2xl shadow-black/50 overflow-hidden z-[110] backdrop-blur-xl">
             {options.map((option) => (
               <button
                 key={option.value}
