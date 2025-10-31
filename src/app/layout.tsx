@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components";
 import { AuthProvider, GalleryProvider } from "@/lib/contexts";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -25,14 +26,16 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <AuthProvider>
-          <GalleryProvider>
-            <div className="min-h-screen relative">
-              <Header />
-              {children}
-            </div>
-          </GalleryProvider>
-        </AuthProvider>
+        <ErrorBoundary>
+          <AuthProvider>
+            <GalleryProvider>
+              <div className="min-h-screen relative">
+                <Header />
+                {children}
+              </div>
+            </GalleryProvider>
+          </AuthProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );
