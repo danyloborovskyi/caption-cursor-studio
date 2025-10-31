@@ -458,9 +458,9 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
       </div>
 
       {/* Card Content */}
-      <div className="px-4 py-2 flex-1 flex flex-col">
+      <div className="px-3 py-1.5 sm:px-4 sm:py-2 flex-1 flex flex-col">
         {/* Filename */}
-        <div className="mb-2">
+        <div className="mb-1.5 sm:mb-2">
           {isEditingFilename ? (
             <>
               <div className="mb-1">
@@ -491,8 +491,8 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
 
         {/* Description */}
         {photo.description && (
-          <div className="mb-2">
-            <div className="flex items-start justify-between gap-2 mb-1">
+          <div className="mb-1.5 sm:mb-2">
+            <div className="flex items-start justify-between gap-1.5 sm:gap-2 mb-1">
               <span className="text-xs text-white/50 font-light">
                 Description:
               </span>
@@ -585,8 +585,8 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
 
         {/* Tags */}
         {photo.tags && photo.tags.length > 0 && (
-          <div className="mb-3 flex-1">
-            <div className="flex items-start justify-between gap-2 mb-2">
+          <div className="mb-2 sm:mb-3 flex-1">
+            <div className="flex items-start justify-between gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
               <span className="text-xs text-white/50 font-light">Tags:</span>
               <div className="flex items-center gap-2">
                 {!isEditingTags && (
@@ -651,7 +651,7 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
                 <div
                   ref={tagsContainerRef}
                   onClick={handleEditTags}
-                  className={`flex flex-wrap gap-2 transition-all duration-300 overflow-hidden cursor-pointer hover:bg-white/5 px-2 py-1 rounded ${
+                  className={`flex flex-wrap gap-1.5 sm:gap-2 transition-all duration-300 overflow-hidden cursor-pointer hover:bg-white/5 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded ${
                     isTagsExpanded ? "max-h-96" : "max-h-[2rem]"
                   }`}
                 >
@@ -660,7 +660,7 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
                     return (
                       <span
                         key={index}
-                        className={`px-3 py-1 text-xs rounded-full font-light transition-all whitespace-nowrap ${
+                        className={`px-2 py-0.5 sm:px-3 sm:py-1 text-[10px] sm:text-xs rounded-full font-light transition-all whitespace-nowrap ${
                           isHighlighted
                             ? "bg-yellow-500/30 text-yellow-200 border-2 border-yellow-400/60 shadow-lg shadow-yellow-500/20 font-medium"
                             : "bg-blue-500/20 text-blue-200 border border-blue-400/30"
@@ -847,9 +847,9 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
           </div>
 
           {/* Dates under delete button */}
-          <div className="flex items-center justify-center gap-4 mt-2 flex-wrap">
+          <div className="flex items-center justify-center gap-2 sm:gap-4 mt-1.5 sm:mt-2 flex-wrap">
             {photo.uploadedAt && (
-              <p className="text-white/50 text-xs font-light">
+              <p className="text-white/50 text-[10px] sm:text-xs font-light">
                 Created:{" "}
                 {new Date(photo.uploadedAt).toLocaleString("en-US", {
                   year: "numeric",
@@ -861,7 +861,7 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
               </p>
             )}
             {photo.updatedAt && (
-              <p className="text-white/40 text-xs font-light">
+              <p className="text-white/40 text-[10px] sm:text-xs font-light">
                 Updated:{" "}
                 {new Date(photo.updatedAt).toLocaleString("en-US", {
                   year: "numeric",
