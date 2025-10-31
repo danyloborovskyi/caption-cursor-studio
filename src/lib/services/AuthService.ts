@@ -56,6 +56,9 @@ export class AuthService implements IAuthService {
       {
         method: "POST",
         body: JSON.stringify(validation.sanitized),
+        headers: {
+          "Content-Type": "application/json",
+        },
         skipAuth: true,
       },
       "login"
@@ -121,6 +124,9 @@ export class AuthService implements IAuthService {
       {
         method: "POST",
         body: JSON.stringify(validation.sanitized),
+        headers: {
+          "Content-Type": "application/json",
+        },
         skipAuth: true,
       },
       "signup"
