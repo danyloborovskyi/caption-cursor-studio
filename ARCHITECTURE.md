@@ -17,7 +17,7 @@ graph TB
 
     subgraph "Frontend Application"
         NextJS[Next.js App Router]
-        
+
         subgraph "Presentation Layer"
             Pages[Pages/Routes]
             Components[UI Components]
@@ -25,19 +25,19 @@ graph TB
             Gallery[Gallery Component]
             Upload[Upload Component]
         end
-        
+
         subgraph "Business Logic Layer"
             Hooks[Custom Hooks]
             Contexts[React Contexts]
             Services[Service Layer]
         end
-        
+
         subgraph "Data Layer"
             API[API Client]
             SecureClient[Secure API Client]
             Storage[Local Storage]
         end
-        
+
         subgraph "Infrastructure Layer"
             Utils[Utilities]
             Security[Security Utils]
@@ -54,7 +54,7 @@ graph TB
 
     Browser --> NextJS
     Mobile --> NextJS
-    
+
     Pages --> Components
     Pages --> Hooks
     Components --> Hooks
@@ -66,12 +66,12 @@ graph TB
     Backend --> AI
     Backend --> DB
     Backend --> FileStorage
-    
+
     Utils --> Security
     Utils --> Validators
     Security --> API
     Validators --> Components
-    
+
     Storage -.-> Contexts
 
     style NextJS fill:#0070f3,stroke:#0070f3,color:#fff
@@ -122,12 +122,12 @@ graph LR
     MyGallery --> MyImageCard
     MyGallery --> SearchBar
     MyGallery --> CustomSelect
-    
+
     MyImageCard --> Button
     MyImageCard --> ConfirmationModal
     BulkUpload --> LoadingState
     BulkUpload --> ErrorDisplay
-    
+
     RootLayout --> AuthContext
     RootLayout --> GalleryContext
     RootLayout --> Navbar
@@ -163,7 +163,7 @@ sequenceDiagram
     API->>Hook: File Data
     Hook->>UI: Update State
     UI->>User: Show Success
-    
+
     Note over User,AI: Complete upload flow with AI analysis
 ```
 
@@ -177,23 +177,23 @@ graph TB
         A1[Pages] --> A2[Components]
         A2 --> A3[Layouts]
     end
-    
+
     subgraph "Layer 2: Business Logic"
         B1[Custom Hooks] --> B2[Contexts]
         B2 --> B3[Service Container]
         B3 --> B4[Services]
     end
-    
+
     subgraph "Layer 3: Data Access"
         C1[API Client] --> C2[HTTP Client]
         C2 --> C3[Request/Response]
     end
-    
+
     subgraph "Layer 4: Infrastructure"
         D1[Utilities] --> D2[Validators]
         D2 --> D3[Security Utils]
     end
-    
+
     subgraph "Layer 5: External"
         E1[Backend API]
         E2[File Storage]
@@ -226,21 +226,21 @@ graph TB
         Sanitization[Sanitization]
         RateLimit[Rate Limiting]
     end
-    
+
     subgraph "Network Security"
         HTTPS[HTTPS/TLS]
         Headers[Security Headers]
         CORS[CORS Policy]
         CSRF[CSRF Protection]
     end
-    
+
     subgraph "API Security"
         Auth[Authentication]
         FileVal[File Validation]
         MagicBytes[Magic Bytes Check]
         SizeLimit[Size Limits]
     end
-    
+
     subgraph "Storage Security"
         PathSan[Path Sanitization]
         SecureStorage[Secure Storage]
@@ -280,28 +280,28 @@ classDiagram
         +getStorageService()
         +getLoggerService()
     }
-    
+
     class AuthService {
         +login(credentials)
         +logout()
         +getToken()
         +refreshToken()
     }
-    
+
     class StorageService {
         +getItem(key)
         +setItem(key, value)
         +removeItem(key)
         +clear()
     }
-    
+
     class LoggerService {
         +log(message)
         +error(message)
         +warn(message)
         +debug(message)
     }
-    
+
     ServiceContainer --> AuthService
     ServiceContainer --> StorageService
     ServiceContainer --> LoggerService
@@ -317,18 +317,18 @@ graph TB
         AuthCtx[Auth Context]
         GalleryCtx[Gallery Context]
     end
-    
+
     subgraph "Component State"
         LocalState[useState]
         FormState[Form State]
         UIState[UI State]
     end
-    
+
     subgraph "Persistent State"
         LocalStorage[Local Storage]
         SessionStorage[Session Storage]
     end
-    
+
     subgraph "Server State"
         APICache[API Cache]
         QueryState[Query State]
@@ -356,7 +356,7 @@ graph TB
         Dev[Local Dev Server]
         DevDB[Dev Database]
     end
-    
+
     subgraph "CI/CD Pipeline"
         GitHub[GitHub]
         Actions[GitHub Actions]
@@ -364,20 +364,20 @@ graph TB
         Build[Build Project]
         Deploy[Deploy]
     end
-    
+
     subgraph "Production"
         Vercel[Vercel Platform]
         CDN[Vercel CDN]
         Edge[Edge Functions]
     end
-    
+
     subgraph "Backend Services"
         API[Production API]
         ProdDB[(Production DB)]
         Storage[File Storage]
         AIService[AI Service]
     end
-    
+
     subgraph "Monitoring"
         Logs[Logs]
         Analytics[Analytics]
@@ -416,21 +416,21 @@ graph LR
         Tablet["Tablet ≥ 640px"]
         Desktop["Desktop ≥ 1024px"]
     end
-    
+
     subgraph "Mobile Optimizations"
         M1[Compact Spacing]
         M2[Touch Targets]
         M3[Single Column]
         M4[Hidden Labels]
     end
-    
+
     subgraph "Tablet Optimizations"
         T1[Medium Spacing]
         T2[Two Columns]
         T3[Visible Labels]
         T4[Horizontal Layout]
     end
-    
+
     subgraph "Desktop Optimizations"
         D1[Spacious Layout]
         D2[Three Columns]
@@ -442,12 +442,12 @@ graph LR
     Mobile --> M2
     Mobile --> M3
     Mobile --> M4
-    
+
     Tablet --> T1
     Tablet --> T2
     Tablet --> T3
     Tablet --> T4
-    
+
     Desktop --> D1
     Desktop --> D2
     Desktop --> D3
@@ -470,20 +470,20 @@ graph TB
         U3[Utility Tests]
         U4[Service Tests]
     end
-    
+
     subgraph "Integration Tests"
         I1[API Tests]
         I2[Service Integration]
         I3[Data Flow Tests]
     end
-    
+
     subgraph "E2E Tests"
         E1[User Flows]
         E2[Authentication]
         E3[Upload Flow]
         E4[Gallery Flow]
     end
-    
+
     subgraph "Testing Tools"
         Vitest[Vitest]
         RTL[React Testing Library]
@@ -495,18 +495,18 @@ graph TB
     U2 --> Vitest
     U3 --> Vitest
     U4 --> Vitest
-    
+
     I1 --> Vitest
     I2 --> Vitest
     I3 --> Vitest
-    
+
     E1 --> Playwright
     E2 --> Playwright
     E3 --> Playwright
     E4 --> Playwright
-    
+
     U1 --> RTL
-    
+
     Vitest --> Coverage
     Playwright --> Coverage
 
@@ -528,7 +528,7 @@ sequenceDiagram
     participant SC as Secure Client
     participant I as Interceptor
     participant B as Backend
-    
+
     C->>H: Call Hook Function
     H->>S: Validate Input
     S->>AC: Call API Function
@@ -542,7 +542,7 @@ sequenceDiagram
     SC->>AC: Return Data
     AC->>H: Return Result
     H->>C: Update State
-    
+
     Note over C,B: Complete request/response cycle
 ```
 
@@ -596,31 +596,37 @@ src/
 ## 🎯 Design Patterns Used
 
 ### 1. **Dependency Injection (DI)**
+
 - Service Container manages service instances
 - Loose coupling between components
 - Easy to mock for testing
 
 ### 2. **Repository Pattern**
+
 - Centralized data access through API client
 - Abstraction over data sources
 - Consistent error handling
 
 ### 3. **Observer Pattern**
+
 - React Context for state updates
 - Components subscribe to context changes
 - Decoupled component communication
 
 ### 4. **Factory Pattern**
+
 - Service creation through container
 - Singleton service instances
 - Lazy initialization
 
 ### 5. **Strategy Pattern**
+
 - Different validation strategies
 - Pluggable security implementations
 - Flexible file upload strategies
 
 ### 6. **Facade Pattern**
+
 - API client simplifies backend calls
 - Hooks abstract complex logic
 - Clean component interfaces
@@ -630,31 +636,37 @@ src/
 ## 🔑 Key Architectural Decisions
 
 ### ✅ **Next.js App Router**
+
 - Modern React features (Server Components)
 - Built-in routing and layouts
 - Optimized performance
 
 ### ✅ **Layered Architecture**
+
 - Clear separation of concerns
 - Easy to maintain and test
 - Scalable structure
 
 ### ✅ **Service Layer**
+
 - Reusable business logic
 - Dependency injection
 - Testable services
 
 ### ✅ **Custom Hooks**
+
 - Encapsulated component logic
 - Reusable across components
 - Easier testing
 
 ### ✅ **Context API**
+
 - Global state management
 - No external dependencies
 - Simple and effective
 
 ### ✅ **Secure API Client**
+
 - Centralized request handling
 - Interceptors for auth
 - Consistent error handling
@@ -664,21 +676,25 @@ src/
 ## 📈 Scalability Considerations
 
 ### **Horizontal Scaling**
+
 - Stateless components
 - API-driven architecture
 - Cacheable responses
 
 ### **Vertical Scaling**
+
 - Code splitting
 - Lazy loading
 - Image optimization
 
 ### **Performance**
+
 - Server-side rendering
 - Static generation
 - Edge caching
 
 ### **Maintainability**
+
 - Clear structure
 - Type safety (TypeScript)
 - Comprehensive testing
@@ -688,6 +704,7 @@ src/
 ## 🔮 Future Architecture Enhancements
 
 ### **Potential Improvements**
+
 - WebSocket for real-time updates
 - Service Workers for offline support
 - Progressive Web App (PWA)
@@ -698,4 +715,3 @@ src/
 ---
 
 Built with ❤️ following best practices and SOLID principles
-
