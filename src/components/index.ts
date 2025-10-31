@@ -2,9 +2,7 @@
 export { Button } from "./ui/Button";
 export { Header } from "./ui/Header";
 export { BulkUpload } from "./ui/BulkUpload";
-export { Gallery } from "./ui/Gallery";
 export { MyGallery } from "./ui/MyGallery";
-export { ImageCard } from "./ui/ImageCard";
 export { MyImageCard } from "./ui/MyImageCard";
 export { SearchBar } from "./ui/SearchBar";
 export { CustomSelect } from "./ui/CustomSelect";
