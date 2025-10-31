@@ -901,12 +901,12 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
   return (
     <div className={`w-full ${className}`}>
       {/* Header */}
-      <div className="mb-8">
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-light text-white mb-2 tracking-wide">
+      <div className="mb-6 sm:mb-8">
+        <div className="text-center mb-6 sm:mb-8">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-light text-white mb-2 tracking-wide">
             Your Gallery
           </h2>
-          <p className="text-white/60 font-light">
+          <p className="text-white/60 font-light text-sm sm:text-base px-2">
             {isSearchMode && searchQuery ? (
               <>
                 Found {totalItems} result{totalItems !== 1 ? "s" : ""} for
@@ -922,7 +922,7 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
         </div>
 
         {/* Filters Row */}
-        <div className="flex flex-wrap gap-4 items-center justify-center mb-6">
+        <div className="flex flex-wrap gap-2 sm:gap-4 items-center justify-center mb-4 sm:mb-6">
           {/* Sort By Selector */}
           <CustomSelect
             id="sort-by-select"
@@ -965,7 +965,7 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
           {/* Bulk Download Button */}
           <button
             onClick={handleToggleBulkDownload}
-            className={`flex items-center gap-2 px-4 rounded-xl border transition-all cursor-pointer h-[52px] ${
+            className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-4 rounded-lg sm:rounded-xl border transition-all cursor-pointer h-[44px] sm:h-[52px] text-xs sm:text-sm ${
               isBulkDownloadMode
                 ? "bg-green-500/20 border-green-500/50 text-green-300"
                 : "glass border-white/20 text-white/70 hover:border-white/40 hover:text-white"
@@ -973,7 +973,7 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
             title="Bulk download mode"
           >
             <svg
-              className="w-5 h-5"
+              className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -985,8 +985,11 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
                 d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
               />
             </svg>
-            <span className="whitespace-nowrap text-sm font-light">
+            <span className="whitespace-nowrap font-light hidden sm:inline">
               Bulk Download
+            </span>
+            <span className="whitespace-nowrap font-light sm:hidden">
+              Download
             </span>
             {isBulkDownloadMode && downloadSelectedIds.length > 0 && (
               <span className="font-medium">
@@ -998,7 +1001,7 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
           {/* Bulk Regenerate Button */}
           <button
             onClick={handleToggleBulkRegenerate}
-            className={`flex items-center gap-2 px-4 rounded-xl border transition-all cursor-pointer h-[52px] ${
+            className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-4 rounded-lg sm:rounded-xl border transition-all cursor-pointer h-[44px] sm:h-[52px] text-xs sm:text-sm ${
               isBulkRegenerateMode
                 ? "bg-blue-500/20 border-blue-500/50 text-blue-300"
                 : "glass border-white/20 text-white/70 hover:border-white/40 hover:text-white"
@@ -1006,7 +1009,7 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
             title="Bulk regenerate AI mode"
           >
             <svg
-              className="w-5 h-5"
+              className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -1018,8 +1021,11 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
                 d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
               />
             </svg>
-            <span className="whitespace-nowrap text-sm font-light">
+            <span className="whitespace-nowrap font-light hidden sm:inline">
               Bulk Regenerate
+            </span>
+            <span className="whitespace-nowrap font-light sm:hidden">
+              Regenerate
             </span>
             {isBulkRegenerateMode && regenerateSelectedIds.length > 0 && (
               <span className="font-medium">
@@ -1031,7 +1037,7 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
           {/* Bulk Delete Button */}
           <button
             onClick={handleToggleBulkDelete}
-            className={`flex items-center gap-2 px-4 rounded-xl border transition-all cursor-pointer h-[52px] ${
+            className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-4 rounded-lg sm:rounded-xl border transition-all cursor-pointer h-[44px] sm:h-[52px] text-xs sm:text-sm ${
               isBulkDeleteMode
                 ? "bg-red-500/20 border-red-500/50 text-red-300"
                 : "glass border-white/20 text-white/70 hover:border-white/40 hover:text-white"
@@ -1039,7 +1045,7 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
             title="Bulk delete mode"
           >
             <svg
-              className="w-5 h-5"
+              className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -1051,8 +1057,11 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
                 d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
               />
             </svg>
-            <span className="whitespace-nowrap text-sm font-light">
+            <span className="whitespace-nowrap font-light hidden sm:inline">
               Bulk Delete
+            </span>
+            <span className="whitespace-nowrap font-light sm:hidden">
+              Delete
             </span>
             {isBulkDeleteMode && selectedIds.length > 0 && (
               <span className="font-medium">({selectedIds.length})</span>
@@ -1075,9 +1084,9 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
 
         {/* Bulk Download Actions Bar */}
         {isBulkDownloadMode && (
-          <div className="mt-4 flex items-center justify-between glass rounded-xl px-4 py-3 border border-green-500/50">
-            <div className="flex items-center gap-4">
-              <span className="text-white/90 text-sm font-light">
+          <div className="mt-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between glass rounded-xl px-3 sm:px-4 py-3 border border-green-500/50 gap-3">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
+              <span className="text-white/90 text-xs sm:text-sm font-light">
                 {downloadSelectedIds.length === 0
                   ? "Select images to download"
                   : `${downloadSelectedIds.length} image${
@@ -1086,7 +1095,7 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
               </span>
               <button
                 onClick={handleSelectAllForDownload}
-                className="text-green-300 hover:text-green-200 text-sm font-medium cursor-pointer"
+                className="text-green-300 hover:text-green-200 text-xs sm:text-sm font-medium cursor-pointer text-left"
               >
                 {downloadSelectedIds.length === photos.length
                   ? "Deselect All"
@@ -1099,6 +1108,7 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
                 size="sm"
                 onClick={handleToggleBulkDownload}
                 disabled={isBulkDownloading}
+                className="flex-1 sm:flex-none"
               >
                 Cancel
               </Button>
@@ -1107,7 +1117,7 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
                 size="sm"
                 onClick={handleBulkDownload}
                 disabled={downloadSelectedIds.length === 0 || isBulkDownloading}
-                className="!bg-green-500 hover:!bg-green-600"
+                className="!bg-green-500 hover:!bg-green-600 flex-1 sm:flex-none"
               >
                 {isBulkDownloading
                   ? "Downloading..."
@@ -1123,9 +1133,9 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
 
         {/* Bulk Regenerate Actions Bar */}
         {isBulkRegenerateMode && (
-          <div className="mt-4 flex items-center justify-between glass rounded-xl px-4 py-3 border border-blue-500/50">
-            <div className="flex items-center gap-4">
-              <span className="text-white/90 text-sm font-light">
+          <div className="mt-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between glass rounded-xl px-3 sm:px-4 py-3 border border-blue-500/50 gap-3">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
+              <span className="text-white/90 text-xs sm:text-sm font-light">
                 {regenerateSelectedIds.length === 0
                   ? "Select images to regenerate AI analysis"
                   : `${regenerateSelectedIds.length} image${
@@ -1136,7 +1146,7 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
               </span>
               <button
                 onClick={handleSelectAllForRegenerate}
-                className="text-blue-300 hover:text-blue-200 text-sm font-medium cursor-pointer"
+                className="text-blue-300 hover:text-blue-200 text-xs sm:text-sm font-medium cursor-pointer text-left"
               >
                 {regenerateSelectedIds.length === photos.length
                   ? "Deselect All"
@@ -1149,6 +1159,7 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
                 size="sm"
                 onClick={handleToggleBulkRegenerate}
                 disabled={isBulkRegenerating}
+                className="flex-1 sm:flex-none"
               >
                 Cancel
               </Button>
@@ -1161,7 +1172,7 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
                   isBulkRegenerating ||
                   regenerateSelectedIds.length > 20
                 }
-                className="!bg-blue-500 hover:!bg-blue-600"
+                className="!bg-blue-500 hover:!bg-blue-600 flex-1 sm:flex-none"
               >
                 {isBulkRegenerating
                   ? "Regenerating..."
@@ -1177,17 +1188,17 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
 
         {/* Bulk Delete Actions Bar */}
         {isBulkDeleteMode && (
-          <div className="mt-4 flex items-center justify-between glass rounded-xl px-4 py-3 border border-blue-500/50">
-            <div className="flex items-center gap-4">
+          <div className="mt-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between glass rounded-xl px-3 sm:px-4 py-3 border border-red-500/50 gap-3">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
               <button
                 onClick={handleSelectAll}
-                className="text-sm text-blue-300 hover:text-blue-200 transition-colors cursor-pointer font-light"
+                className="text-xs sm:text-sm text-blue-300 hover:text-blue-200 transition-colors cursor-pointer font-light text-left"
               >
                 {selectedIds.length === photos.length
                   ? "Deselect All"
                   : "Select All"}
               </button>
-              <span className="text-white/60 text-sm">
+              <span className="text-white/60 text-xs sm:text-sm">
                 {selectedIds.length} of {photos.length} selected
               </span>
             </div>
@@ -1197,6 +1208,7 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
                 size="sm"
                 onClick={handleToggleBulkDelete}
                 disabled={isBulkDeleting}
+                className="flex-1 sm:flex-none"
               >
                 Cancel
               </Button>
@@ -1205,7 +1217,7 @@ export const MyGallery: React.FC<MyGalleryProps> = ({ className = "" }) => {
                 size="sm"
                 onClick={handleBulkDelete}
                 disabled={selectedIds.length === 0 || isBulkDeleting}
-                className="!bg-red-500 hover:!bg-red-600"
+                className="!bg-red-500 hover:!bg-red-600 flex-1 sm:flex-none"
               >
                 {isBulkDeleting
                   ? "Deleting..."
