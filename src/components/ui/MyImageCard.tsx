@@ -492,58 +492,56 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
         {/* Description */}
         {photo.description && (
           <div className="mb-1.5 sm:mb-2">
-            <div className="flex items-start justify-between gap-1.5 sm:gap-2 mb-1">
-              <span className="text-xs text-white/50 font-light">
+            <div className="flex items-center justify-between gap-1.5 sm:gap-2 mb-1">
+              <span className="text-xs text-white/50 font-light whitespace-nowrap">
                 Description:
               </span>
-              <div className="flex items-center gap-2">
-                {!isEditingDescription && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleCopyDescription();
-                    }}
-                    className="text-xs text-blue-300 hover:text-blue-200 transition-colors flex items-center gap-1 cursor-pointer"
-                    title="Copy description"
-                  >
-                    {copiedDescription ? (
-                      <>
-                        <svg
-                          className="w-3 h-3"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M5 13l4 4L19 7"
-                          />
-                        </svg>
-                        <span className="text-green-300">Copied!</span>
-                      </>
-                    ) : (
-                      <>
-                        <svg
-                          className="w-3 h-3"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                          />
-                        </svg>
-                        <span>Copy</span>
-                      </>
-                    )}
-                  </button>
-                )}
-              </div>
+              {!isEditingDescription && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCopyDescription();
+                  }}
+                  className="text-xs text-blue-300 hover:text-blue-200 transition-colors flex items-center gap-1 cursor-pointer flex-shrink-0"
+                  title="Copy description"
+                >
+                  {copiedDescription ? (
+                    <>
+                      <svg
+                        className="w-3 h-3 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                      <span className="text-green-300 whitespace-nowrap">Copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg
+                        className="w-3 h-3 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                        />
+                      </svg>
+                      <span className="whitespace-nowrap">Copy</span>
+                    </>
+                  )}
+                </button>
+              )}
             </div>
             <div className="relative">
               {isEditingDescription ? (
@@ -586,56 +584,54 @@ export const MyImageCard: React.FC<MyImageCardProps> = ({
         {/* Tags */}
         {photo.tags && photo.tags.length > 0 && (
           <div className="mb-2 sm:mb-3 flex-1">
-            <div className="flex items-start justify-between gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
-              <span className="text-xs text-white/50 font-light">Tags:</span>
-              <div className="flex items-center gap-2">
-                {!isEditingTags && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleCopyTags();
-                    }}
-                    className="text-xs text-blue-300 hover:text-blue-200 transition-colors flex items-center gap-1 cursor-pointer"
-                    title="Copy all tags"
-                  >
-                    {copiedTags ? (
-                      <>
-                        <svg
-                          className="w-3 h-3"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M5 13l4 4L19 7"
-                          />
-                        </svg>
-                        <span className="text-green-300">Copied!</span>
-                      </>
-                    ) : (
-                      <>
-                        <svg
-                          className="w-3 h-3"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                          />
-                        </svg>
-                        <span>Copy</span>
-                      </>
-                    )}
-                  </button>
-                )}
-              </div>
+            <div className="flex items-center justify-between gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
+              <span className="text-xs text-white/50 font-light whitespace-nowrap">Tags:</span>
+              {!isEditingTags && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCopyTags();
+                  }}
+                  className="text-xs text-blue-300 hover:text-blue-200 transition-colors flex items-center gap-1 cursor-pointer flex-shrink-0"
+                  title="Copy all tags"
+                >
+                  {copiedTags ? (
+                    <>
+                      <svg
+                        className="w-3 h-3 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                      <span className="text-green-300 whitespace-nowrap">Copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg
+                        className="w-3 h-3 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                        />
+                      </svg>
+                      <span className="whitespace-nowrap">Copy</span>
+                    </>
+                  )}
+                </button>
+              )}
             </div>
             {isEditingTags ? (
               <textarea
