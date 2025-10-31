@@ -12,17 +12,20 @@ interface LoadingStateProps {
   size?: "sm" | "md" | "lg";
   /** Whether to show full-screen overlay */
   fullScreen?: boolean;
+  /** Custom className */
+  className?: string;
 }
 
 export function LoadingState({
   message = "Loading...",
   size = "md",
   fullScreen = false,
+  className = "",
 }: LoadingStateProps) {
   const sizeClasses = {
-    sm: "w-6 h-6 border-2",
-    md: "w-12 h-12 border-4",
-    lg: "w-16 h-16 border-4",
+    sm: "h-4 w-4 border-2",
+    md: "h-6 w-6 border-2",
+    lg: "h-8 w-8 border-4",
   };
 
   const textSizeClasses = {
@@ -32,24 +35,32 @@ export function LoadingState({
   };
 
   const spinner = (
-    <div className="flex flex-col items-center justify-center gap-4">
+    <div
+      className="flex flex-col items-center justify-center gap-4"
+      role="status"
+      aria-live="polite"
+    >
       <div
-        className={`${sizeClasses[size]} border-blue-500 border-t-transparent rounded-full animate-spin`}
+        className={`${sizeClasses[size]} border-blue-500 border-b-2 rounded-full animate-spin`}
       />
-      <p className={`text-gray-400 ${textSizeClasses[size]}`}>{message}</p>
+      <p className={`text-white/70 ${textSizeClasses[size]}`}>{message}</p>
     </div>
   );
 
   if (fullScreen) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div
+        className={`min-h-screen flex items-center justify-center ${className}`}
+      >
         {spinner}
       </div>
     );
   }
 
   return (
-    <div className="flex items-center justify-center py-12">{spinner}</div>
+    <div className={`flex items-center justify-center py-12 ${className}`}>
+      {spinner}
+    </div>
   );
 }
 

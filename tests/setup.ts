@@ -28,20 +28,29 @@ if (typeof global.crypto === "undefined") {
   } as unknown as Crypto;
 }
 
-// Mock localStorage
+// Mock localStorage with in-memory storage
+const storageMock = new Map<string, string>();
+
 const localStorageMock = {
   getItem: (key: string) => {
-    return global.localStorage.getItem(key);
+    return storageMock.get(key) || null;
   },
   setItem: (key: string, value: string) => {
-    global.localStorage.setItem(key, value);
+    storageMock.set(key, value);
   },
   removeItem: (key: string) => {
-    global.localStorage.removeItem(key);
+    storageMock.delete(key);
   },
   clear: () => {
-    global.localStorage.clear();
+    storageMock.clear();
+  },
+  get length() {
+    return storageMock.size;
+  },
+  key: (index: number) => {
+    return Array.from(storageMock.keys())[index] || null;
   },
 };
 
 global.localStorage = localStorageMock as Storage;
+global.sessionStorage = localStorageMock as Storage;
