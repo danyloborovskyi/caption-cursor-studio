@@ -60,6 +60,10 @@ jobs:
       - name: Run unit tests
         run: npm test -- --run
 
+      - name: Clean build artifacts before coverage
+        if: matrix.node-version == '20.x'
+        run: rm -rf .next dist build
+
       - name: Generate coverage report
         if: matrix.node-version == '20.x'
         run: npm run test:coverage -- --run
