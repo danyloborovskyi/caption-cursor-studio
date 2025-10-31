@@ -9,15 +9,16 @@
 export function sanitizeInput(input: string): string {
   if (!input) return "";
 
-  // Remove dangerous protocol patterns
-  let sanitized = input
-    .replace(/javascript:/gi, "")
-    .replace(/data:/gi, "")
-    .replace(/vbscript:/gi, "")
-    .replace(/on\w+\s*=/gi, ""); // Remove event handlers like onclick=
+  // Reject inputs with dangerous protocol patterns completely
+  if (/javascript:/gi.test(input) || 
+      /data:/gi.test(input) || 
+      /vbscript:/gi.test(input) ||
+      /on\w+\s*=/gi.test(input)) {
+    return "";
+  }
 
   // Remove HTML tags
-  sanitized = sanitized.replace(/<[^>]*>/g, "");
+  let sanitized = input.replace(/<[^>]*>/g, "");
 
   // Encode special HTML characters
   sanitized = sanitized
@@ -41,8 +42,11 @@ export function sanitizeInput(input: string): string {
 export function sanitizeSearchQuery(query: string): string {
   if (!query) return "";
 
+  // Remove HTML tags first
+  let sanitized = query.replace(/<[^>]*>/g, "");
+
   // Remove potential SQL injection patterns and keywords
-  let sanitized = query
+  sanitized = sanitized
     .replace(/['";]/g, "") // Remove quotes and semicolons
     .replace(/--/g, "") // Remove SQL comments
     .replace(/\/\*/g, "") // Remove block comment start
