@@ -59,19 +59,19 @@ export default function UploadPage() {
   }
 
   return (
-    <main className="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-12 md:py-16">
+    <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-16">
       {/* Page Title */}
-      <div className="text-center mb-6 sm:mb-8 md:mb-12">
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-light text-white mb-2 sm:mb-4 tracking-wide">
+      <div className="text-center mb-8 sm:mb-12">
+        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-light text-white mb-3 sm:mb-4 tracking-wide">
           Upload Your Images
         </h1>
-        <p className="text-white/70 font-light text-sm sm:text-base md:text-lg px-2">
+        <p className="text-white/70 font-light text-base sm:text-lg px-2">
           Upload multiple images and get AI-powered captions and tags
         </p>
       </div>
 
       {/* Upload Section */}
-      <section className="mb-8 sm:mb-12 md:mb-16 max-w-5xl mx-auto">
+      <section className="mb-12 sm:mb-16 max-w-5xl mx-auto">
         <div className="glass rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8">
           <BulkUpload
             onUploadSuccess={() => {
@@ -84,7 +84,7 @@ export default function UploadPage() {
       </section>
 
       {/* My Gallery Section - Shows user's uploaded images */}
-      <section className="mb-8 sm:mb-12 md:mb-16">
+      <section className="mb-12 sm:mb-16">
         <MyGallery key={refreshKey} />
       </section>
     </main>
