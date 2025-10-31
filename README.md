@@ -186,6 +186,8 @@ npm run test:e2e        # Run E2E tests
 - **Observer Pattern**: Context-based state updates
 - **Factory Pattern**: Service instantiation
 
+📖 **[View Detailed Architecture Documentation →](./ARCHITECTURE.md)**
+
 ## 🔐 Security Features
 
 - **Input Validation**: All inputs validated on client and server
