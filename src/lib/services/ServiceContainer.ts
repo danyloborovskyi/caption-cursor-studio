@@ -28,7 +28,7 @@ export function getServiceContainer(): IServiceContainer {
     // Note: FileService will be added when implemented
     serviceContainer = {
       authService,
-      fileService: null as any, // TODO: Implement FileService
+      fileService: null, // TODO: Implement FileService
       storageService,
       loggerService,
     };

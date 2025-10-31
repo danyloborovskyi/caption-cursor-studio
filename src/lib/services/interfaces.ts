@@ -119,7 +119,7 @@ export interface ILoggerService {
 
 export interface IServiceContainer {
   authService: IAuthService;
-  fileService: IFileService;
+  fileService: IFileService | null;
   storageService: IStorageService;
   loggerService: ILoggerService;
 }

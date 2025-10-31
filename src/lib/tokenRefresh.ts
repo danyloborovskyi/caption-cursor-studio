@@ -5,8 +5,7 @@
  * Implements retry logic and refresh token rotation
  */
 
-import { TokenManager, ApiResponse } from "./secureApiClient";
-import { isTokenExpired } from "./security";
+import { TokenManager } from "./secureApiClient";
 
 // =====================
 // Configuration

@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback } from "react";
 import { Button } from "./Button";
-import { sanitizeSearchQuery, escapeRegExp } from "@/lib/security";
+import { sanitizeSearchQuery } from "@/lib/security";
 
 interface SearchBarProps {
   onSearch: (query: string) => void;

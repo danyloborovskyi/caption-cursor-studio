@@ -4,7 +4,6 @@ import React, { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { FileItem, updateFile, regenerateFile, downloadFile } from "@/lib/api";
 import { Button } from "./Button";
-import { ConfirmationModal } from "./ConfirmationModal";
 
 interface MyImageCardProps {
   photo: FileItem;

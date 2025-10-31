@@ -26,13 +26,7 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Use the custom hook for file management
-  const {
-    selectedFiles,
-    error: uploadError,
-    addFiles,
-    removeFile,
-    clearFiles,
-  } = useFileUpload({
+  const { selectedFiles, addFiles, removeFile, clearFiles } = useFileUpload({
     maxFiles: 10,
     onError: (err) => {
       setError(err);
@@ -96,11 +90,6 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({
       fileInputRef.current.value = "";
     }
   }, [clearFiles]);
-
-  const handleUploadSuccess = () => {
-    refreshGallery();
-    onUploadSuccess?.();
-  };
 
   const uploadFiles = async () => {
     if (selectedFiles.length === 0) return;

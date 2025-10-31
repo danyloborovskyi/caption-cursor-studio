@@ -35,7 +35,7 @@ export function sanitizeSearchQuery(query: string): string {
   if (!query) return "";
 
   // Remove potential SQL injection patterns
-  let sanitized = query
+  const sanitized = query
     .replace(/['";]/g, "") // Remove quotes and semicolons
     .replace(/--/g, "") // Remove SQL comments
     .replace(/\/\*/g, "") // Remove block comment start
