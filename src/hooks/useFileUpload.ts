@@ -6,7 +6,6 @@
  */
 
 import { useState, useCallback } from "react";
-import { uploadFile } from "@/lib/api";
 import {
   isValidImageFile,
   sanitizeFilename,
@@ -19,32 +18,21 @@ export interface SelectedFile {
   id: string;
 }
 
-export interface UploadProgress {
-  fileId: string;
-  filename: string;
-  progress: number;
-  status: "pending" | "uploading" | "success" | "error";
-  error?: string;
-}
-
-interface UseFileUploadOptions {
+export interface UseFileUploadOptions {
   maxFiles?: number;
   maxFileSize?: number;
   onUploadComplete?: () => void;
   onError?: (error: string) => void;
 }
 
-interface UseFileUploadReturn {
+export interface UseFileUploadReturn {
   selectedFiles: SelectedFile[];
-  uploadProgress: UploadProgress[];
-  isUploading: boolean;
   error: string | null;
 
   // Actions
   addFiles: (files: FileList | File[]) => void;
   removeFile: (id: string) => void;
   clearFiles: () => void;
-  uploadFiles: (tagStyle: string) => Promise<void>;
   clearError: () => void;
 }
 
@@ -63,8 +51,6 @@ export function useFileUpload(
 
   // State
   const [selectedFiles, setSelectedFiles] = useState<SelectedFile[]>([]);
-  const [uploadProgress, setUploadProgress] = useState<UploadProgress[]>([]);
-  const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Validate and add files
@@ -84,10 +70,20 @@ export function useFileUpload(
 
       // Validate each file
       for (const file of fileArray) {
-        const validation = isValidImageFile(file, maxFileSize);
+        const validation = isValidImageFile(file);
 
         if (!validation.valid) {
           errorMessage = `${sanitizeFilename(file.name)}: ${validation.error}`;
+          setError(errorMessage);
+          onError?.(errorMessage);
+          continue;
+        }
+
+        // Check file size separately
+        if (file.size > maxFileSize) {
+          errorMessage = `${sanitizeFilename(
+            file.name
+          )}: File too large (max ${Math.round(maxFileSize / 1024 / 1024)}MB)`;
           setError(errorMessage);
           onError?.(errorMessage);
           continue;
@@ -117,9 +113,6 @@ export function useFileUpload(
       }
       return prev.filter((f) => f.id !== id);
     });
-
-    // Remove from progress if exists
-    setUploadProgress((prev) => prev.filter((p) => p.fileId !== id));
   }, []);
 
   // Clear all files
@@ -128,100 +121,12 @@ export function useFileUpload(
       URL.revokeObjectURL(file.previewUrl);
     });
     setSelectedFiles([]);
-    setUploadProgress([]);
     setError(null);
   }, [selectedFiles]);
 
-  // Upload files
-  const uploadFiles = useCallback(
-    async (tagStyle: string) => {
-      if (selectedFiles.length === 0) return;
-
-      setIsUploading(true);
-      setError(null);
-
-      // Initialize progress
-      const initialProgress: UploadProgress[] = selectedFiles.map((file) => ({
-        fileId: file.id,
-        filename: file.file.name,
-        progress: 0,
-        status: "pending" as const,
-      }));
-      setUploadProgress(initialProgress);
-
-      try {
-        // Upload files sequentially (can be changed to parallel)
-        for (let i = 0; i < selectedFiles.length; i++) {
-          const selectedFile = selectedFiles[i];
-
-          // Update status to uploading
-          setUploadProgress((prev) =>
-            prev.map((p) =>
-              p.fileId === selectedFile.id
-                ? { ...p, status: "uploading" as const, progress: 50 }
-                : p
-            )
-          );
-
-          try {
-            const response = await uploadFile(selectedFile.file, tagStyle);
-
-            if (response.success) {
-              // Update status to success
-              setUploadProgress((prev) =>
-                prev.map((p) =>
-                  p.fileId === selectedFile.id
-                    ? { ...p, status: "success" as const, progress: 100 }
-                    : p
-                )
-              );
-            } else {
-              // Update status to error
-              setUploadProgress((prev) =>
-                prev.map((p) =>
-                  p.fileId === selectedFile.id
-                    ? {
-                        ...p,
-                        status: "error" as const,
-                        error: response.error || "Upload failed",
-                      }
-                    : p
-                )
-              );
-            }
-          } catch (err) {
-            setUploadProgress((prev) =>
-              prev.map((p) =>
-                p.fileId === selectedFile.id
-                  ? {
-                      ...p,
-                      status: "error" as const,
-                      error:
-                        err instanceof Error ? err.message : "Upload failed",
-                    }
-                  : p
-              )
-            );
-          }
-        }
-
-        // Check if all uploads succeeded
-        const allSuccess = uploadProgress.every((p) => p.status === "success");
-        if (allSuccess) {
-          onUploadComplete?.();
-          clearFiles();
-        }
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "Upload failed";
-        setError(errorMessage);
-        onError?.(errorMessage);
-      } finally {
-        setIsUploading(false);
-      }
-    },
-    [selectedFiles, uploadProgress, onUploadComplete, onError, clearFiles]
-  );
+  // Note: uploadFiles method removed as BulkUpload component
+  // handles the actual upload with bulkUploadAndAnalyzeImages.
+  // This hook focuses on file selection, validation, and preview management.
 
   // Clear error
   const clearError = useCallback(() => {
@@ -230,13 +135,10 @@ export function useFileUpload(
 
   return {
     selectedFiles,
-    uploadProgress,
-    isUploading,
     error,
     addFiles,
     removeFile,
     clearFiles,
-    uploadFiles,
     clearError,
   };
 }

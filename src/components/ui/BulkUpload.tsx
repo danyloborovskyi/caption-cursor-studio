@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import Image from "next/image";
 import {
   bulkUploadAndAnalyzeImages,
@@ -8,22 +8,14 @@ import {
   UploadResponse,
 } from "@/lib/api";
 import { useGallery } from "@/lib/contexts";
+import { useFileUpload } from "@/hooks";
+import { LoadingState } from "@/components/shared/LoadingState";
+import { ErrorDisplay } from "@/components/shared/ErrorDisplay";
 import { Button } from "./Button";
-import {
-  generateSecureId,
-  isValidImageFile,
-  sanitizeFilename,
-} from "@/lib/security";
 
 interface BulkUploadProps {
   className?: string;
   onUploadSuccess?: () => void;
-}
-
-interface SelectedFile {
-  file: File;
-  previewUrl: string;
-  id: string;
 }
 
 export const BulkUpload: React.FC<BulkUploadProps> = ({
@@ -31,8 +23,22 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({
   onUploadSuccess,
 }) => {
   const { refreshGallery } = useGallery();
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
-  const [selectedFiles, setSelectedFiles] = useState<SelectedFile[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Use the custom hook for file management
+  const {
+    selectedFiles,
+    error: uploadError,
+    addFiles,
+    removeFile,
+    clearFiles,
+  } = useFileUpload({
+    maxFiles: 10,
+    onError: (err) => {
+      setError(err);
+    },
+  });
+
   const [isDragOver, setIsDragOver] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -43,48 +49,12 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({
     "playful"
   );
 
-  const createFilePreview = (file: File): SelectedFile => ({
-    file,
-    previewUrl: URL.createObjectURL(file),
-    id: generateSecureId(),
-  });
-
-  const validateAndAddFiles = useCallback(
-    (files: FileList | File[]) => {
-      const fileArray = Array.from(files);
-      const validFiles: File[] = [];
-
-      for (const file of fileArray) {
-        // Validate file using security utility
-        const validation = isValidImageFile(file);
-        if (!validation.valid) {
-          setError(`${sanitizeFilename(file.name)}: ${validation.error}`);
-          continue;
-        }
-
-        validFiles.push(file);
-      }
-
-      // Check total count (max 10 files)
-      const totalFiles = selectedFiles.length + validFiles.length;
-      if (totalFiles > 10) {
-        setError("Maximum 10 images allowed for bulk upload");
-        return;
-      }
-
-      // Clear error and add files
-      setError(null);
-      setSuccessMessage(null);
-      const newFilePreviews = validFiles.map(createFilePreview);
-      setSelectedFiles((prev) => [...prev, ...newFilePreviews]);
-    },
-    [selectedFiles.length]
-  );
-
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files && files.length > 0) {
-      validateAndAddFiles(files);
+      addFiles(files);
+      setError(null);
+      setSuccessMessage(null);
     }
   };
 
@@ -93,7 +63,9 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({
     setIsDragOver(false);
     const files = e.dataTransfer.files;
     if (files && files.length > 0) {
-      validateAndAddFiles(files);
+      addFiles(files);
+      setError(null);
+      setSuccessMessage(null);
     }
   };
 
@@ -107,21 +79,14 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({
     setIsDragOver(false);
   };
 
-  const removeFile = (id: string) => {
-    setSelectedFiles((prev) => {
-      const updated = prev.filter((f) => f.id !== id);
-      // Revoke URL for removed file
-      const removedFile = prev.find((f) => f.id === id);
-      if (removedFile) {
-        URL.revokeObjectURL(removedFile.previewUrl);
-      }
-      return updated;
-    });
+  const handleRemoveFile = (id: string) => {
+    removeFile(id);
+    setError(null);
+    setSuccessMessage(null);
   };
 
   const clearAll = useCallback(() => {
-    selectedFiles.forEach((f) => URL.revokeObjectURL(f.previewUrl));
-    setSelectedFiles([]);
+    clearFiles();
     setError(null);
     setSuccessMessage(null);
     setIsWaitingForAnalysis(false);
@@ -130,7 +95,12 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
-  }, [selectedFiles]);
+  }, [clearFiles]);
+
+  const handleUploadSuccess = () => {
+    refreshGallery();
+    onUploadSuccess?.();
+  };
 
   const uploadFiles = async () => {
     if (selectedFiles.length === 0) return;
@@ -138,6 +108,8 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({
     setIsLoading(true);
     setError(null);
     setSuccessMessage(null);
+    setIsWaitingForAnalysis(false);
+    setAnalysisComplete(false);
 
     try {
       const files = selectedFiles.map((f) => f.file);
@@ -434,7 +406,7 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({
                 </div>
                 {!isLoading && !isWaitingForAnalysis && (
                   <button
-                    onClick={() => removeFile(fileObj.id)}
+                    onClick={() => handleRemoveFile(fileObj.id)}
                     className="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-600 transition-colors cursor-pointer"
                   >
                     ×
@@ -472,14 +444,13 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({
 
       {/* Loading State */}
       {isLoading && (
-        <div className="flex items-center justify-center p-8 glass rounded-lg mb-6">
-          <div className="flex items-center space-x-3">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
-            <p className="text-white/70">
-              Uploading and analyzing {selectedFiles.length} image
-              {selectedFiles.length !== 1 ? "s" : ""}...
-            </p>
-          </div>
+        <div className="mb-6">
+          <LoadingState
+            message={`Uploading and analyzing ${selectedFiles.length} image${
+              selectedFiles.length !== 1 ? "s" : ""
+            }...`}
+            size="md"
+          />
         </div>
       )}
 
@@ -525,27 +496,12 @@ export const BulkUpload: React.FC<BulkUploadProps> = ({
 
       {/* Error State */}
       {error && (
-        <div className="p-4 glass rounded-lg mb-6 border border-red-500/30">
-          <div className="flex items-start space-x-3">
-            <svg
-              className="w-5 h-5 text-red-400 mt-0.5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            <div>
-              <h4 className="text-sm font-medium text-red-400">Upload Error</h4>
-              <p className="text-sm text-white/70 mt-1">{error}</p>
-            </div>
-          </div>
-        </div>
+        <ErrorDisplay
+          error={error}
+          title="Upload Error"
+          variant="error"
+          onDismiss={() => setError(null)}
+        />
       )}
     </div>
   );

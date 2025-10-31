@@ -13,7 +13,6 @@ export type {
 export { useFileUpload } from "./useFileUpload";
 export type {
   SelectedFile,
-  UploadProgress,
   UseFileUploadOptions,
   UseFileUploadReturn,
 } from "./useFileUpload";

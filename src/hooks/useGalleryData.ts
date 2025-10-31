@@ -8,7 +8,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { getFiles, searchFiles, FileItem } from "@/lib/api";
 
-interface UseGalleryDataOptions {
+export interface UseGalleryDataOptions {
   /** Whether to fetch only user's own files */
   userFilesOnly?: boolean;
   /** Initial search query */
@@ -17,7 +17,7 @@ interface UseGalleryDataOptions {
   pageSize?: number;
 }
 
-interface UseGalleryDataReturn {
+export interface UseGalleryDataReturn {
   photos: FileItem[];
   isLoading: boolean;
   isInitialLoading: boolean;
